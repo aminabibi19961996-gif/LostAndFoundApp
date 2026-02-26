@@ -227,22 +227,22 @@ graph TD
 
 | Feature | SuperAdmin | Admin | User |
 |---------|:---:|:---:|:---:|
-| View Dashboard (Full Analytics) | | | Basic |
-| Create Lost & Found Records | | | |
-| Edit Any Record | | | |
-| Delete Records | | | |
-| Manage Master Data | | | |
-| Inline AJAX Master Data Creation | | | |
-| View All Activity Logs | | | |
-| View Own Activity Logs | | | |
-| Export Logs (CSV) | | | |
-| Clear All Logs | | | |
-| View User List | | Read-only | |
-| Create / Edit / Delete Users | | | |
-| Change User Roles | | | |
-| Activate / Deactivate Users | | | |
-| Manage AD Groups | | | |
-| Trigger AD Sync | | | |
+| View Dashboard (Full Analytics) | Yes | Yes | Basic |
+| Create Lost & Found Records | Yes | Yes | Yes |
+| Edit Any Record | Yes | Yes | Yes |
+| Delete Records | Yes | Yes | No |
+| Manage Master Data | Yes | Yes | No |
+| Inline AJAX Master Data Creation | Yes | Yes | No |
+| View All Activity Logs | Yes | Yes | No |
+| View Own Activity Logs | Yes | Yes | Yes |
+| Export Logs (CSV) | Yes | No | No |
+| Clear All Logs | Yes | No | No |
+| View User List | Yes | Read-only | No |
+| Create / Edit / Delete Users | Yes | No | No |
+| Change User Roles | Yes | No | No |
+| Activate / Deactivate Users | Yes | No | No |
+| Manage AD Groups | Yes | No | No |
+| Trigger AD Sync | Yes | No | No |
 
 ---
 
@@ -782,45 +782,45 @@ graph TD
 | Action | Method | Route | SA | A | U |
 |--------|:------:|-------|:---:|:---:|:---:|
 | **Dashboard** | GET | `/` | Full | Full | Basic |
-| **Login** | GET/POST | `/Account/Login` | | | |
-| **Change Password** | GET/POST | `/Account/ChangePassword` | | | |
-| **Logout** | POST | `/Account/Logout` | | | |
-| **Access Denied** | GET | `/Account/AccessDenied` | | | |
-| **Error Page** | GET | `/Home/Error` | | | |
+| **Login** | GET/POST | `/Account/Login` | Public | Public | Public |
+| **Change Password** | GET/POST | `/Account/ChangePassword` | Yes | Yes | Yes |
+| **Logout** | POST | `/Account/Logout` | Yes | Yes | Yes |
+| **Access Denied** | GET | `/Account/AccessDenied` | Public | Public | Public |
+| **Error Page** | GET | `/Home/Error` | Public | Public | Public |
 | | | | | | |
-| **Create Record** | GET/POST | `/LostFoundItem/Create` | | | |
-| **View Details** | GET | `/LostFoundItem/Details/{id}` | | | |
-| **Edit Record** | GET/POST | `/LostFoundItem/Edit/{id}` | | | |
-| **Delete Record** | POST | `/LostFoundItem/Delete/{id}` | | | |
-| **Search** | GET | `/LostFoundItem/Search` | | | |
-| **Print Search** | GET | `/LostFoundItem/PrintSearch` | | | |
-| **View Photo** | GET | `/LostFoundItem/Photo/{name}` | | | |
-| **Download Attachment** | GET | `/LostFoundItem/Attachment/{name}` | | | |
+| **Create Record** | GET/POST | `/LostFoundItem/Create` | Yes | Yes | Yes |
+| **View Details** | GET | `/LostFoundItem/Details/{id}` | Yes | Yes | Yes |
+| **Edit Record** | GET/POST | `/LostFoundItem/Edit/{id}` | Yes | Yes | Yes |
+| **Delete Record** | POST | `/LostFoundItem/Delete/{id}` | Yes | Yes | No |
+| **Search** | GET | `/LostFoundItem/Search` | Yes | Yes | Yes |
+| **Print Search** | GET | `/LostFoundItem/PrintSearch` | Yes | Yes | Yes |
+| **View Photo** | GET | `/LostFoundItem/Photo/{name}` | Yes | Yes | Yes |
+| **Download Attachment** | GET | `/LostFoundItem/Attachment/{name}` | Yes | Yes | Yes |
 | | | | | | |
-| **List Master Data** | GET | `/MasterData/{Table}` | | | |
-| **Create Master Data** | GET/POST | `/MasterData/Create{Entity}` | | | |
-| **Edit Master Data** | GET/POST | `/MasterData/Edit{Entity}/{id}` | | | |
-| **Delete Master Data** | POST | `/MasterData/Delete{Entity}/{id}` | | | |
-| **Toggle Master Data** | POST | `/MasterData/Toggle{Entity}Active/{id}` | | | |
-| **AJAX Create** | POST | `/MasterData/Add{Entity}Ajax` | | | |
+| **List Master Data** | GET | `/MasterData/{Table}` | Yes | Yes | No |
+| **Create Master Data** | GET/POST | `/MasterData/Create{Entity}` | Yes | Yes | No |
+| **Edit Master Data** | GET/POST | `/MasterData/Edit{Entity}/{id}` | Yes | Yes | No |
+| **Delete Master Data** | POST | `/MasterData/Delete{Entity}/{id}` | Yes | Yes | No |
+| **Toggle Master Data** | POST | `/MasterData/Toggle{Entity}Active/{id}` | Yes | Yes | No |
+| **AJAX Create** | POST | `/MasterData/Add{Entity}Ajax` | Yes | Yes | No |
 | | | | | | |
-| **User List** | GET | `/UserManagement` | | | |
-| **Create User** | GET/POST | `/UserManagement/Create` | | | |
-| **Edit User Role** | GET/POST | `/UserManagement/EditRole/{id}` | | | |
-| **Toggle User Active** | POST | `/UserManagement/ToggleActive/{id}` | | | |
+| **User List** | GET | `/UserManagement` | Yes | Read-only | No |
+| **Create User** | GET/POST | `/UserManagement/Create` | Yes | No | No |
+| **Edit User Role** | GET/POST | `/UserManagement/EditRole/{id}` | Yes | No | No |
+| **Toggle User Active** | POST | `/UserManagement/ToggleActive/{id}` | Yes | No | No |
 | | | | | | |
-| **AD Groups** | GET | `/UserManagement/AdGroups` | | | |
-| **Add AD Group** | POST | `/UserManagement/AddAdGroup` | | | |
-| **Update AD Role** | POST | `/UserManagement/UpdateAdGroupRole` | | | |
-| **Toggle AD Group** | POST | `/UserManagement/ToggleAdGroupActive/{id}` | | | |
-| **Remove AD Group** | POST | `/UserManagement/RemoveAdGroup/{id}` | | | |
-| **Sync Now** | POST | `/UserManagement/SyncNow` | | | |
+| **AD Groups** | GET | `/UserManagement/AdGroups` | Yes | No | No |
+| **Add AD Group** | POST | `/UserManagement/AddAdGroup` | Yes | No | No |
+| **Update AD Role** | POST | `/UserManagement/UpdateAdGroupRole` | Yes | No | No |
+| **Toggle AD Group** | POST | `/UserManagement/ToggleAdGroupActive/{id}` | Yes | No | No |
+| **Remove AD Group** | POST | `/UserManagement/RemoveAdGroup/{id}` | Yes | No | No |
+| **Sync Now** | POST | `/UserManagement/SyncNow` | Yes | No | No |
 | | | | | | |
 | **View Logs** | GET | `/Logs` | All | All | Own |
-| **Export Logs** | GET | `/Logs/Export` | | | |
-| **Clear Logs** | POST | `/Logs/Clear` | | | |
+| **Export Logs** | GET | `/Logs/Export` | Yes | No | No |
+| **Clear Logs** | POST | `/Logs/Clear` | Yes | No | No |
 
-> = Public (no auth required) · = Read-only · = Limited view
+> Public = No auth required · Read-only = Can view but not modify · Own = Own records only
 
 </details>
 
