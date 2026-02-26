@@ -400,24 +400,24 @@ Six master data tables, each with identical CRUD operations:
                         |  Razor Views + CSS + JS   |
                         +------------+--------------+
                                      | HTTP
-                        +------------v--------------+
-                        | ASP.NET Core 8.0 MVC App  |
-                        |                           |
-                        |  Middleware                |
-                        |  (MustChangePassword)      |
-                        |         |                  |
-                        |  Controllers ----------+   |
-                        |  - Account     Services |   |
-                        |  - Home        - ActivityLog
-                        |  - Logs        - FileService
-                        |  - LostFound   - AdSync  |   |
-                        |  - MasterData  - AdSync  |   |
-                        |  - UserMgmt    (Hosted)  |   |
-                        |         |        |       |   |
-                        |  Security Layer          |   |
-                        |  - Identity               |
-                        |  - Auth Policies           |
-                        |  - Anti-Forgery            |
+                           +------------v--------------+
+                        | ASP.NET Core 8.0 MVC App      |
+                        |                               |
+                        |  Middleware                   |
+                        |  (MustChangePassword)         |
+                        |         |                     |
+                        |  Controllers ----------+      |
+                        |  - Account     Services |     |
+                        |  - Home        - ActivityLog  |
+                        |  - Logs        - FileService  |
+                        |  - LostFound   - AdSync       |
+                        |  - MasterData  - AdSync       |
+                        |  - UserMgmt    (Hosted)       |
+                        |         |        |            |
+                        |  Security Layer               |
+                        |  - Identity                   |
+                        |  - Auth Policies              |
+                        |  - Anti-Forgery               |
                         +-----+----------+----------+
                               |          |
                 +-------------v--+  +----v-----------+
