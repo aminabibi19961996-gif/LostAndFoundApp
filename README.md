@@ -245,53 +245,15 @@ graph TD
 
 ## Feature Overview
 
-```mermaid
-mindmap
-  root((Lost & Found App))
-    Item Management
-      Create Records
-      Edit Records
-      View Details
-      Delete Records
-      Photo Upload
-      Attachment Upload
-      Search & Filter
-      Print Results
-    Master Data
-      Items
-      Routes
-      Vehicles
-      Storage Locations
-      Statuses
-      Found By Names
-      AJAX Inline Create
-    User Management
-      Create Users
-      Edit Roles
-      Activate/Deactivate
-      User List
-    Active Directory
-      AD Group Mapping
-      Manual Sync
-      Scheduled Daily Sync
-      Role Assignment
-    Activity Logs
-      Audit Trail
-      Filter & Search
-      CSV Export
-      Clear Logs
-    Security
-      Role-Based Auth
-      Password Policy
-      Account Lockout
-      CSRF Protection
-      File Validation
-    Dashboard
-      Status Cards
-      Recent Records
-      Analytics Charts
-      Top Items
-```
+| Module | Capabilities |
+|--------|-------------|
+| **Item Management** | Create, Edit, View Details, Delete, Photo Upload, Attachment Upload, Search & Filter, Print Results |
+| **Master Data** | Items, Routes, Vehicles, Storage Locations, Statuses, Found By Names, AJAX Inline Create |
+| **User Management** | Create Users, Edit Roles, Activate/Deactivate, User List |
+| **Active Directory** | AD Group Mapping, Manual Sync, Scheduled Daily Sync, Role Assignment |
+| **Activity Logs** | Audit Trail, Filter & Search, CSV Export, Clear Logs |
+| **Security** | Role-Based Auth, Password Policy, Account Lockout, CSRF Protection, File Validation |
+| **Dashboard** | Status Cards, Recent Records, Analytics Charts, Top Items |
 
 ### Feature Details
 
@@ -432,63 +394,43 @@ Six master data tables, each with identical CRUD operations:
 
 ### High-Level Architecture
 
-```mermaid
-graph TB
- subgraph Client["Browser"]
- UI["Razor Views<br/>+ CSS + JS"]
- end
-
- subgraph App["ASP.NET Core 8.0 MVC"]
- MW["Middleware<br/><small>MustChangePassword</small>"]
- 
- subgraph Controllers["Controllers"]
- AC[AccountController]
- HC[HomeController]
- LC[LogsController]
- LFC[LostFoundItemController]
- MDC[MasterDataController]
- UMC[UserManagementController]
- end
-
- subgraph Services["Services"]
- ALS[ActivityLogService]
- FS[FileService]
- ADS[AdSyncService]
- ADHS[AdSyncHostedService<br/><small>Background - Daily</small>]
- end
-
- subgraph Security["Security Layer"]
- ID["ASP.NET Core Identity"]
- POL["Authorization Policies<br/><small>RequireSuperAdmin<br/>RequireAdminOrAbove<br/>RequireAnyRole</small>"]
- AF["Anti-Forgery Tokens"]
- end
- end
-
- subgraph Data["Data Layer"]
- EF["Entity Framework Core 8.0"]
- DB[("SQL Server<br/>LostAndFoundDb")]
- end
-
- subgraph Storage["File Storage"]
- PH["SecureStorage/Photos/"]
- AT["SecureStorage/Attachments/"]
- end
-
- subgraph External["External (Optional)"]
- AD["Active Directory<br/>Server"]
- end
-
- UI <-->|HTTP| MW
- MW --> Controllers
- Controllers --> Services
- Controllers --> Security
- Services --> EF
- EF <--> DB
- FS <--> Storage
- ADS <-.->|LDAP| AD
- ADHS -.->|Scheduled| ADS
- ALS --> EF
-
+```
+                        +---------------------------+
+                        |     Browser (Client)      |
+                        |  Razor Views + CSS + JS   |
+                        +------------+--------------+
+                                     | HTTP
+                        +------------v--------------+
+                        | ASP.NET Core 8.0 MVC App  |
+                        |                           |
+                        |  Middleware                |
+                        |  (MustChangePassword)      |
+                        |         |                  |
+                        |  Controllers ----------+   |
+                        |  - Account     Services |   |
+                        |  - Home        - ActivityLog
+                        |  - Logs        - FileService
+                        |  - LostFound   - AdSync  |   |
+                        |  - MasterData  - AdSync  |   |
+                        |  - UserMgmt    (Hosted)  |   |
+                        |         |        |       |   |
+                        |  Security Layer          |   |
+                        |  - Identity               |
+                        |  - Auth Policies           |
+                        |  - Anti-Forgery            |
+                        +-----+----------+----------+
+                              |          |
+                +-------------v--+  +----v-----------+
+                |  Data Layer    |  | File Storage   |
+                |  EF Core 8.0   |  | SecureStorage/ |
+                |  SQL Server    |  |  Photos/       |
+                |  LostAndFoundDb|  |  Attachments/  |
+                +----------------+  +----------------+
+                                          |
+                              +-----------v----------+
+                              | Active Directory     |
+                              | (Optional, LDAP)     |
+                              +----------------------+
 ```
 
 ### Authentication Flow
@@ -712,44 +654,13 @@ erDiagram
 
 ### Security Layers
 
-```mermaid
-graph TD
- subgraph CSRF["CSRF Protection"]
- AF["ValidateAntiForgeryToken<br/>on every POST"]
- AH["RequestVerificationToken<br/>header for AJAX"]
- end
-
- subgraph INPUT["Input Validation"]
- DA["Data Annotations<br/>[Required] [StringLength] [EmailAddress]"]
- NF["[NotFutureDate]<br/>custom attribute"]
- RW["Server-Side Role<br/>Whitelist"]
- DN["Duplicate Name<br/>Checks"]
- end
-
- subgraph FILE["File Upload Security"]
- EW["Extension Whitelist"]
- FS2["File Size Limit (10MB)"]
- DE["Double Extension<br/>Detection"]
- GR["GUID Renaming"]
- PT["Path Traversal<br/>Prevention"]
- OW["Outside Web Root"]
- AA["Authenticated<br/>Access Only"]
- end
-
- subgraph AUTH2["Auth Security"]
- PC["Password Complexity"]
- LO["Account Lockout"]
- FP["Forced Password<br/>Change"]
- AD2["AD Creds Never<br/>Stored"]
- DA2["Deactivated User<br/>Blocking"]
- end
-
- subgraph ERR["Error Handling"]
- CP["Custom Error Pages<br/>400, 403, 404, 405, 408, 500, 503"]
- NS["No Stack Traces<br/>in Production"]
- end
-
-```
+| Layer | Measures |
+|-------|----------|
+| **CSRF Protection** | `ValidateAntiForgeryToken` on every POST, `RequestVerificationToken` header for AJAX |
+| **Input Validation** | Data Annotations (`[Required]`, `[StringLength]`, `[EmailAddress]`), `[NotFutureDate]` custom attribute, Server-side role whitelist, Duplicate name checks |
+| **File Upload Security** | Extension whitelist, File size limit (10MB), Double extension detection, GUID renaming, Path traversal prevention, Files outside web root, Authenticated access only |
+| **Auth Security** | Password complexity, Account lockout, Forced password change on first login, AD credentials never stored, Deactivated user blocking |
+| **Error Handling** | Custom error pages (400, 403, 404, 405, 408, 500, 503), No stack traces in production |
 
 ---
 
@@ -809,36 +720,12 @@ graph TD
 
 ### Service Architecture
 
-```mermaid
-graph LR
- subgraph Controllers
- C1[AccountController]
- C2[HomeController]
- C3[LogsController]
- C4[LostFoundItemController]
- C5[MasterDataController]
- C6[UserManagementController]
- end
-
- subgraph Services
- ALS["ActivityLogService<br/><small>Audit trail for all actions</small>"]
- FS["FileService<br/><small>Upload, download, delete</small>"]
- ADS["AdSyncService<br/><small>AD credential validation<br/>+ user synchronization</small>"]
- ADHS["⏰ AdSyncHostedService<br/><small>Daily background sync</small>"]
- end
-
- C1 --> ALS
- C2 -.-> ALS
- C3 --> ALS
- C4 --> ALS
- C4 --> FS
- C5 --> ALS
- C6 --> ALS
- C6 --> ADS
- ADHS --> ADS
- ADHS --> ALS
-
-```
+| Service | Used By | Purpose |
+|---------|---------|--------|
+| **ActivityLogService** | All Controllers | Audit trail for all actions |
+| **FileService** | LostFoundItemController | Upload, download, delete photos & attachments |
+| **AdSyncService** | UserManagementController | AD credential validation + user synchronization |
+| **AdSyncHostedService** | Background (daily) | Scheduled automatic AD sync |
 
 <details>
 <summary><b> ActivityLogService — Details</b></summary>
