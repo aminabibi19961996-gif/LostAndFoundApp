@@ -143,9 +143,9 @@ graph TD
  SA -->|"inherits all"| A
  A -->|"inherits all"| U
 
- style SA fill:#dc3545,stroke:#b02a37,color:#fff,font-weight:bold
- style A fill:#fd7e14,stroke:#ca6510,color:#fff,font-weight:bold
- style U fill:#198754,stroke:#146c43,color:#fff,font-weight:bold
+ style SA fill:#dc3545,stroke:#b02a37,color:#000,font-weight:bold
+ style A fill:#fd7e14,stroke:#ca6510,color:#000,font-weight:bold
+ style U fill:#198754,stroke:#146c43,color:#000,font-weight:bold
 ```
 
 ### Default Accounts
