@@ -7,7 +7,7 @@ namespace LostAndFoundApp.Data
 {
     /// <summary>
     /// Seeds the database with roles, default accounts for all three roles,
-    /// and default master data on first run.
+    /// default master data, and default AD security groups on first run.
     /// </summary>
     public static class DbInitializer
     {
@@ -20,12 +20,16 @@ namespace LostAndFoundApp.Data
             var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbInitializer");
 
             // ─── Seed Roles ────────────────────────────────────────
-            string[] roles = { "SuperAdmin", "Supervisor", "User" };
+            // SuperAdmin: full system control (not from AD, local-only)
+            // Admin: administrative access (from AD group "LostandFound Admin")
+            // User: standard data entry (from AD group "LostandFound User")
+            string[] roles = { "SuperAdmin", "Admin", "User" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
                 {
                     await roleManager.CreateAsync(new IdentityRole(role));
+                    logger.LogInformation("Seeded role '{Role}'.", role);
                 }
             }
 
@@ -41,14 +45,14 @@ namespace LostAndFoundApp.Data
                 MustChangePassword = true
             });
 
-            // Account 2: Supervisor — operational management
+            // Account 2: Admin — administrative access
             await SeedUserAsync(userManager, logger, new SeedAccount
             {
-                UserName = "supervisor",
-                Email = "supervisor@lostandfound.local",
-                DisplayName = "Shift Supervisor",
+                UserName = "admin",
+                Email = "admin@lostandfound.local",
+                DisplayName = "Admin User",
                 Password = "Rider@2025",
-                Role = "Supervisor",
+                Role = "Admin",
                 MustChangePassword = true
             });
 
@@ -104,6 +108,72 @@ namespace LostAndFoundApp.Data
                     new StorageLocation { Name = "Security Desk" }
                 );
                 await context.SaveChangesAsync();
+            }
+
+            // ─── Seed Default Routes ──────────────────────────────
+            if (!await context.Routes.AnyAsync())
+            {
+                context.Routes.AddRange(
+                    new Models.Route { Name = "Route 1" },
+                    new Models.Route { Name = "Route 2" },
+                    new Models.Route { Name = "Route 5" },
+                    new Models.Route { Name = "Route 10" },
+                    new Models.Route { Name = "Route 15" },
+                    new Models.Route { Name = "Express A" }
+                );
+                await context.SaveChangesAsync();
+            }
+
+            // ─── Seed Default Vehicles ─────────────────────────────
+            if (!await context.Vehicles.AnyAsync())
+            {
+                context.Vehicles.AddRange(
+                    new Vehicle { Name = "Bus 101" },
+                    new Vehicle { Name = "Bus 102" },
+                    new Vehicle { Name = "Bus 201" },
+                    new Vehicle { Name = "Bus 202" },
+                    new Vehicle { Name = "Bus 301" },
+                    new Vehicle { Name = "Van 01" }
+                );
+                await context.SaveChangesAsync();
+            }
+
+            // ─── Seed Default Found By Names ──────────────────────
+            if (!await context.FoundByNames.AnyAsync())
+            {
+                context.FoundByNames.AddRange(
+                    new FoundByName { Name = "Driver" },
+                    new FoundByName { Name = "Cleaning Staff" },
+                    new FoundByName { Name = "Security" },
+                    new FoundByName { Name = "Station Attendant" },
+                    new FoundByName { Name = "Passenger" },
+                    new FoundByName { Name = "Maintenance" }
+                );
+                await context.SaveChangesAsync();
+            }
+
+            // ─── Seed Default AD Security Groups ──────────────────
+            // Two security groups with mapped application roles
+            if (!await context.AdGroups.AnyAsync())
+            {
+                context.AdGroups.AddRange(
+                    new AdGroup
+                    {
+                        GroupName = "LostandFound Admin",
+                        MappedRole = "Admin",
+                        IsActive = true,
+                        DateAdded = DateTime.UtcNow
+                    },
+                    new AdGroup
+                    {
+                        GroupName = "LostandFound User",
+                        MappedRole = "User",
+                        IsActive = true,
+                        DateAdded = DateTime.UtcNow
+                    }
+                );
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded 2 default AD security groups with role mappings.");
             }
         }
 

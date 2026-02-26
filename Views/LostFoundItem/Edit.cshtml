@@ -1,146 +1,141 @@
-@model LostAndFoundApp.ViewModels.LostFoundItemEditViewModel
+@model LostFoundItemEditViewModel
 @{
-    ViewData["Title"] = "Edit Record #" + Model.TrackingId;
+    ViewData["Title"] = $"Edit Record #{Model.TrackingId}";
 }
 
 <div class="page-header">
-    <h2><i class="bi bi-pencil-square"></i> Edit Record #@Model.TrackingId</h2>
-    <div class="page-header-actions">
-        <a href="@Url.Action("Details", "LostFoundItem", new { id = Model.TrackingId })" role="button" class="outline"><i class="bi bi-eye"></i> View</a>
+    <div class="container-fluid px-4">
+        <h1><i class="bi bi-pencil-square me-2"></i>Edit Record #@Model.TrackingId</h1>
+        <p class="subtitle mb-0">Update the details for this record</p>
     </div>
 </div>
 
-<form asp-action="Edit" asp-controller="LostFoundItem" method="post" enctype="multipart/form-data">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="TrackingId" />
-    <input type="hidden" asp-for="ExistingPhotoPath" />
-    <input type="hidden" asp-for="ExistingAttachmentPath" />
-    <div asp-validation-summary="ModelOnly" role="alert" data-variant="error"></div>
+<div class="container-fluid px-4">
+    <div class="card fade-in-up">
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-    <article class="card mb-4">
-        <header><h3>Item Information</h3></header>
-        <div class="form-row-3">
-            <label data-field>
-                Date Found <strong>*</strong>
-                <input asp-for="DateFound" type="date" required />
-                <span asp-validation-for="DateFound" class="field-validation-error"></span>
-            </label>
-            <div data-field>
-                <label>Item Type <strong>*</strong></label>
-                <div class="inline-add-wrap">
-                    <select asp-for="ItemId" asp-items="Model.Items"><option value="">-- Select --</option></select>
-                    <button type="button" class="outline small" onclick="inlineAdd('Item', 'ItemId')" title="Add new"><i class="bi bi-plus"></i></button>
-                </div>
-                <span asp-validation-for="ItemId" class="field-validation-error"></span>
-            </div>
-            <div data-field>
-                <label>Status <strong>*</strong></label>
-                <div class="inline-add-wrap">
-                    <select asp-for="StatusId" asp-items="Model.Statuses"><option value="">-- Select --</option></select>
-                    <button type="button" class="outline small" onclick="inlineAdd('Status', 'StatusId')" title="Add new"><i class="bi bi-plus"></i></button>
-                </div>
-                <span asp-validation-for="StatusId" class="field-validation-error"></span>
-            </div>
-        </div>
-        <div class="form-row-3">
-            <label data-field>
-                Location Found <strong>*</strong>
-                <input asp-for="LocationFound" placeholder="Where was it found?" required />
-                <span asp-validation-for="LocationFound" class="field-validation-error"></span>
-            </label>
-            <label data-field>
-                Status Date
-                <input asp-for="StatusDate" type="date" />
-            </label>
-            <div data-field>
-                <label>Found By</label>
-                <div class="inline-add-wrap">
-                    <select asp-for="FoundById" asp-items="Model.FoundByNames"><option value="">-- Select --</option></select>
-                    <button type="button" class="outline small" onclick="inlineAdd('FoundByName', 'FoundById')" title="Add new"><i class="bi bi-plus"></i></button>
-                </div>
-            </div>
-        </div>
-        <label data-field>
-            Description
-            <textarea asp-for="Description" rows="3" placeholder="Describe the item..."></textarea>
-        </label>
-    </article>
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="TrackingId" />
+                <input type="hidden" asp-for="CreatedBy" />
+                <input type="hidden" asp-for="CreatedDateTime" />
 
-    <article class="card mb-4">
-        <header><h3>Transport &amp; Storage</h3></header>
-        <div class="form-row-3">
-            <div data-field>
-                <label>Route #</label>
-                <div class="inline-add-wrap">
-                    <select asp-for="RouteId" asp-items="Model.Routes"><option value="">-- Select --</option></select>
-                    <button type="button" class="outline small" onclick="inlineAdd('Route', 'RouteId')" title="Add new"><i class="bi bi-plus"></i></button>
-                </div>
-            </div>
-            <div data-field>
-                <label>Vehicle #</label>
-                <div class="inline-add-wrap">
-                    <select asp-for="VehicleId" asp-items="Model.Vehicles"><option value="">-- Select --</option></select>
-                    <button type="button" class="outline small" onclick="inlineAdd('Vehicle', 'VehicleId')" title="Add new"><i class="bi bi-plus"></i></button>
-                </div>
-            </div>
-            <div data-field>
-                <label>Storage Location</label>
-                <div class="inline-add-wrap">
-                    <select asp-for="StorageLocationId" asp-items="Model.StorageLocations"><option value="">-- Select --</option></select>
-                    <button type="button" class="outline small" onclick="inlineAdd('StorageLocation', 'StorageLocationId')" title="Add new"><i class="bi bi-plus"></i></button>
-                </div>
-            </div>
-        </div>
-    </article>
-
-    <article class="card mb-4">
-        <header><h3>Claim &amp; Notes</h3></header>
-        <div class="form-row-2">
-            <label data-field>
-                Claimed By
-                <input asp-for="ClaimedBy" placeholder="Name of person who claimed" />
-            </label>
-            <label data-field>
-                Notes
-                <textarea asp-for="Notes" rows="3" placeholder="Additional notes..."></textarea>
-            </label>
-        </div>
-    </article>
-
-    <article class="card mb-4">
-        <header><h3>Uploads</h3></header>
-        <div class="form-row-2">
-            <div data-field>
-                <label>Photo</label>
-                @if (!string.IsNullOrEmpty(Model.ExistingPhotoPath))
-                {
-                    <div class="mb-2">
-                        <img src="@Url.Action("Photo", "LostFoundItem", new { id = Model.ExistingPhotoPath })" alt="Current photo" class="preview-thumb" />
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="DateFound" class="form-label">Date Found *</label>
+                        <input asp-for="DateFound" class="form-control" type="date" />
+                        <span asp-validation-for="DateFound" class="text-danger small"></span>
                     </div>
-                }
-                <input asp-for="PhotoFile" type="file" accept=".jpg,.jpeg,.png,.gif" />
-                <small data-hint>Upload new to replace existing</small>
-            </div>
-            <div data-field>
-                <label>Attachment</label>
-                @if (!string.IsNullOrEmpty(Model.ExistingAttachmentPath))
-                {
-                    <div class="mb-2">
-                        <a href="@Url.Action("Attachment", "LostFoundItem", new { id = Model.ExistingAttachmentPath })"><i class="bi bi-paperclip"></i> Current attachment</a>
+                    <div class="col-md-4">
+                        <label asp-for="ItemId" class="form-label">Item Type *</label>
+                        <div class="d-flex">
+                            <select asp-for="ItemId" asp-items="Model.Items" class="form-select">
+                                <option value="">Select item type...</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new item type"><i class="bi bi-plus"></i></button>
+                        </div>
                     </div>
-                }
-                <input asp-for="AttachmentFile" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" />
-                <small data-hint>Upload new to replace existing</small>
-            </div>
+                    <div class="col-md-4">
+                        <label asp-for="StatusId" class="form-label">Status *</label>
+                        <div class="d-flex">
+                            <select asp-for="StatusId" asp-items="Model.Statuses" class="form-select">
+                                <option value="">Select status...</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new status"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label asp-for="LocationFound" class="form-label">Location Found *</label>
+                        <input asp-for="LocationFound" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="StatusDate" class="form-label">Status Date</label>
+                        <input asp-for="StatusDate" class="form-control" type="date" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="RouteId" class="form-label">Route #</label>
+                        <div class="d-flex">
+                            <select asp-for="RouteId" asp-items="Model.Routes" class="form-select">
+                                <option value="">Select route...</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new route"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="VehicleId" class="form-label">Vehicle #</label>
+                        <div class="d-flex">
+                            <select asp-for="VehicleId" asp-items="Model.Vehicles" class="form-select">
+                                <option value="">Select vehicle...</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new vehicle"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="StorageLocationId" class="form-label">Storage Location</label>
+                        <div class="d-flex">
+                            <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="form-select">
+                                <option value="">Select location...</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new storage location"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="FoundById" class="form-label">Found By</label>
+                        <div class="d-flex">
+                            <select asp-for="FoundById" asp-items="Model.FoundByNames" class="form-select">
+                                <option value="">Select person...</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new found by name"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ClaimedBy" class="form-label">Claimed By</label>
+                        <input asp-for="ClaimedBy" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="PhotoFile" class="form-label">Replace Photo</label>
+                        <input asp-for="PhotoFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif" />
+                        @if (!string.IsNullOrEmpty(Model.ExistingPhotoPath))
+                        {
+                            <div class="form-text text-success"><i class="bi bi-check-circle"></i> Current photo attached</div>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="AttachmentFile" class="form-label">Replace Attachment</label>
+                        <input asp-for="AttachmentFile" class="form-control" type="file" />
+                        @if (!string.IsNullOrEmpty(Model.ExistingAttachmentPath))
+                        {
+                            <div class="form-text text-success"><i class="bi bi-check-circle"></i> Current attachment attached</div>
+                        }
+                    </div>
+                </div>
+
+                <hr style="margin: 24px 0;" />
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Details" asp-route-id="@Model.TrackingId" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-lg"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
-    </article>
-
-    <footer class="form-actions">
-        <button type="submit"><i class="bi bi-save"></i> Update Record</button>
-        <a href="@Url.Action("Details", "LostFoundItem", new { id = Model.TrackingId })" role="button" class="outline">Cancel</a>
-    </footer>
-</form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+    </div>
+</div>

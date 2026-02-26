@@ -1,0 +1,59 @@
+@model CreateAnnouncementViewModel
+@{
+    ViewData["Title"] = "New Announcement";
+}
+
+<div class="container py-4" style="max-width: 650px;">
+    <div class="card fade-in-up">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-megaphone text-primary"></i>
+            <span>New Announcement</span>
+        </div>
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="e.g. System Maintenance Scheduled" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Message" class="form-label">Message</label>
+                    <textarea asp-for="Message" class="form-control" rows="5" placeholder="Write your announcement message here..."></textarea>
+                    <span asp-validation-for="Message" class="text-danger small"></span>
+                    <div class="form-text">This message will appear as a popup and in the user's message inbox.</div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="TargetRole" class="form-label">Send To</label>
+                        <select asp-for="TargetRole" class="form-select">
+                            <option value="All">All Users (Admin + User)</option>
+                            <option value="Admin">Admin Only</option>
+                            <option value="User">User Only</option>
+                        </select>
+                        <span asp-validation-for="TargetRole" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ExpiresAt" class="form-label">Expires On (Optional)</label>
+                        <input asp-for="ExpiresAt" class="form-control" type="date" />
+                        <div class="form-text">Leave blank for no expiry.</div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Send Announcement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

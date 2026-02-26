@@ -14,12 +14,14 @@ namespace LostAndFoundApp.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly FileService _fileService;
+        private readonly ActivityLogService _activityLogService;
         private readonly ILogger<LostFoundItemController> _logger;
 
-        public LostFoundItemController(ApplicationDbContext context, FileService fileService, ILogger<LostFoundItemController> logger)
+        public LostFoundItemController(ApplicationDbContext context, FileService fileService, ActivityLogService activityLogService, ILogger<LostFoundItemController> logger)
         {
             _context = context;
             _fileService = fileService;
+            _activityLogService = activityLogService;
             _logger = logger;
         }
 
@@ -107,6 +109,8 @@ namespace LostAndFoundApp.Controllers
             }
 
             _logger.LogInformation("LostFoundItem {TrackingId} created by {User}", item.TrackingId, item.CreatedBy);
+            await _activityLogService.LogAsync(HttpContext, "Create Record",
+                $"Created lost & found record #{item.TrackingId} (Item: {vm.ItemId}, Location: {vm.LocationFound}).", "Items");
             TempData["SuccessMessage"] = $"Item record #{item.TrackingId} created successfully.";
             return RedirectToAction(nameof(Details), new { id = item.TrackingId });
         }
@@ -270,6 +274,8 @@ namespace LostAndFoundApp.Controllers
             }
 
             _logger.LogInformation("LostFoundItem {TrackingId} updated by {User}", item.TrackingId, User.Identity?.Name);
+            await _activityLogService.LogAsync(HttpContext, "Edit Record",
+                $"Updated lost & found record #{item.TrackingId}.", "Items");
             TempData["SuccessMessage"] = $"Item record #{item.TrackingId} updated successfully.";
             return RedirectToAction(nameof(Details), new { id = item.TrackingId });
         }
@@ -558,6 +564,44 @@ namespace LostAndFoundApp.Controllers
                 TempData["ErrorMessage"] = "Could not retrieve the attachment. Please try again.";
                 return RedirectToAction(nameof(Search));
             }
+        }
+
+        // POST: /LostFoundItem/Delete/5 — Admin+ only
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var item = await _context.LostFoundItems.FindAsync(id);
+            if (item == null)
+                return NotFound();
+
+            // Capture file paths before removing entity so we can clean up after successful DB delete
+            var photoPath = item.PhotoPath;
+            var attachmentPath = item.AttachmentPath;
+
+            _context.LostFoundItems.Remove(item);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete LostFoundItem {TrackingId}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the record. Please try again.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Clean up associated files AFTER successful DB commit to prevent orphaned records
+            _fileService.DeletePhoto(photoPath);
+            _fileService.DeleteAttachment(attachmentPath);
+
+            _logger.LogInformation("LostFoundItem {TrackingId} deleted by {User}", id, User.Identity?.Name);
+            await _activityLogService.LogAsync(HttpContext, "Delete Record",
+                $"Deleted lost & found record #{id}.", "Items");
+            TempData["SuccessMessage"] = $"Record #{id} has been deleted.";
+            return RedirectToAction(nameof(Search));
         }
 
         // =====================================================================

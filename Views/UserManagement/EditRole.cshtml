@@ -1,43 +1,54 @@
-@model LostAndFoundApp.ViewModels.EditUserRoleViewModel
+@model EditUserRoleViewModel
 @{
     ViewData["Title"] = "Edit Role";
 }
 
-<div class="page-header">
-    <h2><i class="bi bi-shield-check"></i> Edit Role</h2>
-</div>
-
-<article class="card" style="max-width: 500px;">
-    <header>
-        <h3>@Model.UserName</h3>
-        <p class="text-light">@Model.DisplayName · Current role: <span class="badge">@Model.CurrentRole</span></p>
-    </header>
-
-    <form asp-action="EditRole" asp-controller="UserManagement" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="UserId" />
-        <input type="hidden" asp-for="UserName" />
-        <input type="hidden" asp-for="DisplayName" />
-        <input type="hidden" asp-for="CurrentRole" />
-        <div asp-validation-summary="ModelOnly" role="alert" data-variant="error"></div>
-
-        <div data-field>
-            <label>New Role <strong>*</strong></label>
-            <select asp-for="NewRole" required>
-                <option value="User">User</option>
-                <option value="Supervisor">Supervisor</option>
-                <option value="SuperAdmin">Super Admin</option>
-            </select>
-            <span asp-validation-for="NewRole" class="field-validation-error"></span>
+<div class="container py-4" style="max-width: 500px;">
+    <div class="card fade-in-up">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-primary"></i>
+            <span>Edit User Role</span>
         </div>
+        <div class="card-body">
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle me-2"></i>
+                Changing the role for <strong class="ms-1">@Model.UserName</strong>
+                @if (!string.IsNullOrEmpty(Model.DisplayName))
+                {
+                    <span class="ms-1">(@Model.DisplayName)</span>
+                }
+            </div>
 
-        <footer class="form-actions">
-            <button type="submit"><i class="bi bi-save"></i> Update Role</button>
-            <a href="@Url.Action("Index", "UserManagement")" role="button" class="outline">Cancel</a>
-        </footer>
-    </form>
-</article>
+            <form asp-action="EditRole" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="UserId" />
+                <input type="hidden" asp-for="UserName" />
+                <input type="hidden" asp-for="DisplayName" />
+                <input type="hidden" asp-for="CurrentRole" />
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+                <div class="mb-3">
+                    <label class="form-label">Current Role</label>
+                    <input value="@Model.CurrentRole" class="form-control" disabled />
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="NewRole" class="form-label">New Role</label>
+                    <select asp-for="NewRole" class="form-select">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                        <option value="SuperAdmin">Super Admin</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Save Role
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

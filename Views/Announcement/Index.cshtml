@@ -1,0 +1,165 @@
+@model AnnouncementListViewModel
+@{
+    ViewData["Title"] = "Announcements";
+}
+
+<div class="page-header">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
+            <div>
+                <h1><i class="bi bi-megaphone me-2"></i>Announcements</h1>
+                <p class="subtitle mb-0">@Model.TotalCount announcements — Send messages to Admin and User roles</p>
+            </div>
+            <a asp-action="Create" class="btn btn-light rounded-pill px-3">
+                <i class="bi bi-plus-circle"></i> New Announcement
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="card fade-in-up">
+        <div class="card-body p-0">
+            @if (Model.Announcements.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Target</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th>Read By</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Announcements)
+                            {
+                                <tr style="@(item.IsActive ? "" : "opacity: 0.55;")">
+                                    <td>
+                                        <strong>@item.Title</strong>
+                                        <div class="small text-muted" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                            @item.Message
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var targetClass = item.TargetRole switch
+                                            {
+                                                "Admin" => "badge-admin",
+                                                "User" => "badge-user",
+                                                _ => "badge-active"
+                                            };
+                                            var targetLabel = item.TargetRole == "All" ? "All Users" : item.TargetRole;
+                                        }
+                                        <span class="badge-role @targetClass">@targetLabel</span>
+                                    </td>
+                                    <td class="small" style="white-space:nowrap;">
+                                        @item.CreatedAt.ToString("MM/dd/yyyy HH:mm")
+                                        <div class="text-muted">by @item.CreatedBy</div>
+                                    </td>
+                                    <td class="small">
+                                        @if (item.ExpiresAt.HasValue)
+                                        {
+                                            if (item.IsExpired)
+                                            {
+                                                <span class="text-danger">@item.ExpiresAt.Value.ToString("MM/dd/yyyy")</span>
+                                            }
+                                            else
+                                            {
+                                                @item.ExpiresAt.Value.ToString("MM/dd/yyyy")
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Never</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge-role badge-info">@item.ReadCount</span>
+                                    </td>
+                                    <td>
+                                        @if (item.IsExpired)
+                                        {
+                                            <span class="badge-role badge-inactive">Expired</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">
+                                                @(item.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <form asp-action="ToggleActive" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-ghost btn-icon" title="@(item.IsActive ? "Deactivate" : "Activate")">
+                                                    <i class="bi @(item.IsActive ? "bi-eye-slash text-warning" : "bi-eye text-success")"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-ghost btn-icon" title="Delete"
+                                                        data-confirm="Are you sure you want to delete this announcement?">
+                                                    <i class="bi bi-trash3 text-danger"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="d-flex justify-content-between align-items-center px-3 py-3">
+                        <span class="small text-muted">Page @Model.CurrentPage of @Model.TotalPages (@Model.TotalCount entries)</span>
+                        <nav>
+                            <ul class="pagination">
+                                @if (Model.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+                                @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                                    </li>
+                                }
+                                @if (Model.CurrentPage < Model.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-megaphone"></i>
+                    <h3>No announcements yet</h3>
+                    <p>Create your first announcement to notify Admin and User roles.</p>
+                    <a asp-action="Create" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> New Announcement
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

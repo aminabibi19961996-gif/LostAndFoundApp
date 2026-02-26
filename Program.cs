@@ -67,23 +67,34 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-        ? CookieSecurePolicy.SameAsRequest
-        : CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // --- Authorization policies for role-based access control ---
+// Only 3 roles: SuperAdmin, Admin, User
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireSuperAdmin", policy => policy.RequireRole("SuperAdmin"));
-    options.AddPolicy("RequireSupervisorOrAbove", policy => policy.RequireRole("SuperAdmin", "Supervisor"));
-    options.AddPolicy("RequireAnyRole", policy => policy.RequireRole("SuperAdmin", "Supervisor", "User"));
+    options.AddPolicy("RequireAdminOrAbove", policy => policy.RequireRole("SuperAdmin", "Admin"));
+    options.AddPolicy("RequireAnyRole", policy => policy.RequireRole("SuperAdmin", "Admin", "User"));
 });
 
 // --- Application services ---
 builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<AdSyncService>();
+builder.Services.AddScoped<ActivityLogService>();
+
+// --- Daily AD Sync Background Service (only if AD integration is enabled) ---
+if (builder.Configuration.GetValue<bool>("ActiveDirectory:Enabled", false))
+{
+    builder.Services.AddHostedService<AdSyncHostedService>();
+    Log.Information("Active Directory sync is enabled.");
+}
+else
+{
+    Log.Information("Active Directory sync is disabled. Set ActiveDirectory:Enabled to true in appsettings to enable.");
+}
 
 // --- Configure antiforgery to accept token from AJAX header ---
 builder.Services.AddAntiforgery(options =>

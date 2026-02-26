@@ -6,6 +6,7 @@ using LostAndFoundApp.Data;
 using LostAndFoundApp.Models;
 using LostAndFoundApp.ViewModels;
 using System.Diagnostics;
+using System.Linq;
 
 namespace LostAndFoundApp.Controllers
 {
@@ -33,7 +34,7 @@ namespace LostAndFoundApp.Controllers
             var primaryRole = roles.FirstOrDefault() ?? "User";
 
             var isSuperAdmin = User.IsInRole("SuperAdmin");
-            var isSupervisor = User.IsInRole("Supervisor");
+            var isAdmin = User.IsInRole("Admin");
 
             // --- Common data for all roles ---
             var vm = new DashboardViewModel
@@ -59,7 +60,7 @@ namespace LostAndFoundApp.Controllers
                 .Include(x => x.Item)
                 .Include(x => x.Status)
                 .OrderByDescending(x => x.CreatedDateTime)
-                .Take(isSuperAdmin ? 15 : 10);
+                .Take(isSuperAdmin || isAdmin ? 15 : 10);
 
             var recentItems = await recentQuery
                 .Select(x => new
@@ -86,8 +87,8 @@ namespace LostAndFoundApp.Controllers
                 CreatedBy = x.CreatedBy
             }).ToList();
 
-            // --- SuperAdmin: system overview data ---
-            if (isSuperAdmin)
+            // --- SuperAdmin / Admin: system overview data ---
+            if (isSuperAdmin || isAdmin)
             {
                 var allUsers = await _userManager.Users.ToListAsync();
                 vm.TotalUsers = allUsers.Count;
@@ -97,15 +98,16 @@ namespace LostAndFoundApp.Controllers
                 vm.AdUsers = allUsers.Count(u => u.IsAdUser);
                 vm.AdGroupCount = await _context.AdGroups.CountAsync();
 
-                // Role distribution
-                foreach (var user in allUsers)
-                {
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    var role = userRoles.FirstOrDefault();
-                    if (role == "SuperAdmin") vm.SuperAdminCount++;
-                    else if (role == "Supervisor") vm.SupervisorCount++;
-                    else vm.UserRoleCount++;
-                }
+                // Role distribution — single query instead of N+1
+                var roleCounts = await _context.UserRoles
+                    .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+                    .GroupBy(roleName => roleName)
+                    .Select(g => new { Role = g.Key, Count = g.Count() })
+                    .ToListAsync();
+
+                vm.SuperAdminCount = roleCounts.FirstOrDefault(r => r.Role == "SuperAdmin")?.Count ?? 0;
+                vm.AdminCount = roleCounts.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0;
+                vm.UserRoleCount = roleCounts.FirstOrDefault(r => r.Role == "User")?.Count ?? 0;
 
                 // Time-based item stats
                 var weekAgo = DateTime.UtcNow.AddDays(-7);
@@ -120,11 +122,12 @@ namespace LostAndFoundApp.Controllers
                 vm.UnclaimedOver30Days = await _context.LostFoundItems
                     .CountAsync(x => x.DateFound <= thirtyDaysAgo
                         && x.Status != null && x.Status.Name != "Claimed"
-                        && x.Status.Name != "Disposed");
+                        && x.Status.Name != "Disposed"
+                        && x.Status.Name != "Transferred");
             }
 
-            // --- Supervisor + SuperAdmin: operational analytics ---
-            if (isSupervisor || isSuperAdmin)
+            // --- Admin + SuperAdmin: operational analytics ---
+            if (isAdmin || isSuperAdmin)
             {
                 vm.MasterItemCount = await _context.Items.CountAsync();
                 vm.MasterRouteCount = await _context.Routes.CountAsync();
@@ -133,7 +136,7 @@ namespace LostAndFoundApp.Controllers
                 vm.MasterStatusCount = await _context.Statuses.CountAsync();
                 vm.MasterFoundByNameCount = await _context.FoundByNames.CountAsync();
 
-                // Items awaiting action (Found or Stored, not yet Claimed/Disposed/Transferred)
+                // Items awaiting action
                 vm.ItemsAwaitingAction = await _context.LostFoundItems
                     .CountAsync(x => x.Status != null &&
                         (x.Status.Name == "Found" || x.Status.Name == "Stored"));
@@ -167,11 +170,6 @@ namespace LostAndFoundApp.Controllers
             }
 
             return View(vm);
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
         }
 
         [AllowAnonymous]

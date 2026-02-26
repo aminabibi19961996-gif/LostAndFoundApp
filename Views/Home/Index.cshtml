@@ -1,445 +1,315 @@
-﻿@model LostAndFoundApp.ViewModels.DashboardViewModel
+@model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    var isSuperAdmin = User.IsInRole("SuperAdmin");
-    var isSupervisor = User.IsInRole("Supervisor");
 }
 
-<!-- ═══════════════════════════════════════════════════════
-     WELCOME HEADER — Personalized for every role
-     ═══════════════════════════════════════════════════════ -->
 <div class="page-header">
-    <div>
-        <h2 style="margin-bottom: 2px;">
-            @if (isSuperAdmin)
-            {
-                <i class="bi bi-shield-lock"></i> @:System Administration
-            }
-            else if (isSupervisor)
-            {
-                <i class="bi bi-clipboard-data"></i> @:Operations Center
-            }
-            else
-            {
-                <i class="bi bi-speedometer2"></i> @:Dashboard
-            }
-        </h2>
-        <p class="text-light" style="margin: 0; font-size: 0.85rem;">
-            Welcome back, <strong>@Model.UserDisplayName</strong>
-            <span class="badge @Model.UserRole.ToLower()" style="margin-left: 8px; font-size: 0.65rem;">@Model.UserRole</span>
+    <div class="container-fluid px-4">
+        <h1><i class="bi bi-speedometer2 me-2"></i>Welcome, @Model.UserDisplayName</h1>
+        <p class="subtitle mb-0">
+            <span class="badge-role badge-@Model.UserRole.ToLower()">@Model.UserRole</span>
+            — Here's your overview
         </p>
-    </div>
-    <div class="page-header-actions">
-        <a href="@Url.Action("Create", "LostFoundItem")" role="button"><i class="bi bi-plus-circle"></i> New Record</a>
-        <a href="@Url.Action("Search", "LostFoundItem")" role="button" class="outline"><i class="bi bi-search"></i> Search</a>
     </div>
 </div>
 
-
-@if (isSuperAdmin)
-{
-    <!-- ═══════════════════════════════════════════════════════
-         SUPER ADMIN DASHBOARD
-         Full system control: users, items, security, analytics
-         ═══════════════════════════════════════════════════════ -->
-
-    <!-- Row 1: System Health Cards -->
-    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
-        <article class="card stat-card total">
-            <div class="stat-value">@Model.TotalUsers</div>
-            <div class="stat-label">Total Users</div>
-        </article>
-        <article class="card stat-card claimed">
-            <div class="stat-value">@Model.ActiveUsers</div>
-            <div class="stat-label">Active</div>
-        </article>
-        <article class="card stat-card disposed">
-            <div class="stat-value">@Model.InactiveUsers</div>
-            <div class="stat-label">Inactive</div>
-        </article>
-        <article class="card stat-card stored">
-            <div class="stat-value">@Model.LocalUsers</div>
-            <div class="stat-label">Local Accounts</div>
-        </article>
-        <article class="card stat-card transferred">
-            <div class="stat-value">@Model.AdUsers</div>
-            <div class="stat-label">AD Accounts</div>
-        </article>
-        <article class="card stat-card found">
-            <div class="stat-value">@Model.AdGroupCount</div>
-            <div class="stat-label">AD Groups</div>
-        </article>
-    </div>
-
-    <!-- Row 2: Role Distribution + Quick Actions -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-        <article class="card">
-            <header>
-                <h3><i class="bi bi-people"></i> Role Distribution</h3>
-            </header>
-            <div style="padding: 20px;">
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="bi bi-shield-lock" style="color: var(--danger-text);"></i> Super Admins</span>
-                        <span class="badge danger" style="min-width: 28px; justify-content: center;">@Model.SuperAdminCount</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="bi bi-clipboard-check" style="color: var(--warning-text);"></i> Supervisors</span>
-                        <span class="badge found" style="min-width: 28px; justify-content: center;">@Model.SupervisorCount</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="bi bi-person" style="color: var(--info-text);"></i> Users</span>
-                        <span class="badge secondary" style="min-width: 28px; justify-content: center;">@Model.UserRoleCount</span>
-                    </div>
-                </div>
+<div class="container-fluid px-4">
+    <!-- Status Overview Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon"><i class="bi bi-archive"></i></div>
+                <div class="stat-value">@Model.TotalItems</div>
+                <div class="stat-label">Total Records</div>
             </div>
-        </article>
-
-        <article class="card">
-            <header>
-                <h3><i class="bi bi-lightning"></i> Quick Actions</h3>
-            </header>
-            <div style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
-                <a href="@Url.Action("Create", "UserManagement")" role="button" class="outline" style="justify-content: flex-start;">
-                    <i class="bi bi-person-plus"></i> Create New User
-                </a>
-                <a href="@Url.Action("Index", "UserManagement")" role="button" class="outline" style="justify-content: flex-start;">
-                    <i class="bi bi-people"></i> Manage All Users
-                </a>
-                <a href="@Url.Action("AdGroups", "UserManagement")" role="button" class="outline" style="justify-content: flex-start;">
-                    <i class="bi bi-diagram-3"></i> AD Group Sync
-                </a>
-                <a href="@Url.Action("Items", "MasterData")" role="button" class="outline" style="justify-content: flex-start;">
-                    <i class="bi bi-database-gear"></i> Master Data
-                </a>
-            </div>
-        </article>
-    </div>
-
-    <!-- Row 3: Item Stats Overview -->
-    <div class="stats-grid">
-        <article class="card stat-card total">
-            <div class="stat-value">@Model.TotalItems</div>
-            <div class="stat-label">Total Records</div>
-        </article>
-        <article class="card stat-card found">
-            <div class="stat-value">@Model.ItemsThisWeek</div>
-            <div class="stat-label">This Week</div>
-        </article>
-        <article class="card stat-card stored">
-            <div class="stat-value">@Model.ItemsThisMonth</div>
-            <div class="stat-label">This Month</div>
-        </article>
-        <article class="card stat-card disposed">
-            <div class="stat-value">@Model.UnclaimedOver30Days</div>
-            <div class="stat-label">Unclaimed 30+ Days</div>
-        </article>
-    </div>
-
-    <!-- Row 4: Status Breakdown + Top Items -->
-    @if (Model.StatusBreakdown.Any())
-    {
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-            <article class="card">
-                <header><h3><i class="bi bi-bar-chart"></i> Status Breakdown</h3></header>
-                <div style="padding: 20px;">
-                    @foreach (var status in Model.StatusBreakdown)
-                    {
-                        <div style="margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
-                                <span><span class="badge @status.CssClass">@status.StatusName</span></span>
-                                <span style="font-weight: 700;">@status.Count <span style="color: var(--text-muted); font-weight: 400;">(@status.Percentage%)</span></span>
-                            </div>
-                            <div style="height: 6px; background: var(--bg-app); border-radius: 3px; overflow: hidden;">
-                                <div style="width: @(status.Percentage)%; height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s;"></div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </article>
-
-            <article class="card">
-                <header><h3><i class="bi bi-trophy"></i> Top Item Types</h3></header>
-                <div style="padding: 20px;">
-                    @if (Model.TopItemTypes.Any())
-                    {
-                        @foreach (var item in Model.TopItemTypes)
-                        {
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
-                                <span style="font-weight: 500;">@item.ItemName</span>
-                                <span class="badge secondary">@item.Count</span>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-center text-light p-4">No data yet.</p>
-                    }
-                </div>
-            </article>
         </div>
-    }
-}
-else if (isSupervisor)
-{
-    <!-- ═══════════════════════════════════════════════════════
-         SUPERVISOR DASHBOARD
-         Operational focus: item stats, master data health, status tracking
-         ═══════════════════════════════════════════════════════ -->
-
-    <!-- Row 1: Operational Stats -->
-    <div class="stats-grid">
-        <article class="card stat-card total">
-            <div class="stat-value">@Model.TotalItems</div>
-            <div class="stat-label">Total Records</div>
-        </article>
-        <article class="card stat-card found">
-            <div class="stat-value">@Model.FoundCount</div>
-            <div class="stat-label">Found</div>
-        </article>
-        <article class="card stat-card claimed">
-            <div class="stat-value">@Model.ClaimedCount</div>
-            <div class="stat-label">Claimed</div>
-        </article>
-        <article class="card stat-card stored">
-            <div class="stat-value">@Model.StoredCount</div>
-            <div class="stat-label">Stored</div>
-        </article>
-        <article class="card stat-card disposed">
-            <div class="stat-value">@Model.DisposedCount</div>
-            <div class="stat-label">Disposed</div>
-        </article>
-        <article class="card stat-card transferred">
-            <div class="stat-value">@Model.TransferredCount</div>
-            <div class="stat-label">Transferred</div>
-        </article>
-    </div>
-
-    <!-- Row 2: Master Data Health + Items Awaiting Action -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-        <article class="card">
-            <header>
-                <h3><i class="bi bi-database-gear"></i> Master Data Health</h3>
-                <a href="@Url.Action("Items", "MasterData")" role="button" class="ghost small"><i class="bi bi-arrow-right"></i></a>
-            </header>
-            <div style="padding: 20px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="detail-item">
-                        <div class="detail-label">Item Types</div>
-                        <div class="detail-value">@Model.MasterItemCount</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Routes</div>
-                        <div class="detail-value">@Model.MasterRouteCount</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Vehicles</div>
-                        <div class="detail-value">@Model.MasterVehicleCount</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Storage Locations</div>
-                        <div class="detail-value">@Model.MasterStorageLocationCount</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Statuses</div>
-                        <div class="detail-value">@Model.MasterStatusCount</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Found By Names</div>
-                        <div class="detail-value">@Model.MasterFoundByNameCount</div>
-                    </div>
-                </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card stat-info">
+                <div class="stat-icon"><i class="bi bi-eye"></i></div>
+                <div class="stat-value">@Model.FoundCount</div>
+                <div class="stat-label">Found</div>
             </div>
-        </article>
-
-        <article class="card">
-            <header>
-                <h3><i class="bi bi-exclamation-triangle"></i> Attention Required</h3>
-            </header>
-            <div style="padding: 20px;">
-                <div class="detail-item" style="border-left: 3px solid var(--warning-text); margin-bottom: 12px;">
-                    <div class="detail-label">Items Awaiting Action</div>
-                    <div class="detail-value" style="font-size: 2rem; color: var(--warning-text);">@Model.ItemsAwaitingAction</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Found or Stored — not yet claimed, disposed, or transferred</div>
-                </div>
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
-                    <a href="@Url.Action("Create", "LostFoundItem")" role="button" style="flex: 1;"><i class="bi bi-plus-circle"></i> New Record</a>
-                    <a href="@Url.Action("Search", "LostFoundItem")" role="button" class="outline" style="flex: 1;"><i class="bi bi-search"></i> Search</a>
-                </div>
-            </div>
-        </article>
-    </div>
-
-    <!-- Row 3: Status Breakdown + Top Items -->
-    @if (Model.StatusBreakdown.Any())
-    {
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-            <article class="card">
-                <header><h3><i class="bi bi-bar-chart"></i> Status Breakdown</h3></header>
-                <div style="padding: 20px;">
-                    @foreach (var status in Model.StatusBreakdown)
-                    {
-                        <div style="margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
-                                <span><span class="badge @status.CssClass">@status.StatusName</span></span>
-                                <span style="font-weight: 700;">@status.Count <span style="color: var(--text-muted); font-weight: 400;">(@status.Percentage%)</span></span>
-                            </div>
-                            <div style="height: 6px; background: var(--bg-app); border-radius: 3px; overflow: hidden;">
-                                <div style="width: @(status.Percentage)%; height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.5s;"></div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </article>
-
-            <article class="card">
-                <header><h3><i class="bi bi-trophy"></i> Top Item Types</h3></header>
-                <div style="padding: 20px;">
-                    @if (Model.TopItemTypes.Any())
-                    {
-                        @foreach (var item in Model.TopItemTypes)
-                        {
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-subtle);">
-                                <span style="font-weight: 500;">@item.ItemName</span>
-                                <span class="badge secondary">@item.Count</span>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-center text-light p-4">No data yet.</p>
-                    }
-                </div>
-            </article>
         </div>
-    }
-}
-else
-{
-    <!-- ═══════════════════════════════════════════════════════
-         USER DASHBOARD
-         Simple, focused: core stats + recent records + quick actions
-         ═══════════════════════════════════════════════════════ -->
-
-    <!-- Row 1: Core Stats -->
-    <div class="stats-grid">
-        <article class="card stat-card total">
-            <div class="stat-value">@Model.TotalItems</div>
-            <div class="stat-label">Total Records</div>
-        </article>
-        <article class="card stat-card found">
-            <div class="stat-value">@Model.FoundCount</div>
-            <div class="stat-label">Found</div>
-        </article>
-        <article class="card stat-card claimed">
-            <div class="stat-value">@Model.ClaimedCount</div>
-            <div class="stat-label">Claimed</div>
-        </article>
-        <article class="card stat-card stored">
-            <div class="stat-value">@Model.StoredCount</div>
-            <div class="stat-label">Stored</div>
-        </article>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card stat-success">
+                <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-value">@Model.ClaimedCount</div>
+                <div class="stat-label">Claimed</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card stat-accent">
+                <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+                <div class="stat-value">@Model.StoredCount</div>
+                <div class="stat-label">Stored</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card stat-danger">
+                <div class="stat-icon"><i class="bi bi-trash3"></i></div>
+                <div class="stat-value">@Model.DisposedCount</div>
+                <div class="stat-label">Disposed</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card stat-warning">
+                <div class="stat-icon"><i class="bi bi-arrow-left-right"></i></div>
+                <div class="stat-value">@Model.TransferredCount</div>
+                <div class="stat-label">Transferred</div>
+            </div>
+        </div>
     </div>
 
-    <!-- Row 2: Quick Action Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
-        <a href="@Url.Action("Create", "LostFoundItem")" style="text-decoration: none;">
-            <article class="card" style="padding: 24px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-                <i class="bi bi-plus-circle" style="font-size: 2rem; color: var(--accent); display: block; margin-bottom: 8px;"></i>
-                <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">Report Found Item</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Create a new lost & found record</div>
-            </article>
-        </a>
-        <a href="@Url.Action("Search", "LostFoundItem")" style="text-decoration: none;">
-            <article class="card" style="padding: 24px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-                <i class="bi bi-search" style="font-size: 2rem; color: var(--info-text); display: block; margin-bottom: 8px;"></i>
-                <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">Search Records</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Find items by any criteria</div>
-            </article>
-        </a>
-        <a href="@Url.Action("ChangePassword", "Account")" style="text-decoration: none;">
-            <article class="card" style="padding: 24px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;">
-                <i class="bi bi-key" style="font-size: 2rem; color: var(--warning-text); display: block; margin-bottom: 8px;"></i>
-                <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">Change Password</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Update your account security</div>
-            </article>
-        </a>
-    </div>
-}
-
-
-<!-- ═══════════════════════════════════════════════════════
-     RECENT RECORDS TABLE — Shown to all roles
-     ═══════════════════════════════════════════════════════ -->
-<article class="card">
-    <header>
-        <h3>
-            <i class="bi bi-clock-history"></i>
-            @(isSuperAdmin ? "Latest System Activity" : isSupervisor ? "Recent Operations" : "Recent Records")
-        </h3>
-        <a href="@Url.Action("Search", "LostFoundItem")" role="button" class="ghost small">View all <i class="bi bi-arrow-right"></i></a>
-    </header>
-    @if (Model.RecentRecords.Any())
+    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
     {
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Date Found</th>
-                        <th>Item</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                        <th>Days</th>
-                        @if (isSuperAdmin || isSupervisor)
+        <!-- System Overview -->
+        <h5 class="section-title"><i class="bi bi-shield-check"></i> System Overview</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon"><i class="bi bi-people"></i></div>
+                    <div class="stat-value">@Model.TotalUsers</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-success">
+                    <div class="stat-icon"><i class="bi bi-person-check"></i></div>
+                    <div class="stat-value">@Model.ActiveUsers</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-info">
+                    <div class="stat-icon"><i class="bi bi-calendar-week"></i></div>
+                    <div class="stat-value">@Model.ItemsThisWeek</div>
+                    <div class="stat-label">This Week</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div class="stat-value">@Model.UnclaimedOver30Days</div>
+                    <div class="stat-label">Unclaimed 30+ Days</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operational Overview -->
+        <h5 class="section-title"><i class="bi bi-database-gear"></i> Operational Overview</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-accent">
+                    <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="stat-value">@Model.ItemsAwaitingAction</div>
+                    <div class="stat-label">Awaiting Action</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon"><i class="bi bi-box"></i></div>
+                    <div class="stat-value">@Model.MasterItemCount</div>
+                    <div class="stat-label">Item Types</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-info">
+                    <div class="stat-icon"><i class="bi bi-signpost-2"></i></div>
+                    <div class="stat-value">@Model.MasterRouteCount</div>
+                    <div class="stat-label">Routes</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon"><i class="bi bi-bus-front"></i></div>
+                    <div class="stat-value">@Model.MasterVehicleCount</div>
+                    <div class="stat-label">Vehicles</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-success">
+                    <div class="stat-icon"><i class="bi bi-building"></i></div>
+                    <div class="stat-value">@Model.MasterStorageLocationCount</div>
+                    <div class="stat-label">Storage Locations</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon"><i class="bi bi-tag"></i></div>
+                    <div class="stat-value">@Model.MasterStatusCount</div>
+                    <div class="stat-label">Statuses</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-info">
+                    <div class="stat-icon"><i class="bi bi-person"></i></div>
+                    <div class="stat-value">@Model.MasterFoundByNameCount</div>
+                    <div class="stat-label">Found By Names</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Distribution & Charts -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-pie-chart me-2 text-primary"></i>Status Breakdown</div>
+                    <div class="card-body">
+                        @if (Model.StatusBreakdown.Any())
                         {
-                            <th>Created By</th>
-                        }
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.RecentRecords)
-                    {
-                        <tr>
-                            <td><strong>@item.TrackingId</strong></td>
-                            <td>@item.DateFound.ToString("MM/dd/yy")</td>
-                            <td>@item.ItemName</td>
-                            <td>@item.LocationFound</td>
-                            <td><span class="badge @item.StatusName?.ToLower()">@item.StatusName</span></td>
-                            <td>
-                                @if (item.DaysSinceFound > 30)
-                                {
-                                    <span style="color: var(--danger-text); font-weight: 700;">@item.DaysSinceFound</span>
-                                }
-                                else if (item.DaysSinceFound > 7)
-                                {
-                                    <span style="color: var(--warning-text); font-weight: 600;">@item.DaysSinceFound</span>
-                                }
-                                else
-                                {
-                                    <span>@item.DaysSinceFound</span>
-                                }
-                            </td>
-                            @if (isSuperAdmin || isSupervisor)
+                            @foreach (var status in Model.StatusBreakdown)
                             {
-                                <td style="color: var(--text-muted); font-size: 0.8rem;">@item.CreatedBy</td>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge-status badge-@status.CssClass me-2" style="min-width:85px; justify-content:center;">@status.StatusName</span>
+                                    <div class="flex-grow-1">
+                                        <div class="progress">
+                                            <div class="progress-bar" style="width: @status.Percentage%; background: var(--primary);"></div>
+                                        </div>
+                                    </div>
+                                    <span class="ms-2 small fw-semibold text-muted" style="min-width:60px; text-align:right;">@status.Count (@status.Percentage%)</span>
+                                </div>
                             }
-                            <td class="table-actions">
-                                <a href="@Url.Action("Details", "LostFoundItem", new { id = item.TrackingId })" role="button" class="ghost small" title="View" aria-label="View"><i class="bi bi-eye"></i></a>
-                                <a href="@Url.Action("Edit", "LostFoundItem", new { id = item.TrackingId })" role="button" class="ghost small" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">No status data available yet.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header"><i class="bi bi-bar-chart me-2 text-primary"></i>Top Item Types</div>
+                    <div class="card-body">
+                        @if (Model.TopItemTypes.Any())
+                        {
+                            @foreach (var item in Model.TopItemTypes)
+                            {
+                                var max = Model.TopItemTypes.First().Count;
+                                var pct = max > 0 ? (int)Math.Round((double)item.Count / max * 100) : 0;
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="me-2 small fw-semibold" style="min-width: 100px;">@item.ItemName</span>
+                                    <div class="flex-grow-1">
+                                        <div class="progress">
+                                            <div class="progress-bar" style="width: @pct%; background: var(--accent);"></div>
+                                        </div>
+                                    </div>
+                                    <span class="ms-2 small fw-semibold text-muted">@item.Count</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">No items recorded yet.</p>
+                        }
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><i class="bi bi-people me-2 text-primary"></i>Role Distribution</div>
+                    <div class="card-body">
+                        @{
+                            var totalRoleUsers = Model.SuperAdminCount + Model.AdminCount + Model.UserRoleCount;
+                        }
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge-role badge-superadmin me-2" style="min-width:85px; justify-content:center;">SuperAdmin</span>
+                            <div class="flex-grow-1">
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: @(totalRoleUsers > 0 ? (int)Math.Round((double)Model.SuperAdminCount / totalRoleUsers * 100) : 0)%; background: var(--danger);"></div>
+                                </div>
+                            </div>
+                            <span class="ms-2 small fw-semibold text-muted">@Model.SuperAdminCount</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge-role badge-admin me-2" style="min-width:85px; justify-content:center;">Admin</span>
+                            <div class="flex-grow-1">
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: @(totalRoleUsers > 0 ? (int)Math.Round((double)Model.AdminCount / totalRoleUsers * 100) : 0)%; background: var(--accent);"></div>
+                                </div>
+                            </div>
+                            <span class="ms-2 small fw-semibold text-muted">@Model.AdminCount</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge-role badge-user me-2" style="min-width:85px; justify-content:center;">User</span>
+                            <div class="flex-grow-1">
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: @(totalRoleUsers > 0 ? (int)Math.Round((double)Model.UserRoleCount / totalRoleUsers * 100) : 0)%; background: var(--primary);"></div>
+                                </div>
+                            </div>
+                            <span class="ms-2 small fw-semibold text-muted">@Model.UserRoleCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     }
-    else
-    {
-        <p class="text-center text-light p-5" style="font-size: 1rem;">
-            <i class="bi bi-inbox" style="font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.4;"></i>
-            No records yet. Click <strong>New Record</strong> to get started.
-        </p>
-    }
-</article>
+
+    <!-- Recent Records -->
+    <div class="card fade-in-up">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-clock-history me-2 text-primary"></i>Recent Records</span>
+            <a asp-controller="LostFoundItem" asp-action="Search" class="btn btn-sm btn-outline-primary">
+                View All <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.RecentRecords.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date Found</th>
+                                <th>Item</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Days</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.RecentRecords)
+                            {
+                                <tr>
+                                    <td><strong>#@item.TrackingId</strong></td>
+                                    <td>@item.DateFound.ToString("MM/dd/yyyy")</td>
+                                    <td>@item.ItemName</td>
+                                    <td>@item.LocationFound</td>
+                                    <td>
+                                        <span class="badge-status badge-@item.StatusName.ToLower()">@item.StatusName</span>
+                                    </td>
+                                    <td>
+                                        @if (item.DaysSinceFound > 30)
+                                        {
+                                            <span class="text-danger fw-semibold">@item.DaysSinceFound d</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@item.DaysSinceFound d</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-controller="LostFoundItem" asp-action="Details" asp-route-id="@item.TrackingId" class="btn btn-ghost btn-icon" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h3>No records yet</h3>
+                    <p>Start by creating a new lost &amp; found record.</p>
+                    <a asp-controller="LostFoundItem" asp-action="Create" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> New Record
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

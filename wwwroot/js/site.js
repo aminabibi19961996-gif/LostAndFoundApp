@@ -1,264 +1,189 @@
-﻿// ========================================================
-// Lost & Found — Enterprise UI Logic
-// ========================================================
-
-// --- Sidebar Mobile Toggle --------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.querySelector('[data-sidebar-toggle]');
-    const sidebar = document.querySelector('[data-sidebar]');
-
-    if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
-
-        // Close when clicking outside on mobile
-        document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 900 &&
-                sidebar.classList.contains('open') &&
-                !sidebar.contains(e.target) &&
-                !toggleBtn.contains(e.target)) {
-                sidebar.classList.remove('open');
+document.addEventListener('DOMContentLoaded', function () {
+    // Confirmation dialogs for destructive actions
+    document.querySelectorAll('[data-confirm]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            if (!confirm(this.getAttribute('data-confirm'))) {
+                e.preventDefault();
+                e.stopPropagation();
             }
         });
-    }
-});
+    });
 
-// --- Theme Toggling ---------------------------------------
-function toggleTheme() {
-    const root = document.documentElement;
-    const isDark = root.getAttribute('data-theme') === 'dark';
-    const next = isDark ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-}
+    // Auto-dismiss alerts after 6 seconds
+    document.querySelectorAll('.alert-dismissible').forEach(function (alert) {
+        setTimeout(function () {
+            alert.style.transition = 'opacity 0.3s ease-out';
+            alert.style.opacity = '0';
+            setTimeout(function () { alert.remove(); }, 300);
+        }, 6000);
+    });
 
-// --- Toast helper with graceful fallback -------------------
-function showToast(message, title, variant) {
-    // Try OAT library toast if available
-    if (typeof ot !== 'undefined' && ot.toast) {
-        ot.toast(message, title, { variant: variant || 'info' });
-        return;
-    }
-    // Fallback: create a temporary alert banner (XSS-safe — uses textContent)
-    const alert = document.createElement('div');
-    alert.setAttribute('role', 'alert');
-    alert.setAttribute('data-variant', variant === 'danger' ? 'error' : (variant || 'success'));
-    const strong = document.createElement('strong');
-    strong.textContent = title || 'Notice';
-    alert.appendChild(strong);
-    alert.appendChild(document.createTextNode(' ' + message));
-    const container = document.querySelector('.main-content');
-    if (container) {
-        container.prepend(alert);
-        setTimeout(() => {
-            alert.classList.add('fade-out');
-            setTimeout(() => alert.remove(), 400);
-        }, 4000);
-    }
-}
+    // Close alert button
+    document.querySelectorAll('.btn-close').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var alert = this.closest('.alert');
+            if (alert) {
+                alert.style.transition = 'opacity 0.2s ease-out';
+                alert.style.opacity = '0';
+                setTimeout(function () { alert.remove(); }, 200);
+            }
+        });
+    });
 
-// --- Auto-dismiss alerts elegantly ------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[role="alert"]').forEach(el => {
-        // NEVER auto-dismiss validation errors — user needs to fix them
-        if (el.classList.contains('validation-summary-errors')) return;
-        if (el.getAttribute('data-variant') === 'error') return;
-        // Empty validation summaries should hide immediately
-        if (el.classList.contains('validation-summary-valid')) {
-            el.style.display = 'none';
-            return;
+    // Navbar toggle for mobile
+    var toggler = document.querySelector('.navbar-toggler');
+    var collapse = document.querySelector('#navbarContent');
+    if (toggler && collapse) {
+        toggler.addEventListener('click', function () {
+            collapse.classList.toggle('show');
+        });
+    }
+
+    // Dropdown toggle (pure JS, no Bootstrap JS needed)
+    document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var parent = this.closest('.nav-item');
+            var wasOpen = parent.classList.contains('show');
+            // Close all dropdowns first
+            document.querySelectorAll('.nav-item.show').forEach(function (item) {
+                item.classList.remove('show');
+            });
+            if (!wasOpen) {
+                parent.classList.add('show');
+            }
+        });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.nav-item')) {
+            document.querySelectorAll('.nav-item.show').forEach(function (item) {
+                item.classList.remove('show');
+            });
         }
-        // Skip if it has no text content
-        const textContent = el.textContent?.trim();
-        if (!textContent) return;
-
-        // Let user read it, then elegantly fade out (success/info messages only)
-        setTimeout(() => {
-            el.classList.add('fade-out');
-            setTimeout(() => el.remove(), 400);
-        }, 5000);
     });
-});
 
-// --- Prevent double form submission -----------------------
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            // Skip AJAX forms and forms that use data-confirm (handled separately)
-            if (form.getAttribute('data-no-loading') !== null) return;
+    // Announcement popup system — only runs when user is authenticated (navbar present)
+    (function() {
+        if (!document.getElementById('mainNavbar')) return;
 
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if (!submitBtn) return;
+        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
-            // Check if client-side validation passes before showing loading
-            // jQuery Validation integration
-            if (typeof jQuery !== 'undefined' && jQuery(form).valid && !jQuery(form).valid()) {
-                return; // Validation failed, don't disable button
-            }
+        // Fetch unread count for badge
+        fetch('/Announcement/UnreadCount')
+            .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function(data) {
+                if (data.count > 0) {
+                    var badges = document.querySelectorAll('#unreadBadge, #navUnreadBadge');
+                    badges.forEach(function(b) {
+                        b.textContent = data.count;
+                        b.style.display = '';
+                    });
+                }
+            }).catch(function() {});
 
-            // Prevent double-click
-            if (submitBtn.dataset.submitting === 'true') {
-                e.preventDefault();
-                return;
-            }
+        // Fetch popup announcements
+        fetch('/Announcement/GetPopupAnnouncements')
+            .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function(announcements) {
+                if (!announcements || announcements.length === 0) return;
 
-            submitBtn.dataset.submitting = 'true';
-            submitBtn.disabled = true;
+                var modal = document.getElementById('announcementModal');
+                var body = document.getElementById('announcementModalBody');
+                var counter = document.getElementById('announcementCounter');
+                var prevBtn = document.getElementById('prevAnnouncement');
+                var nextBtn = document.getElementById('nextAnnouncement');
+                var closeBtn = document.getElementById('closeAnnouncementModal');
+                var backdrop = document.querySelector('.announcement-modal-backdrop');
+                if (!modal) return;
 
-            // Save original content and show loading state
-            const originalHTML = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat spin-icon"></i> Processing...';
-            submitBtn.classList.add('loading-btn');
+                var current = 0;
+                function showAnnouncement(idx) {
+                    var a = announcements[idx];
+                    body.innerHTML = '';
+                    var h4 = document.createElement('h4');
+                    h4.textContent = a.title;
+                    var p = document.createElement('p');
+                    p.style.whiteSpace = 'pre-line';
+                    p.textContent = a.message;
+                    var footer = document.createElement('div');
+                    footer.className = 'small text-muted mt-2';
+                    footer.textContent = 'From: ' + a.createdBy + ' \u2014 ' + a.createdAt;
+                    body.appendChild(h4);
+                    body.appendChild(p);
+                    body.appendChild(footer);
+                    counter.textContent = (idx + 1) + ' of ' + announcements.length;
+                    prevBtn.style.display = idx > 0 ? '' : 'none';
+                    nextBtn.textContent = idx < announcements.length - 1 ? 'Next' : 'Got it';
+                }
 
-            // Re-enable after 8 seconds as a safety net (in case of redirect failure)
-            setTimeout(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalHTML;
-                submitBtn.classList.remove('loading-btn');
-                delete submitBtn.dataset.submitting;
-            }, 8000);
-        });
-    });
-});
-
-// --- Inline AJAX adding for Dropdowns ---------------------
-function inlineAdd(entityName, selectId) {
-    const name = prompt(`Quick Add — Enter new ${entityName} name:`);
-    if (!name || !name.trim()) return;
-
-    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-    if (!token) {
-        showToast('Security token missing. Please refresh the page.', 'Security Error', 'danger');
-        return;
-    }
-
-    // Show loading toast
-    showToast(`Adding "${name.trim()}"...`, 'Please wait', 'info');
-
-    fetch(`/MasterData/Add${entityName}Ajax`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': token
-        },
-        body: JSON.stringify({ name: name.trim() })
-    })
-        .then(r => {
-            // Handle 401 from MustChangePassword middleware
-            if (r.status === 401) {
-                return r.json().then(data => {
-                    showToast(data.message || 'Please change your password first.', 'Authentication Required', 'danger');
-                    if (data.redirect) {
-                        setTimeout(() => window.location.href = data.redirect, 1500);
+                function closeModal() {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                    var ids = announcements.map(function(a) { return a.id; });
+                    if (token) {
+                        fetch('/Announcement/MarkPopupShown', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                            body: JSON.stringify({ announcementIds: ids })
+                        }).catch(function() {});
                     }
-                    return null;
+                }
+
+                prevBtn.addEventListener('click', function() {
+                    if (current > 0) { current--; showAnnouncement(current); }
                 });
-            }
-            if (r.status === 403) {
-                showToast('You do not have permission to perform this action.', 'Access Denied', 'danger');
-                return null;
-            }
-            if (!r.ok) throw new Error(`Server returned ${r.status}`);
-            return r.json();
-        })
-        .then(data => {
-            if (!data) return; // Already handled (401/403)
-            if (data.success) {
-                const sel = document.getElementById(selectId);
-                if (sel) {
-                    const opt = new Option(data.name, data.id, true, true);
-                    sel.appendChild(opt);
+                nextBtn.addEventListener('click', function() {
+                    if (current < announcements.length - 1) { current++; showAnnouncement(current); }
+                    else { closeModal(); }
+                });
+                closeBtn.addEventListener('click', closeModal);
+                backdrop.addEventListener('click', closeModal);
+
+                showAnnouncement(0);
+                modal.style.display = '';
+                document.body.style.overflow = 'hidden';
+            }).catch(function() {});
+    })();
+
+    // AJAX inline creation for master data dropdowns
+    document.querySelectorAll('[data-inline-create]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var selectId = this.getAttribute('data-target-select');
+            var endpoint = this.getAttribute('data-endpoint');
+            var selectEl = document.getElementById(selectId);
+            var label = this.getAttribute('data-label') || 'item';
+            var newValue = prompt('Enter new ' + label + ' name:');
+            if (!newValue || newValue.trim() === '') return;
+            
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ Name: newValue.trim() })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var option = document.createElement('option');
+                    option.value = data.id;
+                    option.text = data.name;
+                    option.selected = true;
+                    selectEl.appendChild(option);
+                } else {
+                    alert(data.message || 'Error creating item');
                 }
-                showToast(`"${data.name}" added successfully.`, 'Added', 'success');
-            } else {
-                showToast(data.message || 'Operation failed. Please try again.', 'Error', 'danger');
-            }
-        })
-        .catch((err) => {
-            console.error('Inline add error:', err);
-            if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-                showToast('No internet connection. Please check your network and try again.', 'Network Error', 'danger');
-            } else {
-                showToast(`Something went wrong: ${err.message}. Please try again.`, 'Error', 'danger');
-            }
-        });
-}
-
-// --- Delete/Toggle confirmation with better feedback ------
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('form[data-confirm]').forEach(form => {
-        form.addEventListener('submit', (e) => {
-            const message = form.getAttribute('data-confirm') || 'Are you sure?';
-            if (!confirm(message)) {
-                e.preventDefault();
-            }
-        });
-    });
-});
-
-// --- Set max date on DateFound inputs to prevent future dates ---
-document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
-    const dateFoundInput = document.getElementById('DateFound');
-    if (dateFoundInput && dateFoundInput.type === 'date') {
-        dateFoundInput.setAttribute('max', today);
-    }
-});
-
-// --- Client-side file size validation ----------------------
-document.addEventListener('DOMContentLoaded', () => {
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB — matches server config
-
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-        input.addEventListener('change', () => {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                if (file.size > MAX_SIZE) {
-                    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                    showToast(`File "${file.name}" is ${sizeMB} MB. Maximum allowed is 10 MB.`, 'File Too Large', 'danger');
-                    input.value = ''; // Clear the selection
-                    return;
-                }
-
-                // Show photo preview for image uploads
-                if (file.type.startsWith('image/') && input.id === 'PhotoFile') {
-                    let previewContainer = input.parentElement.querySelector('.upload-preview');
-                    if (!previewContainer) {
-                        previewContainer = document.createElement('div');
-                        previewContainer.className = 'upload-preview mt-2';
-                        input.parentElement.appendChild(previewContainer);
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        previewContainer.innerHTML = '';
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'preview-thumb';
-                        img.alt = 'Upload preview';
-                        previewContainer.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                }
-
-                // Confirmation toast for successful file selection
-                const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-                showToast(`"${file.name}" (${sizeMB} MB) selected.`, 'File Ready', 'success');
-            }
+            })
+            .catch(function(err) {
+                console.error(err);
+                alert('Error creating item');
+            });
         });
     });
-});
-
-// --- Global error handler for uncaught JS errors ----------
-window.addEventListener('error', (e) => {
-    console.error('Uncaught error:', e.error);
-    // Don't show toast for script loading errors from CDN
-    if (e.filename && !e.filename.includes(window.location.hostname)) return;
-    showToast('An unexpected error occurred. Please refresh the page.', 'Error', 'danger');
-});
-
-// --- Global handler for unhandled promise rejections ------
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('Unhandled promise rejection:', e.reason);
-    showToast('A background operation failed. Please try again.', 'Error', 'danger');
 });

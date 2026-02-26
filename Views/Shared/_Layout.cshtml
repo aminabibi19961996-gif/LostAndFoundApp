@@ -1,143 +1,178 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<LostAndFoundApp.Models.ApplicationUser> SignInManager
-@inject UserManager<LostAndFoundApp.Models.ApplicationUser> UserManager
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"] — Lost &amp; Found Tracker</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/@@knadh/oat/oat.min.css">
-    <script src="https://unpkg.com/@@knadh/oat/oat.min.js" defer></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="~/css/site.css">
-    @RenderSection("Styles", required: false)
-    <script>
-        // Prevent FOUC (Flash of Unstyled Theme)
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
-        else document.documentElement.setAttribute('data-theme', 'light');
-    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Lost &amp; Found</title>
+    <meta name="description" content="Lost and Found Management System" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-@if (SignInManager.IsSignedIn(User))
-{
-    <div data-sidebar-layout>
-        <nav data-topnav>
-            <button data-sidebar-toggle aria-label="Toggle menu" class="outline small">☰</button>
-            <span><i class="bi bi-box-seam"></i> Lost &amp; Found</span>
-        </nav>
-        <aside data-sidebar>
-            <header class="sidebar-brand">
-                <i class="bi bi-box-seam"></i>
-                <span>Lost &amp; Found</span>
-            </header>
-            <nav>
-                <ul>
-                    <li><a href="@Url.Action("Index", "Home")" aria-current="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "page" : "false")"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-                    <li><a href="@Url.Action("Create", "LostFoundItem")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString() == "Create" && ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "page" : "false")"><i class="bi bi-plus-circle"></i> New Record</a></li>
-                    <li><a href="@Url.Action("Search", "LostFoundItem")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString() == "Search" && ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "page" : "false")"><i class="bi bi-search"></i> Search</a></li>
-
-                    @if (User.IsInRole("Supervisor") || User.IsInRole("SuperAdmin"))
-                    {
-                        <li>
-                            <details @(ViewContext.RouteData.Values["controller"]?.ToString() == "MasterData" ? "open" : "")>
-                                <summary><i class="bi bi-database-gear"></i> Master Data</summary>
-                                <ul>
-                                    <li><a href="@Url.Action("Items", "MasterData")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Item") == true ? "page" : "false")">Items</a></li>
-                                    <li><a href="@Url.Action("Routes", "MasterData")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Route") == true ? "page" : "false")">Routes</a></li>
-                                    <li><a href="@Url.Action("Vehicles", "MasterData")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Vehicle") == true ? "page" : "false")">Vehicles</a></li>
-                                    <li><a href="@Url.Action("StorageLocations", "MasterData")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("StorageLocation") == true ? "page" : "false")">Storage Locations</a></li>
-                                    <li><a href="@Url.Action("Statuses", "MasterData")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("Status") == true ? "page" : "false")">Statuses</a></li>
-                                    <li><a href="@Url.Action("FoundByNames", "MasterData")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString()?.Contains("FoundByName") == true ? "page" : "false")">Found By Names</a></li>
-                                </ul>
-                            </details>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="navbar navbar-expand-lg sticky-top" id="mainNavbar">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                    <div class="brand-icon">
+                        <i class="bi bi-search-heart"></i>
+                    </div>
+                    <span class="brand-text">Lost &amp; Found</span>
+                </a>
+                <button class="navbar-toggler" type="button">
+                    <i class="bi bi-list" style="font-size:1.5rem;"></i>
+                </button>
+                <div class="navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
                         </li>
-                    }
-
-                    @if (User.IsInRole("SuperAdmin"))
-                    {
-                        <li>
-                            <details @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "open" : "")>
-                                <summary><i class="bi bi-people"></i> User Management</summary>
-                                <ul>
-                                    <li><a href="@Url.Action("Index", "UserManagement")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "page" : "false")">All Users</a></li>
-                                    <li><a href="@Url.Action("Create", "UserManagement")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString() == "Create" ? "page" : "false")">Create User</a></li>
-                                    <li><a href="@Url.Action("AdGroups", "UserManagement")" aria-current="@(ViewContext.RouteData.Values["action"]?.ToString() == "AdGroups" ? "page" : "false")">AD Groups &amp; Sync</a></li>
-                                </ul>
-                            </details>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="LostFoundItem" asp-action="Create">
+                                <i class="bi bi-plus-circle me-1"></i> New Record
+                            </a>
                         </li>
-                    }
-                </ul>
-            </nav>
-            <footer>
-                <div class="sidebar-user">
-                    <small><i class="bi bi-person-circle"></i> @User.Identity?.Name</small>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="LostFoundItem" asp-action="Search">
+                                <i class="bi bi-search me-1"></i> Search
+                            </a>
+                        </li>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link dropdown-toggle" href="#" role="button">
+                                    <i class="bi bi-database-gear me-1"></i> Master Data
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Items"><i class="bi bi-box me-2"></i>Items</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Routes"><i class="bi bi-signpost-2 me-2"></i>Routes</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Vehicles"><i class="bi bi-bus-front me-2"></i>Vehicles</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="StorageLocations"><i class="bi bi-building me-2"></i>Storage Locations</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Statuses"><i class="bi bi-tag me-2"></i>Statuses</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="FoundByNames"><i class="bi bi-person me-2"></i>Found By Names</a></li>
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("SuperAdmin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link dropdown-toggle" href="#" role="button">
+                                    <i class="bi bi-shield-lock me-1"></i> Admin
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people me-2"></i>User Management</a></li>
+                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3 me-2"></i>AD Groups &amp; Sync</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone me-2"></i>Announcements</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text me-2"></i>Activity Logs</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link dropdown-toggle" href="#" role="button">
+                                    <i class="bi bi-shield me-1"></i> Admin
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people me-2"></i>Users (View)</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text me-2"></i>Activity Logs</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Announcement" asp-action="Messages"><i class="bi bi-envelope me-2"></i>Messages</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Logs" asp-action="Index">
+                                    <i class="bi bi-journal-text me-1"></i> My Logs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Announcement" asp-action="Messages" style="position:relative;">
+                                    <i class="bi bi-envelope me-1"></i> Messages <span id="unreadBadge" class="notification-badge" style="display:none;"></span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                    <div class="d-flex align-items-center gap-3">
+                        @if (!User.IsInRole("SuperAdmin"))
+                        {
+                            <a asp-controller="Announcement" asp-action="Messages" class="notification-bell" title="Messages">
+                                <i class="bi bi-bell"></i>
+                                <span id="navUnreadBadge" class="notification-badge" style="display:none;"></span>
+                            </a>
+                        }
+                        <div class="user-info d-none d-md-flex align-items-center gap-2">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <span class="user-name">@User.Identity?.Name</span>
+                        </div>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                                <i class="bi bi-box-arrow-right me-1"></i> Logout
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="sidebar-actions">
-                    <a href="@Url.Action("ChangePassword", "Account")" class="ghost small" role="button" title="Change Password"><i class="bi bi-key"></i></a>
-                    <button class="ghost small" onclick="toggleTheme()" title="Toggle contrast"><i class="bi bi-circle-half"></i></button>
-                    <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="ghost small" data-variant="danger" title="Sign out"><i class="bi bi-box-arrow-right"></i></button>
-                    </form>
-                </div>
-            </footer>
-        </aside>
-        <main>
-            <div class="container main-content">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div role="alert" data-variant="success">
-                        <strong>Success!</strong> @TempData["SuccessMessage"]
-                    </div>
-                }
-                @if (TempData["ErrorMessage"] != null)
-                {
-                    <div role="alert" data-variant="error">
-                        <strong>Error!</strong> @TempData["ErrorMessage"]
-                    </div>
-                }
-                @if (TempData["WarningMessage"] != null)
-                {
-                    <div role="alert" data-variant="warning">
-                        <strong>Warning!</strong> @TempData["WarningMessage"]
-                    </div>
-                }
-                @if (TempData["InfoMessage"] != null)
-                {
-                    <div role="alert" data-variant="info">
-                        <strong>Info:</strong> @TempData["InfoMessage"]
-                    </div>
-                }
-                @RenderBody()
             </div>
-        </main>
-    </div>
-}
-else
-{
-    <main class="login-page">
+        </nav>
+    }
+
+    <main class="main-content">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="container-fluid px-4 mt-3">
+                <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
+                    <i class="bi bi-check-circle-fill me-2" style="font-size:1.1rem;"></i>
+                    <div>@TempData["SuccessMessage"]</div>
+                    <button type="button" class="btn-close"></button>
+                </div>
+            </div>
+        }
         @if (TempData["ErrorMessage"] != null)
         {
-            <div role="alert" data-variant="error" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 450px;">
-                <strong>Error!</strong> @TempData["ErrorMessage"]
+            <div class="container-fluid px-4 mt-3">
+                <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="font-size:1.1rem;"></i>
+                    <div>@TempData["ErrorMessage"]</div>
+                    <button type="button" class="btn-close"></button>
+                </div>
             </div>
         }
-        @if (TempData["InfoMessage"] != null)
-        {
-            <div role="alert" data-variant="info" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; width: 90%; max-width: 450px;">
-                <strong>Info:</strong> @TempData["InfoMessage"]
-            </div>
-        }
+
         @RenderBody()
     </main>
-}
 
-<script src="~/js/site.js"></script>
-@RenderSection("Scripts", required: false)
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div id="announcementModal" class="announcement-modal" style="display:none;">
+            <div class="announcement-modal-backdrop"></div>
+            <div class="announcement-modal-content">
+                <div class="announcement-modal-header">
+                    <i class="bi bi-megaphone"></i>
+                    <span>Announcement</span>
+                    <button type="button" class="announcement-modal-close" id="closeAnnouncementModal">&times;</button>
+                </div>
+                <div class="announcement-modal-body" id="announcementModalBody"></div>
+                <div class="announcement-modal-footer">
+                    <span class="small text-muted" id="announcementCounter"></span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="prevAnnouncement" style="display:none;">Previous</button>
+                        <button type="button" class="btn btn-primary btn-sm" id="nextAnnouncement">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <script src="~/js/site.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

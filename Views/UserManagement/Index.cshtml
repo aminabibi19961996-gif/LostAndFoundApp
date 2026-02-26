@@ -1,52 +1,95 @@
-@model IEnumerable<LostAndFoundApp.ViewModels.UserListViewModel>
+@model List<UserListViewModel>
 @{
     ViewData["Title"] = "User Management";
 }
 
 <div class="page-header">
-    <h2><i class="bi bi-people"></i> User Management</h2>
-    <div class="page-header-actions">
-        <a href="@Url.Action("Create", "UserManagement")" role="button"><i class="bi bi-person-plus"></i> Create User</a>
-        <a href="@Url.Action("AdGroups", "UserManagement")" role="button" class="outline"><i class="bi bi-diagram-3"></i> AD Groups</a>
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
+            <div>
+                <h1><i class="bi bi-people me-2"></i>User Management</h1>
+                <p class="subtitle mb-0">Manage local and Active Directory users</p>
+            </div>
+            @if (User.IsInRole("SuperAdmin"))
+            {
+                <a asp-action="Create" class="btn btn-light rounded-pill px-3">
+                    <i class="bi bi-person-plus"></i> Create Local User
+                </a>
+            }
+        </div>
     </div>
 </div>
 
-<article class="card">
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Display Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var user in Model)
-                {
-                    <tr>
-                        <td><strong>@user.UserName</strong></td>
-                        <td>@user.DisplayName</td>
-                        <td>@user.Email</td>
-                        <td><span class="badge">@user.Role</span></td>
-                        <td><span class="badge @(user.AccountType == "Active Directory" ? "secondary" : "outline")">@user.AccountType</span></td>
-                        <td><span class="badge @(user.IsActive ? "success" : "danger")">@(user.IsActive ? "Active" : "Inactive")</span></td>
-                        <td class="table-actions">
-                            <a href="@Url.Action("EditRole", "UserManagement", new { id = user.Id })" role="button" class="ghost small" title="Edit Role" aria-label="Edit Role"><i class="bi bi-shield-check"></i></a>
-                            <form asp-action="ToggleActive" asp-controller="UserManagement" asp-route-id="@user.Id" method="post" style="display: inline;">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="ghost small" title="@(user.IsActive ? "Deactivate" : "Activate")" aria-label="@(user.IsActive ? "Deactivate" : "Activate")">
-                                    <i class="bi bi-toggle-@(user.IsActive ? "on" : "off")"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<div class="container-fluid px-4">
+    <div class="card fade-in-up">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table-modern" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Display Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            @if (User.IsInRole("SuperAdmin"))
+                            {
+                                <th>Actions</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td><strong>@user.UserName</strong></td>
+                                <td>@(user.DisplayName ?? "—")</td>
+                                <td class="text-muted">@(user.Email ?? "—")</td>
+                                <td>
+                                    @{
+                                        var roleClass = user.Role.ToLower() switch
+                                        {
+                                            "superadmin" => "badge-superadmin",
+                                            "admin" => "badge-admin",
+                                            _ => "badge-user"
+                                        };
+                                    }
+                                    <span class="badge-role @roleClass">@user.Role</span>
+                                </td>
+                                <td>
+                                    <span class="badge-role @(user.AccountType == "Active Directory" ? "badge-ad" : "badge-local")">
+                                        <i class="bi @(user.AccountType == "Active Directory" ? "bi-diagram-3" : "bi-person")"></i>
+                                        @user.AccountType
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge-role @(user.IsActive ? "badge-active" : "badge-inactive")">
+                                        @(user.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="EditRole" asp-route-id="@user.Id" class="btn btn-ghost btn-icon" title="Edit Role">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-ghost btn-icon" title="@(user.IsActive ? "Deactivate" : "Activate")"
+                                                    data-confirm="Are you sure you want to @(user.IsActive ? "deactivate" : "activate") this user?">
+                                                <i class="bi @(user.IsActive ? "bi-person-slash text-danger" : "bi-person-check text-success")"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</article>
+</div>
