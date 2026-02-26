@@ -143,9 +143,6 @@ graph TD
  SA -->|"inherits all"| A
  A -->|"inherits all"| U
 
- style SA fill:#dc3545,stroke:#b02a37,color:#000,font-weight:bold
- style A fill:#fd7e14,stroke:#ca6510,color:#000,font-weight:bold
- style U fill:#198754,stroke:#146c43,color:#000,font-weight:bold
 ```
 
 ### Default Accounts
@@ -492,11 +489,6 @@ graph TB
  ADHS -.->|Scheduled| ADS
  ALS --> EF
 
- style Client fill:#e3f2fd,stroke:#1565c0,color:#000
- style App fill:#f3e5f5,stroke:#7b1fa2,color:#000
- style Data fill:#e8f5e9,stroke:#2e7d32,color:#000
- style Storage fill:#fff3e0,stroke:#e65100,color:#000
- style External fill:#fce4ec,stroke:#c62828,color:#000
 ```
 
 ### Authentication Flow
@@ -530,12 +522,6 @@ flowchart TD
  MCP -->|No| Dashboard["Dashboard"]
  ForcePW -->|Password Changed| Dashboard
 
- style Start fill:#e3f2fd,stroke:#1565c0
- style Dashboard fill:#c8e6c9,stroke:#2e7d32
- style Fail fill:#ffcdd2,stroke:#c62828
- style Fail2 fill:#ffcdd2,stroke:#c62828
- style Blocked fill:#ffcdd2,stroke:#c62828
- style Lockout fill:#ffcdd2,stroke:#c62828
 ```
 
 ### Request Pipeline
@@ -551,8 +537,6 @@ flowchart LR
  CTRL --> VIEW[Razor View]
  VIEW --> RES([HTTP Response])
 
- style REQ fill:#e3f2fd,stroke:#1565c0
- style RES fill:#c8e6c9,stroke:#2e7d32
 ```
 
 ### Tech Stack
@@ -765,11 +749,6 @@ graph TD
  NS["No Stack Traces<br/>in Production"]
  end
 
- style CSRF fill:#e8eaf6,stroke:#283593,color:#000
- style INPUT fill:#e0f2f1,stroke:#00695c,color:#000
- style FILE fill:#fff3e0,stroke:#e65100,color:#000
- style AUTH2 fill:#fce4ec,stroke:#880e4f,color:#000
- style ERR fill:#f3e5f5,stroke:#6a1b9a,color:#000
 ```
 
 ---
@@ -859,10 +838,6 @@ graph LR
  ADHS --> ADS
  ADHS --> ALS
 
- style ALS fill:#e8f5e9,stroke:#2e7d32
- style FS fill:#fff3e0,stroke:#e65100
- style ADS fill:#e3f2fd,stroke:#1565c0
- style ADHS fill:#fce4ec,stroke:#c62828
 ```
 
 <details>
@@ -1005,8 +980,6 @@ flowchart LR
  G --> H["Ready"]
  C -->|No| H
 
- style A fill:#e3f2fd,stroke:#1565c0
- style H fill:#c8e6c9,stroke:#2e7d32
 ```
 
 ---
