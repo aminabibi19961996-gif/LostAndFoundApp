@@ -49,10 +49,20 @@
         <div class="pagination-info">
             Showing @Model.StartRecord to @Model.EndRecord of @Model.TotalCount records
             <select class="page-size-select" onchange="window.location.href = '@Url.Action(action, controller, new { pageIndex = Model.PageIndex, pageSize = "__SIZE__" })'.replace('__SIZE__', this.value);">
-                <option value="5" @(Model.PageSize == 5 ? "selected" : "")>5 per page</option>
-                <option value="10" @(Model.PageSize == 10 ? "selected" : "")>10 per page</option>
-                <option value="25" @(Model.PageSize == 25 ? "selected" : "")>25 per page</option>
-                <option value="50" @(Model.PageSize == 50 ? "selected" : "")>50 per page</option>
+                @{
+                    var pageSizes = new[] { 5, 10, 25, 50 };
+                }
+                @foreach (var size in pageSizes)
+                {
+                    if (Model.PageSize == size)
+                    {
+                        <option value="@size" selected="selected">@size per page</option>
+                    }
+                    else
+                    {
+                        <option value="@size">@size per page</option>
+                    }
+                }
             </select>
         </div>
     </div>

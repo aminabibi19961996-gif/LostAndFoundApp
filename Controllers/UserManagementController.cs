@@ -565,7 +565,7 @@ namespace LostAndFoundApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "RequireSuperAdmin")]
-        public async Task<IActionResult> SyncNow()
+        public IActionResult SyncNow()
         {
             // Fire sync in background to avoid HTTP timeout on large directories (Gap 3 fix)
             var triggeredBy = User.Identity?.Name ?? "Unknown";

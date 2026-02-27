@@ -20,6 +20,9 @@ namespace LostAndFoundApp.Models
         [Required, StringLength(450)]
         public string UserId { get; set; } = string.Empty;
 
+        [ForeignKey("UserId")]
+        public virtual ApplicationUser? User { get; set; }
+
         /// <summary>
         /// Number of times the popup has been shown to this user (stops at 3).
         /// </summary>
