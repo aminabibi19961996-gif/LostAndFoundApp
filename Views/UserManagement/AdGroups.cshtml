@@ -5,7 +5,7 @@
 
 <div class="page-header">
     <div class="container-fluid px-4">
-        <h1><i class="bi bi-diagram-3 me-2"></i>Active Directory Groups &amp; Sync</h1>
+        <h1><i class="bi bi-diagram-3 me-2"></i>Active Directory Groups & Sync</h1>
         <p class="subtitle mb-0">Configure AD security groups, role mappings, and trigger synchronization</p>
     </div>
 </div>
@@ -13,7 +13,7 @@
 <div class="container-fluid px-4">
     @if (ViewBag.AdEnabled == true)
     {
-        <div class="alert d-flex align-items-center gap-2 mb-3" style="background: var(--success-bg, #d1fae5); border: 1px solid var(--success, #059669); color: var(--success, #059669); border-radius: 8px; padding: 12px 16px;">
+        <div class="alert d-flex align-items-center gap-2 mb-3" style="background: rgba(108, 99, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 12px 16px;">
             <i class="bi bi-check-circle-fill"></i>
             <div>
                 <strong>Active Directory integration is enabled.</strong>
@@ -23,7 +23,7 @@
     }
     else
     {
-        <div class="alert d-flex align-items-center gap-2 mb-3" style="background: #fef3c7; border: 1px solid #d97706; color: #92400e; border-radius: 8px; padding: 12px 16px;">
+        <div class="alert d-flex align-items-center gap-2 mb-3" style="background: rgba(245, 245, 245, 0.05); border: 1px solid var(--border-light); color: var(--text-secondary); border-radius: 8px; padding: 12px 16px;">
             <i class="bi bi-exclamation-triangle-fill"></i>
             <div>
                 <strong>Active Directory integration is disabled.</strong>
@@ -117,28 +117,47 @@
             <!-- Add New AD Group -->
             <div class="card mt-3 fade-in-up">
                 <div class="card-header">
-                    <i class="bi bi-plus-circle me-2 text-success"></i>Add New AD Group
+                    <i class="bi bi-plus-circle me-2 text-success"></i>Add New AD Group(s)
                 </div>
                 <div class="card-body">
-                    <form asp-action="AddAdGroup" method="post">
+                    <!-- Step 1: Search AD -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Step 1: Search Active Directory</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="adGroupSearch" placeholder="Enter group name to search..." autocomplete="off" />
+                            <button type="button" class="btn btn-primary" id="adSearchBtn">
+                                <i class="bi bi-search me-1"></i> Search AD
+                            </button>
+                        </div>
+                        <div class="form-text">Type a group name and click Search to find AD groups</div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div id="adGroupResults" class="ad-group-results-box mb-3"></div>
+
+                    <!-- Selected Groups -->
+                    <div id="adGroupSelected" class="mb-3"></div>
+
+                    <!-- Step 2: Map Role & Add -->
+                    <form asp-action="AddAdGroups" method="post" id="addAdGroupForm">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="groupNames" id="adGroupNamesHidden" />
                         <div class="row g-3 align-items-end">
                             <div class="col-md-5">
-                                <label class="form-label">AD Group Name</label>
-                                <input type="text" name="groupName" class="form-control" placeholder="e.g. LostandFound Admin" required />
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Map to Role</label>
+                                <label class="form-label fw-semibold">Step 2: Map to Role & Add</label>
                                 <select name="mappedRole" class="form-select" required>
                                     <option value="">Select role...</option>
                                     <option value="Admin">Admin</option>
                                     <option value="User">User</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="bi bi-plus-lg"></i> Add Group
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success w-100" id="addAdGroupBtn" disabled>
+                                    <i class="bi bi-plus-lg me-1"></i> Add Group(s)
                                 </button>
+                            </div>
+                            <div class="col-md-3">
+                                <span id="selectedCount" class="small text-muted"></span>
                             </div>
                         </div>
                     </form>
@@ -154,7 +173,7 @@
                     <i class="bi bi-arrow-repeat me-2 text-primary"></i>AD Synchronization
                 </div>
                 <div class="card-body text-center">
-                    <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;">
+                    <div style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;">
                         <i class="bi bi-arrow-repeat"></i>
                     </div>
                     <h5 class="fw-bold mb-2">Manual Sync</h5>
@@ -169,6 +188,45 @@
                             <i class="bi bi-arrow-repeat"></i> Sync Now
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Last Sync Status -->
+            <div class="card fade-in-up mb-3">
+                <div class="card-header">
+                    <i class="bi bi-clock-history me-2 text-accent"></i>Last Sync
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.LastSyncTimestamp != null)
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            @if ((bool)ViewBag.LastSyncSuccess)
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success" style="background: rgba(108, 99, 255, 0.15) !important; color: var(--accent) !important;">Success</span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background: rgba(245, 245, 245, 0.1); color: var(--text-muted);">Failed</span>
+                            }
+                            <span class="small text-muted">@((DateTime)ViewBag.LastSyncTimestamp).ToString("MMM dd, yyyy — HH:mm:ss") UTC</span>
+                        </div>
+                        <div class="small text-muted mb-1">
+                            <i class="bi bi-person-check me-1"></i>@ViewBag.LastSyncSummary
+                        </div>
+                        <div class="small text-muted">
+                            <i class="bi bi-gear me-1"></i>@ViewBag.LastSyncTrigger by @ViewBag.LastSyncBy
+                        </div>
+                        @if (!string.IsNullOrEmpty((string)ViewBag.LastSyncErrors))
+                        {
+                            <div class="small mt-2" style="color: var(--accent);">
+                                <i class="bi bi-exclamation-triangle me-1"></i>@ViewBag.LastSyncErrors
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">No sync has been performed yet.</p>
+                    }
                 </div>
             </div>
 
@@ -237,3 +295,189 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+(function() {
+    var searchInput = document.getElementById('adGroupSearch');
+    var searchBtn = document.getElementById('adSearchBtn');
+    var hiddenInput = document.getElementById('adGroupNamesHidden');
+    var resultsDiv = document.getElementById('adGroupResults');
+    var selectedListDiv = document.getElementById('adGroupSelected');
+    var addBtn = document.getElementById('addAdGroupBtn');
+    var form = document.getElementById('addAdGroupForm');
+    var selectedCountEl = document.getElementById('selectedCount');
+    if (!searchInput || !searchBtn || !hiddenInput || !resultsDiv || !form || !addBtn) return;
+
+    var selectedGroups = [];
+
+    function updateState() {
+        hiddenInput.value = selectedGroups.join(',');
+        addBtn.disabled = selectedGroups.length === 0;
+        if (selectedCountEl) {
+            selectedCountEl.textContent = selectedGroups.length > 0
+                ? selectedGroups.length + ' group(s) selected'
+                : '';
+        }
+    }
+
+    function renderSelectedChips() {
+        if (!selectedListDiv) return;
+        if (selectedGroups.length === 0) { selectedListDiv.innerHTML = ''; return; }
+        var html = '<label class="form-label fw-semibold small">Selected Groups:</label><div class="selected-groups">';
+        selectedGroups.forEach(function(name, idx) {
+            html += '<span class="selected-group-item">';
+            html += '<i class="bi bi-diagram-3 me-1"></i>' + escapeHtml(name);
+            html += '<button type="button" class="btn-remove-group" data-idx="' + idx + '"><i class="bi bi-x"></i></button>';
+            html += '</span>';
+        });
+        html += '</div>';
+        selectedListDiv.innerHTML = html;
+
+        selectedListDiv.querySelectorAll('.btn-remove-group').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectedGroups.splice(parseInt(this.getAttribute('data-idx')), 1);
+                updateState();
+                renderSelectedChips();
+                refreshResultSelectionUI();
+            });
+        });
+    }
+
+    function refreshResultSelectionUI() {
+        resultsDiv.querySelectorAll('.ad-group-item').forEach(function(el) {
+            var n = el.getAttribute('data-name');
+            var isSel = selectedGroups.includes(n);
+            el.classList.toggle('ad-group-item-selected', isSel);
+            var checkIcon = el.querySelector('.ad-sel-icon');
+            if (checkIcon) {
+                checkIcon.className = isSel
+                    ? 'bi bi-check-circle-fill text-success ad-sel-icon'
+                    : 'bi bi-circle text-muted ad-sel-icon';
+            }
+        });
+    }
+
+    function doSearch() {
+        var term = searchInput.value.trim();
+        if (term.length < 2) {
+            showResults('<div class="ad-group-msg"><i class="bi bi-info-circle me-1"></i>Enter at least 2 characters to search.</div>');
+            return;
+        }
+        showResults('<div class="ad-group-msg"><i class="bi bi-arrow-repeat ad-spin me-1"></i> Searching Active Directory...</div>');
+
+        fetch('/UserManagement/SearchAdGroups?term=' + encodeURIComponent(term))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error && data.error.length > 0) {
+                    showResults('<div class="ad-group-msg ad-group-err"><i class="bi bi-exclamation-triangle me-1"></i>' + escapeHtml(data.error) + '</div>');
+                    return;
+                }
+                if (!data.results || data.results.length === 0) {
+                    showResults('<div class="ad-group-msg"><i class="bi bi-search me-1"></i>No groups found matching "' + escapeHtml(term) + '"</div>');
+                    return;
+                }
+                renderResults(data.results);
+            })
+            .catch(function() {
+                showResults('<div class="ad-group-msg ad-group-err"><i class="bi bi-exclamation-triangle me-1"></i>Failed to search Active Directory.</div>');
+            });
+    }
+
+    function renderResults(results) {
+        var html = '<div class="ad-results-header"><i class="bi bi-list-check me-1"></i>' + results.length + ' group(s) found — click to select</div>';
+        for (var i = 0; i < results.length; i++) {
+            var r = results[i];
+            var isSel = selectedGroups.includes(r.name);
+            html += '<div class="ad-group-item' + (isSel ? ' ad-group-item-selected' : '') + '" data-name="' + escapeAttr(r.name) + '">';
+            html += '<div class="d-flex align-items-center gap-2 flex-grow-1">';
+            html += '<i class="bi bi-diagram-3 text-primary"></i>';
+            html += '<div>';
+            html += '<div class="ad-group-item-name">' + escapeHtml(r.name) + '</div>';
+            if (r.distinguishedName) {
+                html += '<div class="ad-group-item-dn">' + escapeHtml(r.distinguishedName) + '</div>';
+            }
+            html += '</div></div>';
+            html += '<i class="' + (isSel ? 'bi bi-check-circle-fill text-success' : 'bi bi-circle text-muted') + ' ad-sel-icon"></i>';
+            html += '</div>';
+        }
+        showResults(html);
+    }
+
+    // Search button click
+    searchBtn.addEventListener('click', function() { doSearch(); });
+
+    // Enter key triggers search
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+    });
+
+    // Click result to toggle selection
+    resultsDiv.addEventListener('click', function(e) {
+        var item = e.target.closest('.ad-group-item');
+        if (!item) return;
+        var name = item.getAttribute('data-name');
+        var idx = selectedGroups.indexOf(name);
+        if (idx >= 0) { selectedGroups.splice(idx, 1); } else { selectedGroups.push(name); }
+        updateState();
+        renderSelectedChips();
+        refreshResultSelectionUI();
+    });
+
+    // Form submit guard
+    form.addEventListener('submit', function(e) {
+        if (selectedGroups.length === 0) {
+            e.preventDefault();
+            searchInput.focus();
+            showResults('<div class="ad-group-msg ad-group-err"><i class="bi bi-exclamation-triangle me-1"></i>Search and select at least one group first.</div>');
+        }
+    });
+
+    function showResults(html) {
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+    }
+    function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escapeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+})();
+</script>
+}
+
+<style>
+.selected-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+.selected-group-item {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--accent); color: var(--white);
+    padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;
+}
+.selected-group-item .btn-remove-group {
+    background: none; border: none; color: var(--white);
+    padding: 0; margin-left: 4px; cursor: pointer; opacity: 0.8;
+}
+.selected-group-item .btn-remove-group:hover { opacity: 1; }
+.ad-group-results-box {
+    display: none; background: var(--card-bg);
+    border: 1px solid var(--border-light); border-radius: 8px;
+    max-height: 340px; overflow-y: auto;
+}
+.ad-group-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; cursor: pointer;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s;
+}
+.ad-group-item:hover { background: rgba(108, 99, 255, 0.06); }
+.ad-group-item:last-child { border-bottom: none; }
+.ad-group-item-selected { background: rgba(108, 99, 255, 0.1); }
+.ad-group-item-name { font-weight: 600; font-size: 0.9rem; }
+.ad-group-item-dn { font-size: 0.75rem; color: var(--text-muted); opacity: 0.7; }
+.ad-results-header {
+    padding: 8px 14px; font-size: 0.8rem; color: var(--text-muted);
+    border-bottom: 1px solid var(--border-light); background: rgba(108, 99, 255, 0.03);
+}
+.ad-group-msg { padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+.ad-group-err { color: var(--accent); }
+.ad-spin { animation: ad-spin-anim 1s linear infinite; display: inline-block; }
+@keyframes ad-spin-anim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>

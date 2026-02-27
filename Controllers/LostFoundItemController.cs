@@ -41,8 +41,8 @@ namespace LostAndFoundApp.Controllers
         // POST: /LostFoundItem/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestFormLimits(MultipartBodyLengthLimit = 15_728_640)] // 15MB
-        [RequestSizeLimit(15_728_640)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 10_485_760)] // 10MB — matches FileUpload:MaxFileSizeBytes
+        [RequestSizeLimit(10_485_760)]
         public async Task<IActionResult> Create(LostFoundItemCreateViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -88,6 +88,7 @@ namespace LostAndFoundApp.Controllers
                 var attachmentName = await _fileService.SaveAttachmentAsync(vm.AttachmentFile);
                 if (attachmentName == null)
                 {
+                    _fileService.DeletePhoto(item.PhotoPath);
                     ModelState.AddModelError("AttachmentFile", "Invalid attachment file. Allowed types: pdf, doc, docx, xls, xlsx, txt, jpg, jpeg, png. Max size: 10MB.");
                     await PopulateDropdowns(vm);
                     return View(vm);
@@ -103,6 +104,9 @@ namespace LostAndFoundApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save new LostFoundItem");
+                // Clean up orphaned files that were saved to disk before the DB failure
+                _fileService.DeletePhoto(item.PhotoPath);
+                _fileService.DeleteAttachment(item.AttachmentPath);
                 ModelState.AddModelError(string.Empty, "An error occurred while saving the record. Please try again.");
                 await PopulateDropdowns(vm);
                 return View(vm);
@@ -166,6 +170,13 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
+            // Ownership check: User role can only edit their own records
+            if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin")
+                && item.CreatedBy != User.Identity?.Name)
+            {
+                return Forbid();
+            }
+
             var vm = new LostFoundItemEditViewModel
             {
                 TrackingId = item.TrackingId,
@@ -194,8 +205,8 @@ namespace LostAndFoundApp.Controllers
         // POST: /LostFoundItem/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestFormLimits(MultipartBodyLengthLimit = 15_728_640)] // 15MB
-        [RequestSizeLimit(15_728_640)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 10_485_760)] // 10MB — matches FileUpload:MaxFileSizeBytes
+        [RequestSizeLimit(10_485_760)]
         public async Task<IActionResult> Edit(LostFoundItemEditViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -207,6 +218,18 @@ namespace LostAndFoundApp.Controllers
             var item = await _context.LostFoundItems.FindAsync(vm.TrackingId);
             if (item == null)
                 return NotFound();
+
+            // Ownership check: User role can only edit their own records
+            if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin")
+                && item.CreatedBy != User.Identity?.Name)
+            {
+                return Forbid();
+            }
+
+            // P0 FIX: Audit field tampering prevention - never trust client-sent values
+            // Hidden inputs (CreatedBy, CreatedDateTime) can be manipulated; always preserve DB values
+            var originalCreatedBy = item.CreatedBy;
+            var originalCreatedDateTime = item.CreatedDateTime;
 
             item.DateFound = vm.DateFound;
             item.ItemId = vm.ItemId;
@@ -221,9 +244,24 @@ namespace LostAndFoundApp.Controllers
             item.ClaimedBy = vm.ClaimedBy;
             item.Notes = vm.Notes;
             // Audit trail — auto-populated, never user-editable
+            item.CreatedBy = originalCreatedBy;
+            item.CreatedDateTime = originalCreatedDateTime;
             item.ModifiedBy = User.Identity?.Name ?? "Unknown";
             item.ModifiedDateTime = DateTime.UtcNow;
-            // CreatedBy and CreatedDateTime are never modified
+
+            // Handle photo removal checkbox
+            if (Request.Form["RemovePhoto"] == "true" && !string.IsNullOrEmpty(item.PhotoPath))
+            {
+                _fileService.DeletePhoto(item.PhotoPath);
+                item.PhotoPath = null;
+            }
+
+            // Handle attachment removal checkbox
+            if (Request.Form["RemoveAttachment"] == "true" && !string.IsNullOrEmpty(item.AttachmentPath))
+            {
+                _fileService.DeleteAttachment(item.AttachmentPath);
+                item.AttachmentPath = null;
+            }
 
             // Handle photo replacement
             if (vm.PhotoFile != null && vm.PhotoFile.Length > 0)
@@ -566,6 +604,87 @@ namespace LostAndFoundApp.Controllers
             }
         }
 
+        // GET: /LostFoundItem/Export — Export search results to CSV
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Export(SearchViewModel? vm)
+        {
+            vm ??= new SearchViewModel();
+
+            // Build the same query as Search but without pagination
+            var query = _context.LostFoundItems.AsQueryable();
+
+            if (vm.TrackingId.HasValue)
+                query = query.Where(x => x.TrackingId == vm.TrackingId.Value);
+            if (vm.DateFoundFrom.HasValue)
+                query = query.Where(x => x.DateFound >= vm.DateFoundFrom.Value);
+            if (vm.DateFoundTo.HasValue)
+                query = query.Where(x => x.DateFound <= vm.DateFoundTo.Value);
+            if (vm.ItemId.HasValue)
+                query = query.Where(x => x.ItemId == vm.ItemId.Value);
+            if (vm.StatusId.HasValue)
+                query = query.Where(x => x.StatusId == vm.StatusId.Value);
+            if (vm.RouteId.HasValue)
+                query = query.Where(x => x.RouteId == vm.RouteId.Value);
+            if (vm.VehicleId.HasValue)
+                query = query.Where(x => x.VehicleId == vm.VehicleId.Value);
+            if (vm.StorageLocationId.HasValue)
+                query = query.Where(x => x.StorageLocationId == vm.StorageLocationId.Value);
+            if (vm.FoundById.HasValue)
+                query = query.Where(x => x.FoundById == vm.FoundById.Value);
+
+            var results = await query
+                .OrderByDescending(x => x.TrackingId)
+                .Select(x => new
+                {
+                    x.TrackingId,
+                    x.DateFound,
+                    ItemName = x.Item != null ? x.Item.Name : "",
+                    x.Description,
+                    x.LocationFound,
+                    RouteName = x.Route != null ? x.Route.Name : "",
+                    VehicleName = x.Vehicle != null ? x.Vehicle.Name : "",
+                    StorageLocationName = x.StorageLocation != null ? x.StorageLocation.Name : "",
+                    StatusName = x.Status != null ? x.Status.Name : "",
+                    x.StatusDate,
+                    FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
+                    x.ClaimedBy,
+                    x.CreatedBy,
+                    x.CreatedDateTime,
+                    x.ModifiedBy,
+                    x.ModifiedDateTime,
+                    x.Notes
+                })
+                .ToListAsync();
+
+            // Generate CSV
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("TrackingId,DateFound,ItemType,Description,LocationFound,Route,Vehicle,StorageLocation,Status,StatusDate,FoundBy,ClaimedBy,CreatedBy,CreatedDateTime,ModifiedBy,ModifiedDateTime,Notes");
+
+            foreach (var r in results)
+            {
+                sb.AppendLine($"{r.TrackingId},{r.DateFound:yyyy-MM-dd},\"{EscapeCsv(r.ItemName)}\",\"{EscapeCsv(r.Description)}\",\"{EscapeCsv(r.LocationFound)}\",\"{EscapeCsv(r.RouteName)}\",\"{EscapeCsv(r.VehicleName)}\",\"{EscapeCsv(r.StorageLocationName)}\",\"{r.StatusName}\",{r.StatusDate?.ToString("yyyy-MM-dd")},\"{EscapeCsv(r.FoundByName)}\",\"{EscapeCsv(r.ClaimedBy)}\",\"{r.CreatedBy}\",{r.CreatedDateTime:yyyy-MM-dd HH:mm:ss},\"{r.ModifiedBy}\",{r.ModifiedDateTime?.ToString("yyyy-MM-dd HH:mm:ss")},\"{EscapeCsv(r.Notes)}\"");
+            }
+
+            await _activityLogService.LogAsync(HttpContext, "Export Records",
+                $"Exported {results.Count} records to CSV.", "Items");
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            return File(bytes, "text/csv", $"lost-found-export-{DateTime.Now:yyyyMMdd-HHmmss}.csv");
+        }
+
+        private static string EscapeCsv(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            var sanitized = value.Replace("\"", "\"\"").Replace("\n", " ").Replace("\r", " ").Replace("\t", " ");
+            // Prevent CSV formula injection — prefix with single quote if value starts with a formula character
+            if (sanitized.Length > 0 && "=+-@\t".Contains(sanitized[0]))
+            {
+                sanitized = "'" + sanitized;
+            }
+            return sanitized;
+        }
+
         // POST: /LostFoundItem/Delete/5 — Admin+ only
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -604,9 +723,126 @@ namespace LostAndFoundApp.Controllers
             return RedirectToAction(nameof(Search));
         }
 
+        // POST: /LostFoundItem/BulkDelete — Admin+ only
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> BulkDelete([FromForm] string ids)
+        {
+            // Parse comma-separated IDs from the hidden input (JS joins selected values)
+            var idArray = ParseIds(ids);
+            if (idArray.Length == 0)
+            {
+                TempData["ErrorMessage"] = "No records selected for deletion.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            var items = await _context.LostFoundItems
+                .Where(x => idArray.Contains(x.TrackingId))
+                .ToListAsync();
+
+            if (!items.Any())
+            {
+                TempData["ErrorMessage"] = "No matching records found.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            var deletedCount = items.Count;
+
+            // Capture file paths BEFORE removing entities
+            var filesToDelete = items
+                .Select(i => (Photo: i.PhotoPath, Attachment: i.AttachmentPath))
+                .ToList();
+
+            _context.LostFoundItems.RemoveRange(items);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to bulk delete {Count} records", deletedCount);
+                TempData["ErrorMessage"] = "An error occurred while deleting records. Please try again.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            // Clean up files AFTER successful DB commit to prevent orphaned records
+            foreach (var (photo, attachment) in filesToDelete)
+            {
+                _fileService.DeletePhoto(photo);
+                _fileService.DeleteAttachment(attachment);
+            }
+
+            _logger.LogInformation("Bulk deleted {Count} records by {User}", deletedCount, User.Identity?.Name);
+            await _activityLogService.LogAsync(HttpContext, "Bulk Delete",
+                $"Bulk deleted {deletedCount} lost & found records.", "Items");
+            TempData["SuccessMessage"] = $"{deletedCount} record(s) deleted successfully.";
+            return RedirectToAction(nameof(Search));
+        }
+
+        // POST: /LostFoundItem/BulkStatusUpdate — Admin+ only
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> BulkStatusUpdate([FromForm] string ids, [FromForm] int statusId)
+        {
+            // Parse comma-separated IDs from the hidden input (JS joins selected values)
+            var idArray = ParseIds(ids);
+            if (idArray.Length == 0)
+            {
+                TempData["ErrorMessage"] = "No records selected for status update.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            var items = await _context.LostFoundItems
+                .Where(x => idArray.Contains(x.TrackingId))
+                .ToListAsync();
+
+            if (!items.Any())
+            {
+                TempData["ErrorMessage"] = "No matching records found.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            var status = await _context.Statuses.FindAsync(statusId);
+            var updatedCount = items.Count;
+
+            foreach (var item in items)
+            {
+                item.StatusId = statusId;
+                item.StatusDate = DateTime.Today; // Date-only field — use date-only value
+                item.ModifiedBy = User.Identity?.Name ?? "Unknown";
+                item.ModifiedDateTime = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Bulk updated status to '{Status}' for {Count} records by {User}", 
+                status?.Name, updatedCount, User.Identity?.Name);
+            await _activityLogService.LogAsync(HttpContext, "Bulk Status Update",
+                $"Bulk updated status to '{status?.Name}' for {updatedCount} records.", "Items");
+            TempData["SuccessMessage"] = $"{updatedCount} record(s) updated to '{status?.Name}'.";
+            return RedirectToAction(nameof(Search));
+        }
+
         // =====================================================================
         // HELPER METHODS
         // =====================================================================
+
+        /// <summary>
+        /// Parses a comma-separated string of IDs into an int array.
+        /// Used by BulkDelete and BulkStatusUpdate to handle JS-generated hidden input values.
+        /// </summary>
+        private static int[] ParseIds(string? ids)
+        {
+            if (string.IsNullOrWhiteSpace(ids)) return Array.Empty<int>();
+            return ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var id) ? id : (int?)null)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToArray();
+        }
 
         /// <summary>
         /// Populate dropdowns for Create — only active master data items.

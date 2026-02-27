@@ -30,7 +30,10 @@
                             <select asp-for="ItemId" asp-items="Model.Items" class="form-select">
                                 <option value="">Select item type...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new item type"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                         <span asp-validation-for="ItemId" class="text-danger small"></span>
                     </div>
@@ -40,7 +43,10 @@
                             <select asp-for="StatusId" asp-items="Model.Statuses" class="form-select">
                                 <option value="">Select status...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new status"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                         <span asp-validation-for="StatusId" class="text-danger small"></span>
                     </div>
@@ -61,7 +67,10 @@
                             <select asp-for="RouteId" asp-items="Model.Routes" class="form-select">
                                 <option value="">Select route...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new route"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -70,7 +79,10 @@
                             <select asp-for="VehicleId" asp-items="Model.Vehicles" class="form-select">
                                 <option value="">Select vehicle...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new vehicle"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -79,7 +91,10 @@
                             <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="form-select">
                                 <option value="">Select location...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new storage location"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
 
@@ -89,7 +104,10 @@
                             <select asp-for="FoundById" asp-items="Model.FoundByNames" class="form-select">
                                 <option value="">Select person...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new found by name"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">

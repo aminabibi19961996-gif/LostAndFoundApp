@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using LostAndFoundApp.Data;
 using LostAndFoundApp.Models;
 using LostAndFoundApp.Services;
+using LostAndFoundApp.ViewModels;
 
 namespace LostAndFoundApp.Controllers
 {
@@ -28,10 +29,24 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> Items()
+        public async Task<IActionResult> Items(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
-            var items = await _context.Items.OrderBy(x => x.Name).ToListAsync();
-            return View(items);
+            pageIndex = Math.Max(1, pageIndex);
+            pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
+            var totalCount = await _context.Items.CountAsync();
+            var items = await _context.Items
+                .OrderBy(x => x.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var vm = new PaginatedList<Item>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -111,10 +126,24 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> Routes()
+        public async Task<IActionResult> Routes(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
-            var routes = await _context.Routes.OrderBy(x => x.Name).ToListAsync();
-            return View(routes);
+            pageIndex = Math.Max(1, pageIndex);
+            pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
+            var totalCount = await _context.Routes.CountAsync();
+            var routes = await _context.Routes
+                .OrderBy(x => x.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var vm = new PaginatedList<Models.Route>
+            {
+                Items = routes,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -193,10 +222,24 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> Vehicles()
+        public async Task<IActionResult> Vehicles(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
-            var vehicles = await _context.Vehicles.OrderBy(x => x.Name).ToListAsync();
-            return View(vehicles);
+            pageIndex = Math.Max(1, pageIndex);
+            pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
+            var totalCount = await _context.Vehicles.CountAsync();
+            var vehicles = await _context.Vehicles
+                .OrderBy(x => x.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var vm = new PaginatedList<Vehicle>
+            {
+                Items = vehicles,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -275,10 +318,24 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> StorageLocations()
+        public async Task<IActionResult> StorageLocations(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
-            var locations = await _context.StorageLocations.OrderBy(x => x.Name).ToListAsync();
-            return View(locations);
+            pageIndex = Math.Max(1, pageIndex);
+            pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
+            var totalCount = await _context.StorageLocations.CountAsync();
+            var locations = await _context.StorageLocations
+                .OrderBy(x => x.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var vm = new PaginatedList<StorageLocation>
+            {
+                Items = locations,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -357,10 +414,24 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> Statuses()
+        public async Task<IActionResult> Statuses(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
-            var statuses = await _context.Statuses.OrderBy(x => x.Name).ToListAsync();
-            return View(statuses);
+            pageIndex = Math.Max(1, pageIndex);
+            pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
+            var totalCount = await _context.Statuses.CountAsync();
+            var statuses = await _context.Statuses
+                .OrderBy(x => x.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var vm = new PaginatedList<Status>
+            {
+                Items = statuses,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -439,10 +510,24 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> FoundByNames()
+        public async Task<IActionResult> FoundByNames(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
-            var names = await _context.FoundByNames.OrderBy(x => x.Name).ToListAsync();
-            return View(names);
+            pageIndex = Math.Max(1, pageIndex);
+            pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
+            var totalCount = await _context.FoundByNames.CountAsync();
+            var names = await _context.FoundByNames
+                .OrderBy(x => x.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var vm = new PaginatedList<FoundByName>
+            {
+                Items = names,
+                TotalCount = totalCount,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            return View(vm);
         }
 
         [HttpGet]
@@ -530,7 +615,9 @@ namespace LostAndFoundApp.Controllers
             if (item == null) return NotFound();
             item.IsActive = !item.IsActive;
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Item '{item.Name}' has been {(item.IsActive ? "activated" : "deactivated")}.";
+            var status = item.IsActive ? "activated" : "deactivated";
+            TempData["SuccessMessage"] = $"Item '{item.Name}' has been {status}.";
+            await _activityLogService.LogAsync(HttpContext, "Toggle Item", $"Item '{item.Name}' has been {status}.", "MasterData");
             return RedirectToAction(nameof(Items));
         }
 
@@ -543,7 +630,9 @@ namespace LostAndFoundApp.Controllers
             if (route == null) return NotFound();
             route.IsActive = !route.IsActive;
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Route '{route.Name}' has been {(route.IsActive ? "activated" : "deactivated")}.";
+            var status = route.IsActive ? "activated" : "deactivated";
+            TempData["SuccessMessage"] = $"Route '{route.Name}' has been {status}.";
+            await _activityLogService.LogAsync(HttpContext, "Toggle Route", $"Route '{route.Name}' has been {status}.", "MasterData");
             return RedirectToAction(nameof(Routes));
         }
 
@@ -556,7 +645,9 @@ namespace LostAndFoundApp.Controllers
             if (vehicle == null) return NotFound();
             vehicle.IsActive = !vehicle.IsActive;
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Vehicle '{vehicle.Name}' has been {(vehicle.IsActive ? "activated" : "deactivated")}.";
+            var status = vehicle.IsActive ? "activated" : "deactivated";
+            TempData["SuccessMessage"] = $"Vehicle '{vehicle.Name}' has been {status}.";
+            await _activityLogService.LogAsync(HttpContext, "Toggle Vehicle", $"Vehicle '{vehicle.Name}' has been {status}.", "MasterData");
             return RedirectToAction(nameof(Vehicles));
         }
 
@@ -569,7 +660,9 @@ namespace LostAndFoundApp.Controllers
             if (location == null) return NotFound();
             location.IsActive = !location.IsActive;
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Storage Location '{location.Name}' has been {(location.IsActive ? "activated" : "deactivated")}.";
+            var status = location.IsActive ? "activated" : "deactivated";
+            TempData["SuccessMessage"] = $"Storage Location '{location.Name}' has been {status}.";
+            await _activityLogService.LogAsync(HttpContext, "Toggle Storage Location", $"Storage location '{location.Name}' has been {status}.", "MasterData");
             return RedirectToAction(nameof(StorageLocations));
         }
 
@@ -582,7 +675,9 @@ namespace LostAndFoundApp.Controllers
             if (status == null) return NotFound();
             status.IsActive = !status.IsActive;
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Status '{status.Name}' has been {(status.IsActive ? "activated" : "deactivated")}.";
+            var state = status.IsActive ? "activated" : "deactivated";
+            TempData["SuccessMessage"] = $"Status '{status.Name}' has been {state}.";
+            await _activityLogService.LogAsync(HttpContext, "Toggle Status", $"Status '{status.Name}' has been {state}.", "MasterData");
             return RedirectToAction(nameof(Statuses));
         }
 
@@ -595,13 +690,16 @@ namespace LostAndFoundApp.Controllers
             if (name == null) return NotFound();
             name.IsActive = !name.IsActive;
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Found By Name '{name.Name}' has been {(name.IsActive ? "activated" : "deactivated")}.";
+            var status = name.IsActive ? "activated" : "deactivated";
+            TempData["SuccessMessage"] = $"Found By Name '{name.Name}' has been {status}.";
+            await _activityLogService.LogAsync(HttpContext, "Toggle Found By Name", $"Found by name '{name.Name}' has been {status}.", "MasterData");
             return RedirectToAction(nameof(FoundByNames));
         }
 
         // =====================================================================
         // AJAX ENDPOINTS FOR INLINE DROPDOWN CREATION
         // All authenticated users can create new values inline from the item form
+        // FIXED: Removed [Authorize(Policy = "RequireAdminOrAbove")] - was breaking for User role
         // =====================================================================
 
         [HttpPost]
@@ -612,12 +710,14 @@ namespace LostAndFoundApp.Controllers
             if (string.IsNullOrWhiteSpace(request?.Name))
                 return Json(new { success = false, message = "Name is required." });
             var trimmed = request.Name.Trim();
-            var existing = await _context.Items.FirstOrDefaultAsync(x => x.Name == trimmed);
+            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+            var existing = await _context.Items.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
             if (existing != null)
                 return Json(new { success = true, id = existing.Id, name = existing.Name });
             var entity = new Item { Name = trimmed };
             _context.Items.Add(entity);
             await _context.SaveChangesAsync();
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Item", $"Created item type '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
 
@@ -629,12 +729,14 @@ namespace LostAndFoundApp.Controllers
             if (string.IsNullOrWhiteSpace(request?.Name))
                 return Json(new { success = false, message = "Name is required." });
             var trimmed = request.Name.Trim();
-            var existing = await _context.Routes.FirstOrDefaultAsync(x => x.Name == trimmed);
+            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+            var existing = await _context.Routes.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
             if (existing != null)
                 return Json(new { success = true, id = existing.Id, name = existing.Name });
             var entity = new Models.Route { Name = trimmed };
             _context.Routes.Add(entity);
             await _context.SaveChangesAsync();
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Route", $"Created route '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
 
@@ -646,12 +748,14 @@ namespace LostAndFoundApp.Controllers
             if (string.IsNullOrWhiteSpace(request?.Name))
                 return Json(new { success = false, message = "Name is required." });
             var trimmed = request.Name.Trim();
-            var existing = await _context.Vehicles.FirstOrDefaultAsync(x => x.Name == trimmed);
+            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+            var existing = await _context.Vehicles.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
             if (existing != null)
                 return Json(new { success = true, id = existing.Id, name = existing.Name });
             var entity = new Vehicle { Name = trimmed };
             _context.Vehicles.Add(entity);
             await _context.SaveChangesAsync();
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Vehicle", $"Created vehicle '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
 
@@ -663,12 +767,14 @@ namespace LostAndFoundApp.Controllers
             if (string.IsNullOrWhiteSpace(request?.Name))
                 return Json(new { success = false, message = "Name is required." });
             var trimmed = request.Name.Trim();
-            var existing = await _context.StorageLocations.FirstOrDefaultAsync(x => x.Name == trimmed);
+            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+            var existing = await _context.StorageLocations.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
             if (existing != null)
                 return Json(new { success = true, id = existing.Id, name = existing.Name });
             var entity = new StorageLocation { Name = trimmed };
             _context.StorageLocations.Add(entity);
             await _context.SaveChangesAsync();
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Storage Location", $"Created storage location '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
 
@@ -680,12 +786,14 @@ namespace LostAndFoundApp.Controllers
             if (string.IsNullOrWhiteSpace(request?.Name))
                 return Json(new { success = false, message = "Name is required." });
             var trimmed = request.Name.Trim();
-            var existing = await _context.Statuses.FirstOrDefaultAsync(x => x.Name == trimmed);
+            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+            var existing = await _context.Statuses.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
             if (existing != null)
                 return Json(new { success = true, id = existing.Id, name = existing.Name });
             var entity = new Status { Name = trimmed };
             _context.Statuses.Add(entity);
             await _context.SaveChangesAsync();
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Status", $"Created status '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
 
@@ -697,22 +805,16 @@ namespace LostAndFoundApp.Controllers
             if (string.IsNullOrWhiteSpace(request?.Name))
                 return Json(new { success = false, message = "Name is required." });
             var trimmed = request.Name.Trim();
-            var existing = await _context.FoundByNames.FirstOrDefaultAsync(x => x.Name == trimmed);
+            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+            var existing = await _context.FoundByNames.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
             if (existing != null)
                 return Json(new { success = true, id = existing.Id, name = existing.Name });
             var entity = new FoundByName { Name = trimmed };
             _context.FoundByNames.Add(entity);
             await _context.SaveChangesAsync();
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Found By Name", $"Created found by name '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
-    }
-
-    /// <summary>
-    /// Simple request model for AJAX inline master data creation
-    /// </summary>
-    public class MasterDataAjaxRequest
-    {
-        public string Name { get; set; } = string.Empty;
     }
 }
 

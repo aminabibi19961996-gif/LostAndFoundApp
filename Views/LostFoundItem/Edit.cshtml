@@ -18,8 +18,6 @@
             <form asp-action="Edit" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="TrackingId" />
-                <input type="hidden" asp-for="CreatedBy" />
-                <input type="hidden" asp-for="CreatedDateTime" />
 
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -33,7 +31,10 @@
                             <select asp-for="ItemId" asp-items="Model.Items" class="form-select">
                                 <option value="">Select item type...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new item type"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -42,7 +43,10 @@
                             <select asp-for="StatusId" asp-items="Model.Statuses" class="form-select">
                                 <option value="">Select status...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new status"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
 
@@ -61,7 +65,10 @@
                             <select asp-for="RouteId" asp-items="Model.Routes" class="form-select">
                                 <option value="">Select route...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new route"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -70,7 +77,10 @@
                             <select asp-for="VehicleId" asp-items="Model.Vehicles" class="form-select">
                                 <option value="">Select vehicle...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new vehicle"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -79,7 +89,10 @@
                             <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="form-select">
                                 <option value="">Select location...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new storage location"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
 
@@ -89,7 +102,10 @@
                             <select asp-for="FoundById" asp-items="Model.FoundByNames" class="form-select">
                                 <option value="">Select person...</option>
                             </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                            {
                             <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new found by name"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -108,19 +124,27 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label asp-for="PhotoFile" class="form-label">Replace Photo</label>
+                        <label asp-for="PhotoFile" class="form-label">Photo</label>
                         <input asp-for="PhotoFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif" />
                         @if (!string.IsNullOrEmpty(Model.ExistingPhotoPath))
                         {
                             <div class="form-text text-success"><i class="bi bi-check-circle"></i> Current photo attached</div>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="RemovePhoto" value="true" class="form-check-input" id="removePhoto" />
+                                <label class="form-check-label text-danger" for="removePhoto">Remove current photo</label>
+                            </div>
                         }
                     </div>
                     <div class="col-md-6">
-                        <label asp-for="AttachmentFile" class="form-label">Replace Attachment</label>
+                        <label asp-for="AttachmentFile" class="form-label">Attachment</label>
                         <input asp-for="AttachmentFile" class="form-control" type="file" />
                         @if (!string.IsNullOrEmpty(Model.ExistingAttachmentPath))
                         {
                             <div class="form-text text-success"><i class="bi bi-check-circle"></i> Current attachment attached</div>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="RemoveAttachment" value="true" class="form-check-input" id="removeAttachment" />
+                                <label class="form-check-label text-danger" for="removeAttachment">Remove current attachment</label>
+                            </div>
                         }
                     </div>
                 </div>

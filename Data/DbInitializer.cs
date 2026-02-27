@@ -175,6 +175,21 @@ namespace LostAndFoundApp.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("Seeded 2 default AD security groups with role mappings.");
             }
+
+            // ─── Seed Default Password Policy ─────────────────────
+            if (!await context.PasswordPolicySettings.AnyAsync())
+            {
+                context.PasswordPolicySettings.Add(new PasswordPolicySetting
+                {
+                    MinimumLength = 8,
+                    RequireDigit = true,
+                    RequireLowercase = true,
+                    RequireUppercase = true,
+                    RequireNonAlphanumeric = true
+                });
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded default password policy.");
+            }
         }
 
         /// <summary>

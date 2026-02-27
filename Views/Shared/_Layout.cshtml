@@ -9,6 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="~/css/site.css" rel="stylesheet" />
     @await RenderSectionAsync("Styles", required: false)
+    @* P1 FIX: Enable client-side validation *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
 </head>
 <body>
     @if (User.Identity?.IsAuthenticated == true)
@@ -66,6 +70,7 @@
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people me-2"></i>User Management</a></li>
                                     <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3 me-2"></i>AD Groups &amp; Sync</a></li>
+                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="PasswordPolicy"><i class="bi bi-key me-2"></i>Password Policy</a></li>
                                     <li><a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone me-2"></i>Announcements</a></li>
                                     <li><hr class="dropdown-divider" /></li>
                                     <li><a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text me-2"></i>Activity Logs</a></li>
@@ -113,6 +118,21 @@
                             </div>
                             <span class="user-name">@User.Identity?.Name</span>
                         </div>
+                        <!-- Mobile-only nav links -->
+                        <div class="d-flex d-md-none gap-2 mb-2 pb-2 border-bottom border-secondary">
+                            <a asp-controller="Account" asp-action="Profile" class="nav-link">
+                                <i class="bi bi-person-gear me-1"></i> My Profile
+                            </a>
+                            <a asp-controller="Account" asp-action="ChangePassword" class="nav-link">
+                                <i class="bi bi-key me-1"></i> Change Password
+                            </a>
+                        </div>
+                        <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-ghost btn-icon" title="Change Password" style="color: var(--text-muted);">
+                            <i class="bi bi-key"></i>
+                        </a>
+                        <a asp-controller="Account" asp-action="Profile" class="btn btn-ghost btn-icon" title="My Profile" style="color: var(--text-muted);">
+                            <i class="bi bi-person-gear"></i>
+                        </a>
                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-3">

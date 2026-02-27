@@ -1,0 +1,105 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="page-header">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
+            <div>
+                <h1><i class="bi bi-person me-2"></i>My Profile</h1>
+                <p class="subtitle mb-0">Update your personal information</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card fade-in-up">
+                <div class="card-header"><i class="bi bi-person-badge me-2 text-primary"></i>Profile Information</div>
+                <div class="card-body">
+                    <form method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input value="@Model.UserName" class="form-control" disabled />
+                            <div class="form-text">Username cannot be changed.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="DisplayName"></label>
+                            <input asp-for="DisplayName" class="form-control" />
+                            <span asp-validation-for="DisplayName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Email"></label>
+                            @if (Model.IsAdUser)
+                            {
+                                <input value="@Model.Email" class="form-control" disabled />
+                                <div class="form-text">Email is managed by Active Directory and cannot be changed here.</div>
+                            }
+                            else
+                            {
+                                <input asp-for="Email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            }
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i> Save Changes
+                            </button>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card fade-in-up">
+                <div class="card-header"><i class="bi bi-info-circle me-2 text-primary"></i>Account Info</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label mb-0">Account Type</label>
+                        <p>
+                            @if (Model.IsAdUser)
+                            {
+                                <span class="badge-role badge-ad">
+                                    <i class="bi bi-diagram-3"></i> Active Directory
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-role badge-local">
+                                    <i class="bi bi-person"></i> Local Account
+                                </span>
+                            }
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label mb-0">Password</label>
+                        <p>
+                            @if (Model.IsAdUser)
+                            {
+                                <span class="text-muted">Managed by Active Directory</span>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-key me-1"></i> Change Password
+                                </a>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -58,10 +58,18 @@
                 </button>
             </form>
 
-            <p class="text-center mt-4 mb-0 small text-muted">
+            <div class="text-center mt-4">
+                <a asp-controller="Account" asp-action="ForgotUsername" class="small text-muted">
+                    <i class="bi bi-question-circle me-1"></i> Forgot Username?
+                </a>
+            </div>
+            <p class="text-center mt-3 mb-0 small text-muted">
                 <i class="bi bi-shield-check me-1"></i> Secured by Active Directory &amp; Microsoft Identity
             </p>
         </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
 </body>
 </html>

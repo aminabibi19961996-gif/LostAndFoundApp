@@ -36,6 +36,12 @@ namespace LostAndFoundApp.Data
         public DbSet<Announcement> Announcements { get; set; }
         public DbSet<AnnouncementRead> AnnouncementReads { get; set; }
 
+        // Password policy settings (single-row configuration table)
+        public DbSet<PasswordPolicySetting> PasswordPolicySettings { get; set; }
+
+        // AD sync history log
+        public DbSet<AdSyncLog> AdSyncLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -183,12 +189,39 @@ namespace LostAndFoundApp.Data
                     .HasForeignKey(e => e.AnnouncementId)
                     .OnDelete(DeleteBehavior.Cascade);
 
+                // Foreign key to AspNetUsers - prevents orphaned records and enables cascade delete
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
                 entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
                 entity.Property(e => e.PopupShownCount).HasDefaultValue(0);
 
                 // Unique composite index: one read record per user per announcement
                 entity.HasIndex(e => new { e.AnnouncementId, e.UserId }).IsUnique();
                 entity.HasIndex(e => e.UserId);
+            });
+
+            builder.Entity<PasswordPolicySetting>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.MinimumLength).HasDefaultValue(8);
+                entity.Property(e => e.RequireDigit).HasDefaultValue(true);
+                entity.Property(e => e.RequireLowercase).HasDefaultValue(true);
+                entity.Property(e => e.RequireUppercase).HasDefaultValue(true);
+                entity.Property(e => e.RequireNonAlphanumeric).HasDefaultValue(true);
+            });
+
+            builder.Entity<AdSyncLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Timestamp).IsRequired();
+                entity.Property(e => e.TriggerType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.TriggeredBy).HasMaxLength(256);
+                entity.Property(e => e.ErrorSummary).HasMaxLength(2000);
+                entity.HasIndex(e => e.Timestamp);
             });
         }
     }

@@ -26,7 +26,7 @@ namespace LostAndFoundApp.ViewModels
         public string CurrentPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "New password is required.")]
-        [StringLength(100, ErrorMessage = "Password must be at least {2} characters long.", MinimumLength = 8)]
+        [StringLength(100, ErrorMessage = "Password must not exceed {1} characters.")]
         [DataType(DataType.Password)]
         [Display(Name = "New Password")]
         public string NewPassword { get; set; } = string.Empty;
@@ -35,5 +35,38 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Confirm New Password")]
         [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    public class ProfileViewModel
+    {
+        public string UserName { get; set; } = string.Empty;
+
+        [Display(Name = "Display Name")]
+        [StringLength(200, ErrorMessage = "Display name cannot exceed 200 characters.")]
+        public string DisplayName { get; set; } = string.Empty;
+
+        [Display(Name = "Email")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        [StringLength(256, ErrorMessage = "Email cannot exceed 256 characters.")]
+        public string Email { get; set; } = string.Empty;
+
+        public bool IsAdUser { get; set; }
+    }
+
+    public class ForgotUsernameViewModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        [Display(Name = "Email Address")]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class PasswordPolicyViewModel
+    {
+        public int MinimumLength { get; set; } = 8;
+        public bool RequireDigit { get; set; } = true;
+        public bool RequireLowercase { get; set; } = true;
+        public bool RequireUppercase { get; set; } = true;
+        public bool RequireNonAlphanumeric { get; set; } = true;
     }
 }

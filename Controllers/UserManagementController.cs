@@ -1,3 +1,4 @@
+using System.DirectoryServices.AccountManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -50,27 +51,89 @@ namespace LostAndFoundApp.Controllers
         }
 
         // GET: /UserManagement
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string search, string role, string accountType, string status, int page = 1)
         {
-            var users = await _userManager.Users.ToListAsync();
-            var userList = new List<UserListViewModel>();
+            const int pageSize = 50;
 
+            // Batched query: get all users and roles in single queries instead of N+1
+            var users = await _userManager.Users.ToListAsync();
+            
+            // Get all user-role mappings in one query
+            var userRolePairs = await _context.UserRoles
+                .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, RoleName = r.Name })
+                .ToListAsync();
+            
+            // Build a lookup dictionary for O(1) role lookup
+            var userRolesLookup = userRolePairs
+                .GroupBy(x => x.UserId)
+                .ToDictionary(g => g.Key, g => g.First().RoleName);
+
+            var userList = new List<UserListViewModel>();
             foreach (var user in users)
             {
-                var roles = await _userManager.GetRolesAsync(user);
+                userRolesLookup.TryGetValue(user.Id, out var roleName);
                 userList.Add(new UserListViewModel
                 {
                     Id = user.Id,
                     UserName = user.UserName ?? "",
                     DisplayName = user.DisplayName,
                     Email = user.Email,
-                    Role = roles.FirstOrDefault() ?? "None",
+                    Role = roleName ?? "None",
                     AccountType = user.IsAdUser ? "Active Directory" : "Local",
                     IsActive = user.IsActive
                 });
             }
 
-            return View(userList.OrderBy(u => u.UserName).ToList());
+            // Apply filters
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.ToLower();
+                userList = userList.Where(u =>
+                    u.UserName.ToLower().Contains(term) ||
+                    (u.DisplayName?.ToLower().Contains(term) ?? false) ||
+                    (u.Email?.ToLower().Contains(term) ?? false)
+                ).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(role) && role != "All")
+            {
+                userList = userList.Where(u => u.Role.Equals(role, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(accountType) && accountType != "All")
+            {
+                userList = userList.Where(u => u.AccountType.Equals(accountType, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+            {
+                var isActive = status == "Active";
+                userList = userList.Where(u => u.IsActive == isActive).ToList();
+            }
+
+            // Pagination
+            var totalFiltered = userList.Count;
+            var totalPages = (int)Math.Ceiling((double)totalFiltered / pageSize);
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedList = userList
+                .OrderBy(u => u.UserName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Store filter values and pagination for the view
+            ViewBag.Search = search;
+            ViewBag.Role = role;
+            ViewBag.AccountType = accountType;
+            ViewBag.Status = status;
+            ViewBag.TotalCount = users.Count;
+            ViewBag.FilteredCount = totalFiltered;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+
+            return View(pagedList);
         }
 
         // GET: /UserManagement/Create
@@ -177,6 +240,8 @@ namespace LostAndFoundApp.Controllers
             if (user == null) return NotFound();
 
             var currentRoles = await _userManager.GetRolesAsync(user);
+            var actualCurrentRole = currentRoles.FirstOrDefault() ?? "None";
+
             if (currentRoles.Any())
             {
                 await _userManager.RemoveFromRolesAsync(user, currentRoles);
@@ -185,9 +250,9 @@ namespace LostAndFoundApp.Controllers
             await _userManager.AddToRoleAsync(user, model.NewRole);
 
             await _activityLogService.LogAsync(HttpContext, "Change Role",
-                $"Role for user '{user.UserName}' changed from '{model.CurrentRole}' to '{model.NewRole}'.", "UserManagement");
+                $"Role for user '{user.UserName}' changed from '{actualCurrentRole}' to '{model.NewRole}'.", "UserManagement");
             _logger.LogInformation("Role for user '{User}' changed from '{OldRole}' to '{NewRole}'.",
-                user.UserName, model.CurrentRole, model.NewRole);
+                user.UserName, actualCurrentRole, model.NewRole);
             TempData["SuccessMessage"] = $"Role for '{user.UserName}' changed to '{model.NewRole}'.";
             return RedirectToAction(nameof(Index));
         }
@@ -218,6 +283,116 @@ namespace LostAndFoundApp.Controllers
         }
 
         // =====================================================================
+        // ADMIN PASSWORD RESET — SuperAdmin can reset any local user's password
+        // =====================================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireSuperAdmin")]
+        public async Task<IActionResult> ResetPassword(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.IsAdUser)
+            {
+                TempData["ErrorMessage"] = "Cannot reset password for Active Directory users. They must use their organization's password management.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Generate a strong temporary password
+            var tempPassword = GenerateTempPassword();
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, tempPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                TempData["ErrorMessage"] = $"Failed to reset password: {errors}";
+                return RedirectToAction(nameof(Index));
+            }
+
+            user.MustChangePassword = true;
+            await _userManager.UpdateAsync(user);
+
+            await _activityLogService.LogAsync(HttpContext, "Reset Password",
+                $"Password reset for user '{user.UserName}' by administrator.", "UserManagement");
+            _logger.LogInformation("Password reset for user '{User}' by '{Admin}'.", user.UserName, User.Identity?.Name);
+            TempData["SuccessMessage"] = $"Password for '{user.UserName}' has been reset to: {tempPassword} — They must change it on next login.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // =====================================================================
+        // DELETE USER — SuperAdmin can permanently remove a user
+        // =====================================================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireSuperAdmin")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.UserName == User.Identity?.Name)
+            {
+                TempData["ErrorMessage"] = "You cannot delete your own account.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var userName = user.UserName;
+
+            // Clean up AnnouncementReads to prevent orphaned records
+            await _context.AnnouncementReads.Where(r => r.UserId == user.Id).ExecuteDeleteAsync();
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                TempData["ErrorMessage"] = $"Failed to delete user: {errors}";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _activityLogService.LogAsync(HttpContext, "Delete User",
+                $"User '{userName}' permanently deleted.", "UserManagement");
+            _logger.LogInformation("User '{User}' deleted by '{Admin}'.", userName, User.Identity?.Name);
+            TempData["SuccessMessage"] = $"User '{userName}' has been permanently deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        private static string GenerateTempPassword()
+        {
+            const string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lower = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+            const string special = "!@#$%&*";
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            var bytes = new byte[8];
+            rng.GetBytes(bytes);
+            var chars = new char[12];
+            chars[0] = upper[bytes[0] % upper.Length];
+            chars[1] = lower[bytes[1] % lower.Length];
+            chars[2] = digits[bytes[2] % digits.Length];
+            chars[3] = special[bytes[3] % special.Length];
+            var all = upper + lower + digits + special;
+            for (int i = 4; i < 12; i++)
+            {
+                rng.GetBytes(bytes);
+                chars[i] = all[bytes[0] % all.Length];
+            }
+            // Shuffle
+            for (int i = chars.Length - 1; i > 0; i--)
+            {
+                rng.GetBytes(bytes);
+                int j = bytes[0] % (i + 1);
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+            return new string(chars);
+        }
+
+        // =====================================================================
         // ACTIVE DIRECTORY GROUP MANAGEMENT WITH ROLE MAPPING
         // =====================================================================
 
@@ -227,6 +402,20 @@ namespace LostAndFoundApp.Controllers
         {
             ViewBag.AdEnabled = _config.GetValue<bool>("ActiveDirectory:Enabled", false);
             ViewBag.AdDomain = _config["ActiveDirectory:Domain"] ?? "(not configured)";
+
+            // Fetch last sync info for display (Gap 2 fix)
+            var lastSync = await _context.AdSyncLogs
+                .OrderByDescending(l => l.Timestamp)
+                .FirstOrDefaultAsync();
+            ViewBag.LastSyncTimestamp = lastSync?.Timestamp;
+            ViewBag.LastSyncSuccess = lastSync?.Success;
+            ViewBag.LastSyncSummary = lastSync != null
+                ? $"Created: {lastSync.UsersCreated}, Updated: {lastSync.UsersUpdated}, Deactivated: {lastSync.UsersDeactivated}, Roles: {lastSync.RolesUpdated}"
+                : null;
+            ViewBag.LastSyncTrigger = lastSync?.TriggerType;
+            ViewBag.LastSyncBy = lastSync?.TriggeredBy;
+            ViewBag.LastSyncErrors = lastSync?.ErrorSummary;
+
             var groups = await _context.AdGroups.OrderBy(g => g.GroupName).ToListAsync();
             return View(groups);
         }
@@ -234,11 +423,11 @@ namespace LostAndFoundApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "RequireSuperAdmin")]
-        public async Task<IActionResult> AddAdGroup(string groupName, string mappedRole)
+        public async Task<IActionResult> AddAdGroups(string groupNames, string mappedRole)
         {
-            if (string.IsNullOrWhiteSpace(groupName))
+            if (string.IsNullOrWhiteSpace(groupNames))
             {
-                TempData["ErrorMessage"] = "Group name is required.";
+                TempData["ErrorMessage"] = "At least one group name is required.";
                 return RedirectToAction(nameof(AdGroups));
             }
 
@@ -250,26 +439,63 @@ namespace LostAndFoundApp.Controllers
                 return RedirectToAction(nameof(AdGroups));
             }
 
-            var trimmed = groupName.Trim();
-            if (await _context.AdGroups.AnyAsync(g => g.GroupName == trimmed))
+            // Parse comma-separated group names
+            var groupNameList = groupNames.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(g => g.Trim())
+                .Where(g => !string.IsNullOrWhiteSpace(g))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (!groupNameList.Any())
             {
-                TempData["ErrorMessage"] = $"AD group '{trimmed}' is already configured.";
+                TempData["ErrorMessage"] = "No valid group names provided.";
                 return RedirectToAction(nameof(AdGroups));
             }
 
-            _context.AdGroups.Add(new AdGroup
-            {
-                GroupName = trimmed,
-                MappedRole = mappedRole,
-                IsActive = true,
-                DateAdded = DateTime.UtcNow
-            });
-            await _context.SaveChangesAsync();
+            var addedCount = 0;
+            var duplicateCount = 0;
+            var errorCount = 0;
 
-            await _activityLogService.LogAsync(HttpContext, "Add AD Group",
-                $"AD group '{trimmed}' added with role mapping '{mappedRole}'.", "ADSync");
-            _logger.LogInformation("AD group '{GroupName}' added with role '{Role}' by '{User}'.", trimmed, mappedRole, User.Identity?.Name);
-            TempData["SuccessMessage"] = $"AD group '{trimmed}' added with role mapping '{mappedRole}'.";
+            foreach (var groupName in groupNameList)
+            {
+                try
+                {
+                    if (await _context.AdGroups.AnyAsync(g => g.GroupName.ToLower() == groupName.ToLower()))
+                    {
+                        duplicateCount++;
+                        continue;
+                    }
+
+                    _context.AdGroups.Add(new AdGroup
+                    {
+                        GroupName = groupName,
+                        MappedRole = mappedRole,
+                        IsActive = true,
+                        DateAdded = DateTime.UtcNow
+                    });
+                    addedCount++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to add AD group '{GroupName}'", groupName);
+                    errorCount++;
+                }
+            }
+
+            if (addedCount > 0)
+            {
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Add AD Groups",
+                    $"Added {addedCount} AD group(s) with role mapping '{mappedRole}'.", "ADSync");
+            }
+
+            // Build result message
+            var messages = new List<string>();
+            if (addedCount > 0) messages.Add($"{addedCount} group(s) added");
+            if (duplicateCount > 0) messages.Add($"{duplicateCount} duplicate(s) skipped");
+            if (errorCount > 0) messages.Add($"{errorCount} error(s)");
+
+            TempData[errorCount > 0 ? "ErrorMessage" : "SuccessMessage"] = string.Join(", ", messages);
             return RedirectToAction(nameof(AdGroups));
         }
 
@@ -341,22 +567,147 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSuperAdmin")]
         public async Task<IActionResult> SyncNow()
         {
-            var result = await _adSyncService.SyncUsersAsync();
-
-            await _activityLogService.LogAsync(HttpContext, "Manual AD Sync",
-                result.Summary, "ADSync", result.Success ? "Success" : "Failed");
-
-            if (result.Success)
+            // Fire sync in background to avoid HTTP timeout on large directories (Gap 3 fix)
+            var triggeredBy = User.Identity?.Name ?? "Unknown";
+            var scopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+            _ = Task.Run(async () =>
             {
-                TempData["SuccessMessage"] = result.Summary;
-            }
-            else
-            {
-                TempData["ErrorMessage"] = result.Summary;
-            }
+                try
+                {
+                    using var scope = scopeFactory.CreateScope();
+                    var adSync = scope.ServiceProvider.GetRequiredService<AdSyncService>();
+                    var activityLog = scope.ServiceProvider.GetRequiredService<ActivityLogService>();
+                    var result = await adSync.SyncUsersAsync("Manual", triggeredBy);
+                    await activityLog.LogAsync(
+                        "Manual AD Sync",
+                        result.Summary,
+                        triggeredBy,
+                        "ADSync",
+                        null,
+                        result.Success ? "Success" : "Failed");
+                }
+                catch (Exception ex)
+                {
+                    var logger = _logger;
+                    logger.LogError(ex, "Background AD sync failed.");
+                }
+            });
 
-            _logger.LogInformation("AD sync triggered by '{User}': {Summary}", User.Identity?.Name, result.Summary);
+            TempData["SuccessMessage"] = "AD sync has been triggered and is running in the background. Refresh this page in a few moments to see results.";
             return RedirectToAction(nameof(AdGroups));
+        }
+
+        // =====================================================================
+        // PASSWORD POLICY CONFIGURATION — SuperAdmin only
+        // =====================================================================
+
+        // GET: /UserManagement/PasswordPolicy
+        [HttpGet]
+        [Authorize(Policy = "RequireSuperAdmin")]
+        public IActionResult PasswordPolicy()
+        {
+            // Read current policy from database (Gap 1 fix)
+            var policy = _context.PasswordPolicySettings.FirstOrDefault();
+            var vm = new PasswordPolicyViewModel
+            {
+                MinimumLength = policy?.MinimumLength ?? 8,
+                RequireDigit = policy?.RequireDigit ?? true,
+                RequireLowercase = policy?.RequireLowercase ?? true,
+                RequireUppercase = policy?.RequireUppercase ?? true,
+                RequireNonAlphanumeric = policy?.RequireNonAlphanumeric ?? true
+            };
+            return View(vm);
+        }
+
+        // POST: /UserManagement/PasswordPolicy
+        [HttpPost]
+        [Authorize(Policy = "RequireSuperAdmin")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PasswordPolicy(PasswordPolicyViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Persist to database (Gap 1 fix)
+            var policy = await _context.PasswordPolicySettings.FirstOrDefaultAsync();
+            if (policy == null)
+            {
+                policy = new Models.PasswordPolicySetting();
+                _context.PasswordPolicySettings.Add(policy);
+            }
+
+            policy.MinimumLength = model.MinimumLength;
+            policy.RequireDigit = model.RequireDigit;
+            policy.RequireLowercase = model.RequireLowercase;
+            policy.RequireUppercase = model.RequireUppercase;
+            policy.RequireNonAlphanumeric = model.RequireNonAlphanumeric;
+
+            await _context.SaveChangesAsync();
+
+            await _activityLogService.LogAsync(HttpContext, "Update Password Policy",
+                $"Password policy updated: MinLength={model.MinimumLength}, Digit={model.RequireDigit}, Lower={model.RequireLowercase}, Upper={model.RequireUppercase}, NonAlpha={model.RequireNonAlphanumeric}.", "UserManagement");
+            
+            TempData["SuccessMessage"] = "Password policy has been updated successfully. Changes take effect immediately for all new password operations.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // =====================================================================
+        // AD GROUP SEARCH — live search against Active Directory
+        // =====================================================================
+
+        /// <summary>
+        /// Searches Active Directory for security groups matching the given term.
+        /// Returns JSON array of { name, distinguishedName } for the autocomplete UI.
+        /// </summary>
+        [HttpGet]
+        [Authorize(Policy = "RequireSuperAdmin")]
+        public IActionResult SearchAdGroups(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+                return Json(new { results = Array.Empty<object>(), error = "" });
+
+            if (!_config.GetValue<bool>("ActiveDirectory:Enabled", false))
+                return Json(new { results = Array.Empty<object>(), error = "Active Directory integration is disabled." });
+
+            var domain = _config["ActiveDirectory:Domain"];
+            var container = _config["ActiveDirectory:Container"];
+            var useSsl = _config.GetValue<bool>("ActiveDirectory:UseSSL", false);
+
+            if (string.IsNullOrEmpty(domain))
+                return Json(new { results = Array.Empty<object>(), error = "AD domain not configured." });
+
+            try
+            {
+                var options = useSsl
+                    ? ContextOptions.Negotiate | ContextOptions.SecureSocketLayer
+                    : ContextOptions.Negotiate;
+                using var ctx = new PrincipalContext(ContextType.Domain, domain, container, options);
+
+                // Use GroupPrincipal query to find groups matching by name
+                using var queryFilter = new GroupPrincipal(ctx) { Name = $"*{term.Trim()}*" };
+                using var searcher = new PrincipalSearcher(queryFilter);
+
+                var results = searcher.FindAll()
+                    .Take(15)
+                    .Select(p => new
+                    {
+                        name = p.Name,
+                        distinguishedName = p.DistinguishedName
+                    })
+                    .ToList();
+
+                return Json(new { results, error = "" });
+            }
+            catch (PrincipalServerDownException)
+            {
+                _logger.LogWarning("AD server not reachable during group search.");
+                return Json(new { results = Array.Empty<object>(), error = "AD server is not reachable." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching AD groups for term '{Term}'.", term);
+                return Json(new { results = Array.Empty<object>(), error = "Error searching Active Directory." });
+            }
         }
     }
 }

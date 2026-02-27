@@ -8,7 +8,16 @@
         <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
             <div>
                 <h1><i class="bi bi-people me-2"></i>User Management</h1>
-                <p class="subtitle mb-0">Manage local and Active Directory users</p>
+                <p class="subtitle mb-0">
+                    @if (ViewBag.TotalCount > 0)
+                    {
+                        <span>@ViewBag.TotalCount total user(s)</span>
+                    }
+                    else
+                    {
+                        <span>Manage local and Active Directory users</span>
+                    }
+                </p>
             </div>
             @if (User.IsInRole("SuperAdmin"))
             {
@@ -16,6 +25,53 @@
                     <i class="bi bi-person-plus"></i> Create Local User
                 </a>
             }
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <!-- Filters -->
+    <div class="card mb-3 fade-in-up">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Username, name, or email..." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select">
+                        <option value="All">All Roles</option>
+                        <option value="SuperAdmin" selected="@(ViewBag.Role == "SuperAdmin" ? "selected" : null)">SuperAdmin</option>
+                        <option value="Admin" selected="@(ViewBag.Role == "Admin" ? "selected" : null)">Admin</option>
+                        <option value="User" selected="@(ViewBag.Role == "User" ? "selected" : null)">User</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Account Type</label>
+                    <select name="accountType" class="form-select">
+                        <option value="All">All Types</option>
+                        <option value="Active Directory" selected="@(ViewBag.AccountType == "Active Directory" ? "selected" : null)">Active Directory</option>
+                        <option value="Local" selected="@(ViewBag.AccountType == "Local" ? "selected" : null)">Local</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="All">All Status</option>
+                        <option value="Active" selected="@(ViewBag.Status == "Active" ? "selected" : null)">Active</option>
+                        <option value="Inactive" selected="@(ViewBag.Status == "Inactive" ? "selected" : null)">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    <a asp-action="Index" class="btn btn-ghost">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -33,7 +89,7 @@
                             <th>Role</th>
                             <th>Type</th>
                             <th>Status</th>
-                            @if (User.IsInRole("SuperAdmin"))
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
                                 <th>Actions</th>
                             }
@@ -68,20 +124,54 @@
                                         @(user.IsActive ? "Active" : "Inactive")
                                     </span>
                                 </td>
-                                @if (User.IsInRole("SuperAdmin"))
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                                 {
                                 <td>
                                     <div class="d-flex gap-1">
-                                        <a asp-action="EditRole" asp-route-id="@user.Id" class="btn btn-ghost btn-icon" title="Edit Role">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-ghost btn-icon" title="@(user.IsActive ? "Deactivate" : "Activate")"
-                                                    data-confirm="Are you sure you want to @(user.IsActive ? "deactivate" : "activate") this user?">
-                                                <i class="bi @(user.IsActive ? "bi-person-slash text-danger" : "bi-person-check text-success")"></i>
-                                            </button>
-                                        </form>
+                                        @if (User.IsInRole("SuperAdmin"))
+                                        {
+                                            <a asp-action="EditRole" asp-route-id="@user.Id" class="btn btn-ghost btn-icon" title="Edit Role">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        @if (User.IsInRole("SuperAdmin") && user.AccountType != "Active Directory")
+                                        {
+                                            <form asp-action="ResetPassword" asp-route-id="@user.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-ghost btn-icon" title="Reset Password"
+                                                        data-confirm="Reset password for '@user.UserName'? A temporary password will be generated.">
+                                                    <i class="bi bi-key text-warning"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (User.IsInRole("SuperAdmin"))
+                                        {
+                                            <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-ghost btn-icon" title="@(user.IsActive ? "Deactivate" : "Activate")"
+                                                        data-confirm="Are you sure you want to @(user.IsActive ? "deactivate" : "activate") this user?">
+                                                    <i class="bi @(user.IsActive ? "bi-person-slash text-danger" : "bi-person-check text-success")"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-ghost btn-icon" title="Delete User"
+                                                        data-confirm="PERMANENTLY delete user '@user.UserName'? This cannot be undone.">
+                                                    <i class="bi bi-trash3 text-danger"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
+                                        {
+                                            // Admin can only toggle active status, not edit role or delete
+                                            <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-ghost btn-icon" title="@(user.IsActive ? "Deactivate" : "Activate")"
+                                                        data-confirm="Are you sure you want to @(user.IsActive ? "deactivate" : "activate") this user?">
+                                                    <i class="bi @(user.IsActive ? "bi-person-slash text-danger" : "bi-person-check text-success")"></i>
+                                                </button>
+                                            </form>
+                                        }
                                     </div>
                                 </td>
                                 }
@@ -90,6 +180,42 @@
                     </tbody>
                 </table>
             </div>
+
+            @if (ViewBag.TotalPages > 1)
+            {
+                <div style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border);">
+                    <span class="text-muted" style="font-size: 0.8125rem;">
+                        Showing page @ViewBag.CurrentPage of @ViewBag.TotalPages
+                        (@ViewBag.FilteredCount user(s) found)
+                    </span>
+                    <div class="d-flex gap-2">
+                        @if (ViewBag.CurrentPage > 1)
+                        {
+                            <a asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage - 1)"
+                               asp-route-search="@ViewBag.Search"
+                               asp-route-role="@ViewBag.Role"
+                               asp-route-accountType="@ViewBag.AccountType"
+                               asp-route-status="@ViewBag.Status"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-chevron-left"></i> Previous
+                            </a>
+                        }
+                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                        {
+                            <a asp-action="Index"
+                               asp-route-page="@(ViewBag.CurrentPage + 1)"
+                               asp-route-search="@ViewBag.Search"
+                               asp-route-role="@ViewBag.Role"
+                               asp-route-accountType="@ViewBag.AccountType"
+                               asp-route-status="@ViewBag.Status"
+                               class="btn btn-outline-secondary btn-sm">
+                                Next <i class="bi bi-chevron-right"></i>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

@@ -60,10 +60,12 @@ namespace LostAndFoundApp.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error in AD Sync Hosted Service. Will retry in 1 hour.");
+                    _logger.LogError(ex, "Error in AD Sync Hosted Service. Will retry.");
                     try
                     {
-                        await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                        var retryMinutes = _config.GetValue<int>("ActiveDirectory:SyncRetryMinutes", 60);
+                        _logger.LogInformation("Retrying AD sync in {Minutes} minutes.", retryMinutes);
+                        await Task.Delay(TimeSpan.FromMinutes(retryMinutes), stoppingToken);
                     }
                     catch (OperationCanceledException)
                     {
@@ -83,7 +85,7 @@ namespace LostAndFoundApp.Services
             var adSyncService = scope.ServiceProvider.GetRequiredService<AdSyncService>();
             var activityLogService = scope.ServiceProvider.GetRequiredService<ActivityLogService>();
 
-            var result = await adSyncService.SyncUsersAsync();
+            var result = await adSyncService.SyncUsersAsync("Scheduled", "System (Background Service)");
 
             await activityLogService.LogAsync(
                 "Scheduled AD Sync",

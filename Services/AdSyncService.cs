@@ -82,7 +82,7 @@ namespace LostAndFoundApp.Services
         /// if they appear in multiple groups.
         /// Returns a summary of the sync operation.
         /// </summary>
-        public async Task<AdSyncResult> SyncUsersAsync()
+        public async Task<AdSyncResult> SyncUsersAsync(string triggerType = "Manual", string? triggeredBy = null)
         {
             var result = new AdSyncResult();
 
@@ -286,6 +286,10 @@ namespace LostAndFoundApp.Services
 
                 await context.SaveChangesAsync();
                 result.Success = true;
+
+                // ─── Save sync history log ────────────────────────────
+                await SaveSyncLogAsync(context, result, triggerType, triggeredBy);
+
                 _logger.LogInformation("AD sync completed. Created: {Created}, Updated: {Updated}, Deactivated: {Deactivated}, Roles Updated: {RolesUpdated}",
                     result.UsersCreated, result.UsersUpdated, result.UsersDeactivated, result.RolesUpdated);
             }
@@ -293,9 +297,44 @@ namespace LostAndFoundApp.Services
             {
                 result.Errors.Add($"AD sync failed: {ex.Message}");
                 _logger.LogError(ex, "AD sync failed with unexpected error.");
+
+                // Still log the failed sync attempt
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    await SaveSyncLogAsync(context, result, triggerType, triggeredBy);
+                }
+                catch { /* Don't let logging failure mask the original error */ }
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Persists a sync history record to the database.
+        /// </summary>
+        private static async Task SaveSyncLogAsync(ApplicationDbContext context, AdSyncResult result, string triggerType, string? triggeredBy)
+        {
+            var log = new AdSyncLog
+            {
+                Timestamp = DateTime.UtcNow,
+                Success = result.Success,
+                UsersCreated = result.UsersCreated,
+                UsersUpdated = result.UsersUpdated,
+                UsersDeactivated = result.UsersDeactivated,
+                RolesUpdated = result.RolesUpdated,
+                TriggerType = triggerType,
+                TriggeredBy = triggeredBy ?? "System",
+                ErrorSummary = result.Errors.Any()
+                    ? string.Join("; ", result.Errors).Length > 2000
+                        ? string.Join("; ", result.Errors)[..2000]
+                        : string.Join("; ", result.Errors)
+                    : null
+            };
+
+            context.AdSyncLogs.Add(log);
+            await context.SaveChangesAsync();
         }
 
         /// <summary>

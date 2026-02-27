@@ -1,9 +1,9 @@
-@model List<LostAndFoundApp.Models.Route>
+@model PaginatedList<LostAndFoundApp.Models.Route>
 @{ ViewData["Title"] = "Routes"; }
 <div class="page-header">
     <div class="container-fluid px-4">
         <div class="d-flex justify-content-between align-items-center">
-            <div><h1><i class="bi bi-signpost-2 me-2"></i>Routes</h1><p class="subtitle mb-0">Manage route master data</p></div>
+            <div><h1><i class="bi bi-signpost-2 me-2"></i>Routes</h1><p class="subtitle mb-0">@Model.TotalCount route(s)</p></div>
             <a asp-action="CreateRoute" class="btn btn-light rounded-pill px-3"><i class="bi bi-plus-lg"></i> Add Route</a>
         </div>
     </div>
@@ -11,27 +11,41 @@
 <div class="container-fluid px-4">
     <div class="card fade-in-up">
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table-modern">
-                    <thead><tr><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td><strong>@item.Name</strong></td>
-                                <td><span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">@(item.IsActive ? "Active" : "Inactive")</span></td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <a asp-action="EditRoute" asp-route-id="@item.Id" class="btn btn-ghost btn-icon" title="Edit"><i class="bi bi-pencil"></i></a>
-                                        <form asp-action="ToggleRouteActive" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-ghost btn-icon"><i class="bi @(item.IsActive ? "bi-toggle-on text-success" : "bi-toggle-off text-muted")"></i></button></form>
-                                        <form asp-action="DeleteRoute" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-ghost btn-icon text-danger" data-confirm="Delete this route?"><i class="bi bi-trash3"></i></button></form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+            @if (Model.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead><tr><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td><strong>@item.Name</strong></td>
+                                    <td><span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">@(item.IsActive ? "Active" : "Inactive")</span></td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a asp-action="EditRoute" asp-route-id="@item.Id" class="btn btn-ghost btn-icon" title="Edit"><i class="bi bi-pencil"></i></a>
+                                            <form asp-action="ToggleRouteActive" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-ghost btn-icon"><i class="bi @(item.IsActive ? "bi-toggle-on text-success" : "bi-toggle-off text-muted")"></i></button></form>
+                                            <form asp-action="DeleteRoute" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-ghost btn-icon text-danger" data-confirm="Delete this route?"><i class="bi bi-trash3"></i></button></form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <partial name="_Pagination" model="Model" />
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-signpost-2"></i>
+                    <h3>No routes</h3>
+                    <p>Add your first route to get started.</p>
+                </div>
+            }
         </div>
     </div>
 </div>

@@ -37,22 +37,25 @@ namespace LostAndFoundApp.Controllers
             var isAdmin = User.IsInRole("Admin");
 
             // --- Common data for all roles ---
+            // Single query for all status counts to avoid N+1
+            var statusGroups = await _context.LostFoundItems
+                .Include(x => x.Status)
+                .Where(x => x.Status != null)
+                .GroupBy(x => x.Status!.Name)
+                .Select(g => new { StatusName = g.Key, Count = g.Count() })
+                .ToListAsync();
+
             var vm = new DashboardViewModel
             {
                 UserDisplayName = currentUser?.DisplayName ?? currentUser?.UserName ?? "User",
                 UserRole = primaryRole,
                 UserName = currentUser?.UserName ?? "",
-                TotalItems = await _context.LostFoundItems.CountAsync(),
-                FoundCount = await _context.LostFoundItems
-                    .CountAsync(x => x.Status != null && x.Status.Name == "Found"),
-                ClaimedCount = await _context.LostFoundItems
-                    .CountAsync(x => x.Status != null && x.Status.Name == "Claimed"),
-                StoredCount = await _context.LostFoundItems
-                    .CountAsync(x => x.Status != null && x.Status.Name == "Stored"),
-                DisposedCount = await _context.LostFoundItems
-                    .CountAsync(x => x.Status != null && x.Status.Name == "Disposed"),
-                TransferredCount = await _context.LostFoundItems
-                    .CountAsync(x => x.Status != null && x.Status.Name == "Transferred"),
+                TotalItems = statusGroups.Sum(s => s.Count),
+                FoundCount = statusGroups.FirstOrDefault(s => s.StatusName == "Found")?.Count ?? 0,
+                ClaimedCount = statusGroups.FirstOrDefault(s => s.StatusName == "Claimed")?.Count ?? 0,
+                StoredCount = statusGroups.FirstOrDefault(s => s.StatusName == "Stored")?.Count ?? 0,
+                DisposedCount = statusGroups.FirstOrDefault(s => s.StatusName == "Disposed")?.Count ?? 0,
+                TransferredCount = statusGroups.FirstOrDefault(s => s.StatusName == "Transferred")?.Count ?? 0,
             };
 
             // --- Recent records ---
@@ -141,14 +144,7 @@ namespace LostAndFoundApp.Controllers
                     .CountAsync(x => x.Status != null &&
                         (x.Status.Name == "Found" || x.Status.Name == "Stored"));
 
-                // Status breakdown for analytics
-                var statusGroups = await _context.LostFoundItems
-                    .Include(x => x.Status)
-                    .Where(x => x.Status != null)
-                    .GroupBy(x => x.Status!.Name)
-                    .Select(g => new { StatusName = g.Key, Count = g.Count() })
-                    .ToListAsync();
-
+                // Reuse statusGroups already fetched at top of method
                 var total = statusGroups.Sum(s => s.Count);
                 vm.StatusBreakdown = statusGroups.Select(s => new StatusBreakdownItem
                 {

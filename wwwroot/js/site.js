@@ -56,38 +56,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Close dropdowns when clicking outside
+    // Close dropdowns and mobile nav when clicking outside
     document.addEventListener('click', function (e) {
         if (!e.target.closest('.nav-item')) {
             document.querySelectorAll('.nav-item.show').forEach(function (item) {
                 item.classList.remove('show');
             });
         }
+        var collapse = document.getElementById('navbarContent');
+        if (collapse && collapse.classList.contains('show') && !e.target.closest('#navbarContent') && !e.target.closest('.navbar-toggler')) {
+            collapse.classList.remove('show');
+        }
     });
 
     // Announcement popup system — only runs when user is authenticated (navbar present)
-    (function() {
+    (function () {
         if (!document.getElementById('mainNavbar')) return;
 
         var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
         // Fetch unread count for badge
         fetch('/Announcement/UnreadCount')
-            .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
-            .then(function(data) {
+            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function (data) {
                 if (data.count > 0) {
                     var badges = document.querySelectorAll('#unreadBadge, #navUnreadBadge');
-                    badges.forEach(function(b) {
+                    badges.forEach(function (b) {
                         b.textContent = data.count;
                         b.style.display = '';
                     });
                 }
-            }).catch(function() {});
+            }).catch(function () { });
 
         // Fetch popup announcements
         fetch('/Announcement/GetPopupAnnouncements')
-            .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
-            .then(function(announcements) {
+            .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+            .then(function (announcements) {
                 if (!announcements || announcements.length === 0) return;
 
                 var modal = document.getElementById('announcementModal');
@@ -122,20 +126,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 function closeModal() {
                     modal.style.display = 'none';
                     document.body.style.overflow = '';
-                    var ids = announcements.map(function(a) { return a.id; });
+                    var ids = announcements.map(function (a) { return a.id; });
                     if (token) {
                         fetch('/Announcement/MarkPopupShown', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
                             body: JSON.stringify({ announcementIds: ids })
-                        }).catch(function() {});
+                        }).catch(function () { });
                     }
                 }
 
-                prevBtn.addEventListener('click', function() {
+                prevBtn.addEventListener('click', function () {
                     if (current > 0) { current--; showAnnouncement(current); }
                 });
-                nextBtn.addEventListener('click', function() {
+                nextBtn.addEventListener('click', function () {
                     if (current < announcements.length - 1) { current++; showAnnouncement(current); }
                     else { closeModal(); }
                 });
@@ -145,12 +149,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 showAnnouncement(0);
                 modal.style.display = '';
                 document.body.style.overflow = 'hidden';
-            }).catch(function() {});
+            }).catch(function () { });
     })();
 
     // AJAX inline creation for master data dropdowns
-    document.querySelectorAll('[data-inline-create]').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+    document.querySelectorAll('[data-inline-create]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             var selectId = this.getAttribute('data-target-select');
             var endpoint = this.getAttribute('data-endpoint');
@@ -158,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var label = this.getAttribute('data-label') || 'item';
             var newValue = prompt('Enter new ' + label + ' name:');
             if (!newValue || newValue.trim() === '') return;
-            
+
             var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
             fetch(endpoint, {
                 method: 'POST',
@@ -168,22 +172,46 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({ Name: newValue.trim() })
             })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    var option = document.createElement('option');
-                    option.value = data.id;
-                    option.text = data.name;
-                    option.selected = true;
-                    selectEl.appendChild(option);
-                } else {
-                    alert(data.message || 'Error creating item');
-                }
-            })
-            .catch(function(err) {
-                console.error(err);
-                alert('Error creating item');
-            });
+                .then(function (res) {
+                    if (!res.ok) {
+                        if (res.status === 403) {
+                            throw new Error('You do not have permission to create new items.');
+                        }
+                        throw new Error('Server error (' + res.status + '). Please try again.');
+                    }
+                    return res.json();
+                })
+                .then(function (data) {
+                    if (data.success) {
+                        var option = document.createElement('option');
+                        option.value = data.id;
+                        option.text = data.name;
+                        option.selected = true;
+                        selectEl.appendChild(option);
+                    } else {
+                        alert(data.message || 'Error creating item');
+                    }
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    showToast(err.message || 'Error creating item. Please try again.', 'error');
+                });
         });
     });
+
+    // P3 FIX: Toast notification system for AJAX errors
+    function showToast(message, type) {
+        var toast = document.createElement('div');
+        toast.className = 'toast-notification toast-' + (type || 'info');
+        toast.innerHTML = '<i class="bi bi-' + (type === 'error' ? 'exclamation-circle-fill' : 'info-circle-fill') + '"></i><span>' + message + '</span>';
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.classList.add('show'); }, 10);
+        setTimeout(function () {
+            toast.classList.remove('show');
+            setTimeout(function () { toast.remove(); }, 300);
+        }, 5000);
+    }
+
+    // Make showToast available globally
+    window.showToast = showToast;
 });

@@ -103,6 +103,13 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            // Past-date validation: ExpiresAt cannot be in the past
+            if (model.ExpiresAt.HasValue && model.ExpiresAt.Value.Date < DateTime.Today)
+            {
+                ModelState.AddModelError("ExpiresAt", "Expiry date cannot be in the past.");
+                return View(model);
+            }
+
             var validTargets = new[] { "Admin", "User", "All" };
             if (!validTargets.Contains(model.TargetRole))
             {
@@ -223,8 +230,8 @@ namespace LostAndFoundApp.Controllers
                 UnreadCount = messages.Count(m => !m.IsDismissed)
             };
 
-            await _activityLogService.LogAsync(HttpContext, "View Messages",
-                $"User viewed message inbox ({vm.UnreadCount} unread of {vm.Messages.Count} total).", "Announcement");
+            // NOTE: Removed logging on page view to prevent audit trail flooding
+            // Logging every inbox visit creates too much noise
 
             return View(vm);
         }
@@ -381,10 +388,5 @@ namespace LostAndFoundApp.Controllers
 
             return Json(new { count });
         }
-    }
-
-    public class MarkPopupShownRequest
-    {
-        public int[] AnnouncementIds { get; set; } = Array.Empty<int>();
     }
 }

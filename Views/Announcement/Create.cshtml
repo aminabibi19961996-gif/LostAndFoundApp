@@ -41,6 +41,7 @@
                     <div class="col-md-6">
                         <label asp-for="ExpiresAt" class="form-label">Expires On (Optional)</label>
                         <input asp-for="ExpiresAt" class="form-control" type="date" />
+                        <span asp-validation-for="ExpiresAt" class="text-danger small"></span>
                         <div class="form-text">Leave blank for no expiry.</div>
                     </div>
                 </div>

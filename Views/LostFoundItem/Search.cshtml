@@ -12,23 +12,112 @@
             </div>
             @if (Model.Results.Any())
             {
-                <a asp-action="PrintSearch"
-                   asp-route-TrackingId="@Model.TrackingId"
-                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
-                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
-                   asp-route-ItemId="@Model.ItemId"
-                   asp-route-StatusId="@Model.StatusId"
-                   asp-route-RouteId="@Model.RouteId"
-                   asp-route-VehicleId="@Model.VehicleId"
-                   asp-route-StorageLocationId="@Model.StorageLocationId"
-                   asp-route-FoundById="@Model.FoundById"
-                   class="btn btn-light rounded-pill px-3" target="_blank">
-                    <i class="bi bi-printer"></i> Print
-                </a>
+                <div class="d-flex gap-2">
+                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                    {
+                        <div class="nav-item">
+                            <button class="btn btn-light rounded-pill px-3 dropdown-toggle" type="button">
+                                <i class="bi bi-gear"></i> Bulk Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" data-modal-target="bulkStatusModal"><i class="bi bi-pencil me-2"></i>Update Status</a></li>
+                                <li><a class="dropdown-item text-danger" href="#" data-modal-target="bulkDeleteModal"><i class="bi bi-trash3 me-2"></i>Delete Selected</a></li>
+                            </ul>
+                        </div>
+                    }
+                    <a asp-action="Export"
+                       asp-route-TrackingId="@Model.TrackingId"
+                       asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
+                       asp-route-ItemId="@Model.ItemId"
+                       asp-route-StatusId="@Model.StatusId"
+                       asp-route-RouteId="@Model.RouteId"
+                       asp-route-VehicleId="@Model.VehicleId"
+                       asp-route-StorageLocationId="@Model.StorageLocationId"
+                       asp-route-FoundById="@Model.FoundById"
+                       class="btn btn-light rounded-pill px-3" title="Export to CSV">
+                        <i class="bi bi-download"></i> Export CSV
+                    </a>
+                    <a asp-action="PrintSearch"
+                       asp-route-TrackingId="@Model.TrackingId"
+                       asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
+                       asp-route-ItemId="@Model.ItemId"
+                       asp-route-StatusId="@Model.StatusId"
+                       asp-route-RouteId="@Model.RouteId"
+                       asp-route-VehicleId="@Model.VehicleId"
+                       asp-route-StorageLocationId="@Model.StorageLocationId"
+                       asp-route-FoundById="@Model.FoundById"
+                       class="btn btn-light rounded-pill px-3" target="_blank">
+                        <i class="bi bi-printer"></i> Print
+                    </a>
+                </div>
             }
         </div>
     </div>
 </div>
+
+@if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+{
+<!-- Bulk Status Update Modal -->
+<div class="announcement-modal" id="bulkStatusModal" style="display:none;">
+    <div class="announcement-modal-backdrop" data-modal-close="bulkStatusModal"></div>
+    <div class="announcement-modal-content" style="max-width:480px;">
+        <div class="announcement-modal-header">
+            <i class="bi bi-pencil-square"></i>
+            <span>Bulk Status Update</span>
+            <button type="button" class="announcement-modal-close" data-modal-close="bulkStatusModal">&times;</button>
+        </div>
+        <form asp-action="BulkStatusUpdate" method="post">
+            @Html.AntiForgeryToken()
+            <div class="announcement-modal-body">
+                <p>Update status for <strong><span id="bulkStatusCount">0</span></strong> selected record(s):</p>
+                <div class="mb-3">
+                    <label class="form-label">New Status</label>
+                    <select name="statusId" class="form-select" required>
+                        <option value="">Select Status...</option>
+                        @if (Model.Statuses != null)
+                        {
+                            @foreach (var status in Model.Statuses)
+                            {
+                                <option value="@status.Value">@status.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <input type="hidden" name="ids" id="bulkStatusIds" />
+            </div>
+            <div class="announcement-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-modal-close="bulkStatusModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Delete Modal -->
+<div class="announcement-modal" id="bulkDeleteModal" style="display:none;">
+    <div class="announcement-modal-backdrop" data-modal-close="bulkDeleteModal"></div>
+    <div class="announcement-modal-content" style="max-width:480px;">
+        <div class="announcement-modal-header" style="background:var(--accent);">
+            <i class="bi bi-trash3"></i>
+            <span>Bulk Delete</span>
+            <button type="button" class="announcement-modal-close" data-modal-close="bulkDeleteModal">&times;</button>
+        </div>
+        <form asp-action="BulkDelete" method="post">
+            @Html.AntiForgeryToken()
+            <div class="announcement-modal-body">
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Are you sure you want to permanently delete <strong><span id="bulkDeleteCount">0</span></strong> record(s)? This cannot be undone.</p>
+                <input type="hidden" name="ids" id="bulkDeleteIds" />
+            </div>
+            <div class="announcement-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-modal-close="bulkDeleteModal">Cancel</button>
+                <button type="submit" class="btn btn-danger"><i class="bi bi-trash3 me-1"></i>Delete All</button>
+            </div>
+        </form>
+    </div>
+</div>
+}
 
 <div class="container-fluid px-4">
     <!-- Filters -->
@@ -150,11 +239,31 @@
                     <table class="table-modern">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Date Found</th>
-                                <th>Item</th>
-                                <th>Location</th>
-                                <th>Status</th>
+                                @{
+                                    var sortParams = new Dictionary<string, string?>
+                                    {
+                                        { "TrackingId", Model.TrackingId?.ToString() },
+                                        { "DateFoundFrom", Model.DateFoundFrom?.ToString("yyyy-MM-dd") },
+                                        { "DateFoundTo", Model.DateFoundTo?.ToString("yyyy-MM-dd") },
+                                        { "ItemId", Model.ItemId?.ToString() },
+                                        { "StatusId", Model.StatusId?.ToString() },
+                                        { "RouteId", Model.RouteId?.ToString() },
+                                        { "VehicleId", Model.VehicleId?.ToString() },
+                                        { "StorageLocationId", Model.StorageLocationId?.ToString() },
+                                        { "FoundById", Model.FoundById?.ToString() },
+                                    };
+                                    string SortIcon(string field) => Model.SortField == field ? (Model.SortOrder == "asc" ? "bi-sort-up" : "bi-sort-down") : "bi-chevron-expand";
+                                    string NextOrder(string field) => Model.SortField == field && Model.SortOrder == "desc" ? "asc" : "desc";
+                                }
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                {
+                                    <th style="width:40px;"><input type="checkbox" id="selectAll" /></th>
+                                }
+                                <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="TrackingId" asp-route-SortOrder="@NextOrder("TrackingId")" style="color:inherit;text-decoration:none;">ID <i class="bi @SortIcon("TrackingId")"></i></a></th>
+                                <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="DateFound" asp-route-SortOrder="@NextOrder("DateFound")" style="color:inherit;text-decoration:none;">Date Found <i class="bi @SortIcon("DateFound")"></i></a></th>
+                                <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="ItemName" asp-route-SortOrder="@NextOrder("ItemName")" style="color:inherit;text-decoration:none;">Item <i class="bi @SortIcon("ItemName")"></i></a></th>
+                                <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="LocationFound" asp-route-SortOrder="@NextOrder("LocationFound")" style="color:inherit;text-decoration:none;">Location <i class="bi @SortIcon("LocationFound")"></i></a></th>
+                                <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="StatusName" asp-route-SortOrder="@NextOrder("StatusName")" style="color:inherit;text-decoration:none;">Status <i class="bi @SortIcon("StatusName")"></i></a></th>
                                 <th>Days</th>
                                 <th>Claimed By</th>
                                 <th></th>
@@ -164,6 +273,10 @@
                             @foreach (var item in Model.Results)
                             {
                                 <tr>
+                                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                    {
+                                        <td><input type="checkbox" class="record-checkbox" value="@item.TrackingId" /></td>
+                                    }
                                     <td><strong>#@item.TrackingId</strong></td>
                                     <td>@item.DateFound.ToString("MM/dd/yyyy")</td>
                                     <td>@item.ItemName</td>
@@ -215,7 +328,9 @@
                                            asp-route-RouteId="@Model.RouteId"
                                            asp-route-VehicleId="@Model.VehicleId"
                                            asp-route-StorageLocationId="@Model.StorageLocationId"
-                                           asp-route-FoundById="@Model.FoundById">
+                                           asp-route-FoundById="@Model.FoundById"
+                                           asp-route-SortField="@Model.SortField"
+                                           asp-route-SortOrder="@Model.SortOrder">
                                             <i class="bi bi-chevron-left"></i>
                                         </a>
                                     </li>
@@ -233,7 +348,9 @@
                                            asp-route-RouteId="@Model.RouteId"
                                            asp-route-VehicleId="@Model.VehicleId"
                                            asp-route-StorageLocationId="@Model.StorageLocationId"
-                                           asp-route-FoundById="@Model.FoundById">@i</a>
+                                           asp-route-FoundById="@Model.FoundById"
+                                           asp-route-SortField="@Model.SortField"
+                                           asp-route-SortOrder="@Model.SortOrder">@i</a>
                                     </li>
                                 }
                                 @if (Model.CurrentPage < Model.TotalPages)
@@ -249,7 +366,9 @@
                                            asp-route-RouteId="@Model.RouteId"
                                            asp-route-VehicleId="@Model.VehicleId"
                                            asp-route-StorageLocationId="@Model.StorageLocationId"
-                                           asp-route-FoundById="@Model.FoundById">
+                                           asp-route-FoundById="@Model.FoundById"
+                                           asp-route-SortField="@Model.SortField"
+                                           asp-route-SortOrder="@Model.SortOrder">
                                             <i class="bi bi-chevron-right"></i>
                                         </a>
                                     </li>
@@ -270,3 +389,65 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bulk selection checkboxes
+    var selectAll = document.getElementById('selectAll');
+    var checkboxes = document.querySelectorAll('.record-checkbox');
+    
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+            updateBulkCounts();
+        });
+    }
+    
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', updateBulkCounts);
+    });
+    
+    function updateBulkCounts() {
+        var selected = document.querySelectorAll('.record-checkbox:checked');
+        var count = selected.length;
+        var statusCount = document.getElementById('bulkStatusCount');
+        var deleteCount = document.getElementById('bulkDeleteCount');
+        if (statusCount) statusCount.textContent = count;
+        if (deleteCount) deleteCount.textContent = count;
+        
+        var ids = Array.from(selected).map(function(cb) { return cb.value; });
+        var statusIds = document.getElementById('bulkStatusIds');
+        var deleteIds = document.getElementById('bulkDeleteIds');
+        if (statusIds) statusIds.value = ids.join(',');
+        if (deleteIds) deleteIds.value = ids.join(',');
+    }
+
+    // Pure JS modal open — replaces Bootstrap data-bs-toggle="modal"
+    document.querySelectorAll('[data-modal-target]').forEach(function(trigger) {
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            var modalId = this.getAttribute('data-modal-target');
+            var modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = '';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    });
+
+    // Pure JS modal close — replaces Bootstrap data-bs-dismiss="modal"
+    document.querySelectorAll('[data-modal-close]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var modalId = this.getAttribute('data-modal-close');
+            var modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    });
+});
+</script>
+}

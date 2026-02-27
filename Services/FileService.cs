@@ -74,6 +74,19 @@ namespace LostAndFoundApp.Services
                 }
             }
 
+            // Validate MIME type matches the extension (defense in depth)
+            var expectedMimeTypes = GetExpectedMimeTypes(extension);
+            if (expectedMimeTypes.Length > 0 && !string.IsNullOrEmpty(file.ContentType))
+            {
+                var contentType = file.ContentType.ToLowerInvariant();
+                if (!expectedMimeTypes.Contains(contentType))
+                {
+                    _logger.LogWarning("File upload rejected: MIME type '{ContentType}' does not match extension '{Ext}'",
+                        file.ContentType, extension);
+                    return null;
+                }
+            }
+
             // Ensure storage directory exists
             Directory.CreateDirectory(storagePath);
 
@@ -89,6 +102,24 @@ namespace LostAndFoundApp.Services
             _logger.LogInformation("File saved successfully: {FileName}", uniqueFileName);
             return uniqueFileName;
         }
+
+        /// <summary>
+        /// Returns expected MIME types for a given file extension.
+        /// Used to verify the browser-reported Content-Type matches the extension.
+        /// </summary>
+        private static string[] GetExpectedMimeTypes(string extension) => extension switch
+        {
+            ".jpg" or ".jpeg" => new[] { "image/jpeg" },
+            ".png" => new[] { "image/png" },
+            ".gif" => new[] { "image/gif" },
+            ".pdf" => new[] { "application/pdf" },
+            ".doc" => new[] { "application/msword" },
+            ".docx" => new[] { "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+            ".xls" => new[] { "application/vnd.ms-excel" },
+            ".xlsx" => new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+            ".txt" => new[] { "text/plain" },
+            _ => Array.Empty<string>()
+        };
 
         /// <summary>
         /// Retrieves a file stream for authenticated download. Returns null if file not found.

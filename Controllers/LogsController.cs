@@ -115,9 +115,9 @@ namespace LostAndFoundApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: /Logs/Export — Export logs as CSV
+        // GET: /Logs/Export — Export logs as CSV (Admin and SuperAdmin)
         [HttpGet]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Export(string? category, DateTime? dateFrom, DateTime? dateTo)
         {
             var query = _context.ActivityLogs.AsQueryable();

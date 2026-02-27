@@ -30,7 +30,7 @@ namespace LostAndFoundApp.ViewModels
         public string? DisplayName { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
-        [StringLength(100, ErrorMessage = "Password must be at least {2} characters long.", MinimumLength = 8)]
+        [StringLength(100, ErrorMessage = "Password must not exceed {1} characters.")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 

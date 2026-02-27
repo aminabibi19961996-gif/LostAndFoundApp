@@ -2,6 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace LostAndFoundApp.ViewModels
 {
+    public class MarkPopupShownRequest
+    {
+        public int[] AnnouncementIds { get; set; } = Array.Empty<int>();
+    }
+
     public class CreateAnnouncementViewModel
     {
         [Required(ErrorMessage = "Title is required.")]

@@ -39,12 +39,13 @@ var lockoutMinutes = builder.Configuration.GetValue<int>("Identity:LockoutMinute
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Password policy
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequiredLength = 8;
+    // Password validation is now handled by DatabasePasswordValidator which reads from DB.
+    // Set Identity's built-in rules to minimum so they don't conflict with the DB-driven policy.
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 1; // DatabasePasswordValidator enforces the real minimum
 
     // Lockout policy — configurable via appsettings
     options.Lockout.MaxFailedAccessAttempts = lockoutAttempts;
@@ -67,7 +68,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
@@ -84,6 +85,11 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<AdSyncService>();
 builder.Services.AddScoped<ActivityLogService>();
+builder.Services.AddSingleton<AdLoginRateLimiter>();
+
+// Custom password validator that reads policy from database (Gap 1 fix)
+// Replaces Identity's hardcoded password rules with dynamic, SuperAdmin-configurable policy
+builder.Services.AddScoped<IPasswordValidator<ApplicationUser>, DatabasePasswordValidator>();
 
 // --- Daily AD Sync Background Service (only if AD integration is enabled) ---
 if (builder.Configuration.GetValue<bool>("ActiveDirectory:Enabled", false))
@@ -103,7 +109,12 @@ builder.Services.AddAntiforgery(options =>
 });
 
 // --- MVC ---
-builder.Services.AddControllersWithViews();
+// --- MVC with Razor runtime compilation (for development) ---
+var mvcBuilder = builder.Services.AddControllersWithViews();
+if (builder.Environment.IsDevelopment())
+{
+    mvcBuilder.AddRazorRuntimeCompilation();
+}
 
 var app = builder.Build();
 
@@ -146,6 +157,8 @@ app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
