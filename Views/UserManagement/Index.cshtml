@@ -4,11 +4,10 @@
 }
 
 <div class="page-header">
-    <div class="container-fluid px-4">
-        <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
-            <div>
-                <h1><i class="bi bi-people me-2"></i>User Management</h1>
-                <p class="subtitle mb-0">
+    <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
+        <div>
+            <h1 class="page-title"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>User Management</h1>
+            <p class="page-subtitle">
                     @if (ViewBag.TotalCount > 0)
                     {
                         <span>@ViewBag.TotalCount total user(s)</span>
@@ -21,15 +20,12 @@
             </div>
             @if (User.IsInRole("SuperAdmin"))
             {
-                <a asp-action="Create" class="btn btn-light rounded-pill px-3">
+                <a asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-person-plus"></i> Create Local User
                 </a>
             }
         </div>
-    </div>
 </div>
-
-<div class="container-fluid px-4">
     <!-- Filters -->
     <div class="card mb-3 fade-in-up">
         <div class="card-body">
@@ -73,11 +69,7 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-
-<div class="container-fluid px-4">
-    <div class="card fade-in-up">
+    <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table-modern" id="usersTable">
@@ -197,7 +189,7 @@
                                asp-route-role="@ViewBag.Role"
                                asp-route-accountType="@ViewBag.AccountType"
                                asp-route-status="@ViewBag.Status"
-                               class="btn btn-outline-secondary btn-sm">
+                               class="btn btn-secondary btn-sm">
                                 <i class="bi bi-chevron-left"></i> Previous
                             </a>
                         }
@@ -209,7 +201,7 @@
                                asp-route-role="@ViewBag.Role"
                                asp-route-accountType="@ViewBag.AccountType"
                                asp-route-status="@ViewBag.Status"
-                               class="btn btn-outline-secondary btn-sm">
+                               class="btn btn-secondary btn-sm">
                                 Next <i class="bi bi-chevron-right"></i>
                             </a>
                         }

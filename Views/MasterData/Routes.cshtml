@@ -1,16 +1,13 @@
 @model PaginatedList<LostAndFoundApp.Models.Route>
 @{ ViewData["Title"] = "Routes"; }
 <div class="page-header">
-    <div class="container-fluid px-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div><h1><i class="bi bi-signpost-2 me-2"></i>Routes</h1><p class="subtitle mb-0">@Model.TotalCount route(s)</p></div>
-            <a asp-action="CreateRoute" class="btn btn-light rounded-pill px-3"><i class="bi bi-plus-lg"></i> Add Route</a>
-        </div>
+    <div class="d-flex justify-content-between align-items-center">
+        <div><h1 class="page-title"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16v6H4zM4 12h16M4 18h12"/></svg>Routes</h1><p class="page-subtitle">@Model.TotalCount route(s)</p></div>
+        <a asp-action="CreateRoute" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Route</a>
     </div>
 </div>
-<div class="container-fluid px-4">
-    <div class="card fade-in-up">
-        <div class="card-body p-0">
+<div class="card">
+    <div class="card-body p-0">
             @if (Model.Items.Any())
             {
                 <div class="table-responsive">
@@ -34,16 +31,16 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card-footer bg-transparent">
+                <div class="card-footer">
                     <partial name="_Pagination" model="Model" />
                 </div>
             }
             else
             {
                 <div class="empty-state">
-                    <i class="bi bi-signpost-2"></i>
-                    <h3>No routes</h3>
-                    <p>Add your first route to get started.</p>
+                    <div class="empty-icon"><i class="bi bi-signpost-2"></i></div>
+                    <div class="empty-title">No routes</div>
+                    <div class="empty-desc">Add your first route to get started.</div>
                 </div>
             }
         </div>

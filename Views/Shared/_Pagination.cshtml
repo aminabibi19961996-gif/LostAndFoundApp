@@ -1,5 +1,5 @@
-@model LostAndFoundApp.ViewModels.PaginatedList<dynamic>
 @{
+    // Using dynamic model to support any PaginatedList<T> type
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "MasterData";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
 }

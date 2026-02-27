@@ -3,70 +3,75 @@
     ViewData["Title"] = "Messages";
 }
 
-<div class="page-header">
-    <div class="container-fluid px-4">
-        <h1><i class="bi bi-envelope me-2"></i>Messages</h1>
-        <p class="subtitle mb-0">
-            @if (Model.UnreadCount > 0)
-            {
-                <span>@Model.UnreadCount unread announcement@(Model.UnreadCount != 1 ? "s" : "")</span>
-            }
-            else
-            {
-                <span>All caught up — no unread announcements</span>
-            }
-        </p>
+<div class="page page-full">
+    <div class="page-header">
+        <div>
+            <div class="page-title">Messages</div>
+            <div class="page-subtitle">
+                @if (Model.UnreadCount > 0)
+                {
+                    <span>@Model.UnreadCount unread announcement@(Model.UnreadCount != 1 ? "s" : "")</span>
+                }
+                else
+                {
+                    <span>All caught up — no unread announcements</span>
+                }
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="container-fluid px-4">
+    <div class="messages-list">
     @if (Model.Messages.Any())
     {
         @foreach (var msg in Model.Messages)
         {
-            <div class="card fade-in-up mb-3" style="@(msg.IsDismissed ? "opacity: 0.55;" : "")">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-2">
+            <div class="message-card" style="@(msg.IsDismissed ? "opacity: 0.55;" : "")">
+                <div class="message-header">
+                    <div class="message-title-row">
                         @if (!msg.IsDismissed)
                         {
-                            <span style="width:8px; height:8px; border-radius:50%; background:var(--accent); display:inline-block;" title="Unread"></span>
+                            <span class="unread-dot"></span>
                         }
-                        <i class="bi bi-megaphone text-primary"></i>
+                        <svg class="message-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
                         <strong>@msg.Title</strong>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="small text-muted">@msg.CreatedAt.ToString("MMM dd, yyyy") · by @msg.CreatedBy</span>
+                    <div class="message-meta">
+                        <span class="text-muted">@msg.CreatedAt.ToString("MMM dd, yyyy") · by @msg.CreatedBy</span>
                         @if (!msg.IsDismissed)
                         {
                             <form asp-action="Dismiss" asp-route-id="@msg.AnnouncementId" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-ghost btn-sm" title="Dismiss">
-                                    <i class="bi bi-check2"></i> Dismiss
+                                <button type="submit" class="btn btn-sm btn-secondary">
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    Dismiss
                                 </button>
                             </form>
                         }
                         else
                         {
-                            <span class="badge-role badge-inactive small">
-                                <i class="bi bi-check2"></i> Dismissed
+                            <span class="badge badge-muted">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                Dismissed
                             </span>
                         }
                     </div>
                 </div>
-                <div class="card-body">
-                    <p class="mb-0" style="white-space: pre-line;">@msg.Message</p>
+                <div class="message-body">
+                    <p style="white-space: pre-line;">@msg.Message</p>
                 </div>
             </div>
         }
     }
     else
     {
-        <div class="card fade-in-up">
+        <div class="card">
             <div class="card-body">
                 <div class="empty-state">
-                    <i class="bi bi-envelope-open"></i>
-                    <h3>No messages</h3>
-                    <p>Announcements from the system administrator will appear here.</p>
+                    <div class="empty-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                    </div>
+                    <div class="empty-title">No messages</div>
+                    <div class="empty-desc">Announcements from the system administrator will appear here.</div>
                 </div>
             </div>
         </div>

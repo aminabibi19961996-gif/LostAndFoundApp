@@ -3,22 +3,52 @@
     ViewData["Title"] = "New Record";
 }
 
+<style>
+    .form-summary-panel {
+        background: var(--surface-2);
+        border-radius: var(--radius);
+        padding: 24px;
+        height: 100%;
+    }
+    .summary-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    .summary-text {
+        color: var(--text-secondary);
+        font-size: 13.5px;
+        line-height: 1.6;
+    }
+</style>
+
 <div class="page-header">
-    <div class="container-fluid px-4">
-        <h1><i class="bi bi-plus-circle me-2"></i>New Lost &amp; Found Record</h1>
-        <p class="subtitle mb-0">Enter details of the found item</p>
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            New Lost &amp; Found Record
+        </h1>
+        <p class="page-subtitle">Enter details of the found item</p>
     </div>
 </div>
 
-<div class="container-fluid px-4">
-    <div class="card fade-in-up">
-        <div class="card-body">
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<div class="card">
+    <div class="card-body">
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
 
             <form asp-action="Create" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
-                <div class="row g-3">
+                <div class="row gx-4">
+                    <!-- Left Column: Form -->
+                    <div class="col-lg-8">
+                        <div class="row g-3">
                     <div class="col-md-4">
                         <label asp-for="DateFound" class="form-label">Date Found *</label>
                         <input asp-for="DateFound" class="form-control" type="date" />
@@ -32,7 +62,7 @@
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new item type"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new item type"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                         <span asp-validation-for="ItemId" class="text-danger small"></span>
@@ -45,7 +75,7 @@
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new status"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new status"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                         <span asp-validation-for="StatusId" class="text-danger small"></span>
@@ -69,7 +99,7 @@
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new route"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new route"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                     </div>
@@ -81,7 +111,7 @@
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new vehicle"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new vehicle"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                     </div>
@@ -93,7 +123,7 @@
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new storage location"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new storage location"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                     </div>
@@ -106,7 +136,7 @@
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                             {
-                            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new found by name"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary ms-1" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new found by name"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                     </div>
@@ -137,16 +167,37 @@
                         <span asp-validation-for="AttachmentFile" class="text-danger small"></span>
                         <div class="form-text">PDF, DOC, XLS, TXT, or images. Max 10MB.</div>
                     </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Summary Panel -->
+                    <div class="col-lg-4 d-none d-lg-block">
+                        <div class="form-summary-panel fade-in-up">
+                            <div class="summary-icon">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h5 class="mb-3" style="font-weight: 600; font-size: 16px;">Quick Tips</h5>
+                            <div class="summary-text mb-4">
+                                <p class="mb-2"><strong class="text-primary">1. Accuracy matters:</strong> Please ensure the Date Found and Location are as precise as possible.</p>
+                                <p class="mb-2"><strong class="text-primary">2. Categorization:</strong> Use the right Item Type to help matched claims process faster.</p>
+                                <p class="mb-0"><strong class="text-primary">3. Attachments:</strong> Uploading clear photos significantly increases return rates.</p>
+                            </div>
+                            <hr style="border-color: var(--border); margin: 24px 0;" />
+                            <div class="text-muted" style="font-size: 12px;">
+                                <i class="bi bi-info-circle me-1"></i> Fields marked with * are required.
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <hr style="margin: 24px 0;" />
+                <hr style="border-color: var(--border); margin: 24px 0;" />
 
                 <div class="d-flex justify-content-between">
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Cancel
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary"> 
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Cancel
                     </a>
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-check-lg"></i> Create Record
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Create Record
                     </button>
                 </div>
             </form>

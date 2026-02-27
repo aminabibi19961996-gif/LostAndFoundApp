@@ -1,198 +1,699 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — Lost &amp; Found</title>
-    <meta name="description" content="Lost and Found Management System" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="~/css/site.css" rel="stylesheet" />
-    @await RenderSectionAsync("Styles", required: false)
-    @* P1 FIX: Enable client-side validation *@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <link href="~/css/site.css" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0A0A0A;
+            --surface: #111111;
+            --surface-2: #1A1A1A;
+            --border: #242424;
+            --text-primary: #F0F0F0;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --accent: #4F7EF7;
+            --accent-soft: #131D3A;
+            --success: #34A66E;
+            --success-soft: #0D2419;
+            --warning: #D97706;
+            --warning-soft: #271A06;
+            --danger: #E05454;
+            --danger-soft: #2A0F0F;
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+        /* NAV */
+        nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .nav-brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; color: var(--text-primary); text-decoration: none; margin-right: 40px; }
+        .nav-brand-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+        .nav-brand-icon svg { color: white; }
+        .nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+        .nav-link { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none; font-size: 13.5px; font-weight: 400; transition: background 0.15s, color 0.15s; }
+        .nav-link:hover { background: var(--surface-2); color: var(--text-primary); }
+        .nav-link.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+        .nav-link svg { width: 15px; height: 15px; }
+        .nav-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: inherit; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #3a6ae0; }
+        .btn-secondary { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); color: var(--text-primary); }
+        .btn-ghost { background: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: var(--surface-2); color: var(--text-primary); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #c94444; }
+        .btn svg { width: 14px; height: 14px; }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; }
+        
+        /* DROPDOWN */
+        .dropdown { position: relative; }
+        .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 180px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 0; box-shadow: var(--shadow-md); z-index: 200; }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: background 0.15s, color 0.15s; }
+        .dropdown-item:hover { background: var(--surface-2); color: var(--text-primary); }
+        .dropdown-item i { font-size: 14px; width: 18px; }
+        .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+        /* LAYOUT */
+        .page { width: 100%; padding: 32px 24px; }
+        .page-full { max-width: 100%; padding: 24px 28px; }
+        .page-wide { max-width: 1600px; }
+
+        /* HEADER */
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+        .page-title { font-size: 22px; font-weight: 600; line-height: 1.2; }
+        .page-subtitle { color: var(--text-muted); font-size: 13.5px; margin-top: 3px; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11.5px; font-weight: 500; }
+        .badge-blue { background: var(--accent-soft); color: var(--accent); }
+
+        /* CARDS */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .card-title { font-size: 13.5px; font-weight: 600; }
+        .card-body { padding: 20px; }
+        .card-body.p-0 { padding: 0; }
+        .card-footer { padding: 12px 20px; border-top: 1px solid var(--border); background: transparent; }
+
+        /* FORMS */
+        .form-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-control, .form-select { width: 100%; padding: 8px 12px; font-size: 13.5px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); transition: border-color 0.15s, box-shadow 0.15s; }
+        .form-control:focus, .form-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+        .form-control::placeholder { color: var(--text-muted); }
+        .form-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .form-check { display: flex; align-items: center; gap: 8px; }
+        .form-check-input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+        /* TABLES */
+        .table-responsive { overflow-x: auto; }
+        .table-modern { width: 100%; border-collapse: collapse; }
+        .table-modern th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+        .table-modern td { padding: 12px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+        .table-modern tr:last-child td { border-bottom: none; }
+        .table-modern tr:hover td { background: var(--surface-2); }
+        .table-modern a { color: var(--accent); text-decoration: none; }
+        .table-modern a:hover { text-decoration: underline; }
+
+        /* BUTTONS */
+        .btn-sm { padding: 4px 10px; font-size: 12.5px; }
+        .btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); }
+        .btn-icon:hover { background: var(--surface-2); }
+
+        /* BADGES */
+        .badge-status { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 11.5px; font-weight: 500; }
+        .badge-found { background: var(--success-soft); color: var(--success); }
+        .badge-claimed { background: var(--accent-soft); color: var(--accent); }
+        .badge-stored { background: var(--warning-soft); color: var(--warning); }
+        .badge-disposed { background: var(--danger-soft); color: var(--danger); }
+        .badge-role { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11.5px; font-weight: 500; }
+        .badge-superadmin { background: var(--accent-soft); color: var(--accent); }
+        .badge-admin { background: var(--success-soft); color: var(--success); }
+        .badge-user { background: var(--warning-soft); color: var(--warning); }
+        .badge-active { background: var(--success-soft); color: var(--success); }
+        .badge-inactive { background: var(--surface-2); color: var(--text-muted); }
+        .badge-ad { background: var(--accent-soft); color: var(--accent); }
+        .badge-local { background: var(--surface-2); color: var(--text-secondary); }
+
+        /* ALERTS */
+        .alert { padding: 12px 16px; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px; font-size: 13.5px; margin-bottom: 16px; border: none; }
+        .alert-success { background: var(--success-soft); color: var(--success); }
+        .alert-danger { background: var(--danger-soft); color: var(--danger); }
+        .alert-warning { background: var(--warning-soft); color: var(--warning); }
+        .alert-info { background: var(--accent-soft); color: var(--accent); }
+        .alert i { font-size: 16px; }
+
+        /* EMPTY STATE */
+        .empty-state { padding: 48px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .empty-icon { width: 48px; height: 48px; background: var(--surface-2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); margin-bottom: 4px; font-size: 20px; }
+        .empty-title { font-size: 14px; font-weight: 500; }
+        .empty-desc { font-size: 13px; color: var(--text-muted); max-width: 240px; }
+
+        /* PAGINATION */
+        .pagination { display: flex; gap: 4px; list-style: none; }
+        .page-item { }
+        .page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 8px; border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary); background: transparent; border: 1px solid var(--border); text-decoration: none; transition: background 0.15s, color 0.15s; }
+        .page-link:hover { background: var(--surface-2); color: var(--text-primary); }
+        .page-item.active .page-link { background: var(--accent); color: white; border-color: var(--accent); }
+        .page-item.disabled .page-link { opacity: 0.5; pointer-events: none; }
+
+        /* MODAL */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; }
+        .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 90%; max-width: 500px; z-index: 301; }
+        .modal-header { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600; }
+        .modal-header i { font-size: 18px; }
+        .modal-body { padding: 20px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); }
+        .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; margin-left: auto; }
+
+        /* UTILITIES */
+        .text-danger { color: var(--danger); }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-muted { color: var(--text-muted); }
+        .d-flex { display: flex; }
+        .gap-1 { gap: 4px; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .align-items-center { align-items: center; }
+        .justify-content-between { justify-content: space-between; }
+        .mb-0 { margin-bottom: 0; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 16px; }
+        .mb-4 { margin-bottom: 24px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-3 { margin-top: 16px; }
+        .me-1 { margin-right: 4px; }
+        .me-2 { margin-right: 8px; }
+        .ms-1 { margin-left: 4px; }
+        .ms-2 { margin-left: 8px; }
+        .row { display: flex; flex-wrap: wrap; margin: -8px; }
+        .col, .col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 { padding: 8px; }
+        .col-1 { flex: 0 0 8.333%; }
+        .col-2 { flex: 0 0 16.667%; }
+        .col-3 { flex: 0 0 25%; }
+        .col-4 { flex: 0 0 33.333%; }
+        .col-5 { flex: 0 0 41.667%; }
+        .col-6 { flex: 0 0 50%; }
+        .col-7 { flex: 0 0 58.333%; }
+        .col-8 { flex: 0 0 66.667%; }
+        .col-9 { flex: 0 0 75%; }
+        .col-10 { flex: 0 0 83.333%; }
+        .col-11 { flex: 0 0 91.667%; }
+        .col-12 { flex: 0 0 100%; }
+
+        /* VALIDATION */
+        .field-validation-error { font-size: 12px; color: var(--danger); display: block; margin-top: 4px; }
+        .validation-summary-errors { background: var(--danger-soft); color: var(--danger); padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; }
+        .validation-summary-errors ul { margin: 0; padding-left: 20px; }
+
+        /* FORM STYLES */
+        .form-group { margin-bottom: 16px; }
+        .form-row { display: flex; gap: 16px; }
+        .form-row .form-group { flex: 1; }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+        .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13.5px; color: var(--text-secondary); }
+        .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+
+        /* TABLE PAGINATION */
+        .table-pagination { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-top: 1px solid var(--border); }
+        .pagination-links { display: flex; gap: 4px; }
+        .pagination-links .page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; padding: 0 8px; border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary); background: transparent; border: 1px solid var(--border); text-decoration: none; transition: background 0.15s, color 0.15s; }
+        .pagination-links .page-link:hover { background: var(--surface-2); color: var(--text-primary); }
+        .pagination-links .page-link.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .pagination-links .page-link svg { width: 14px; height: 14px; }
+
+        /* MESSAGES */
+        .messages-list { display: flex; flex-direction: column; gap: 12px; }
+        .message-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .message-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+        .message-title-row { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+        .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+        .message-icon { width: 16px; height: 16px; color: var(--accent); }
+        .message-meta { display: flex; align-items: center; gap: 12px; font-size: 12.5px; }
+        .message-body { padding: 16px 18px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+
+        /* BADGE MUTED */
+        .badge-muted { background: var(--surface-2); color: var(--text-muted); }
+
+        /* ICON BUTTON DANGER */
+        .btn-icon-danger { color: var(--danger); }
+        .btn-icon-danger:hover { background: var(--danger-soft); }
+
+        /* ICON BUG FIX */
+        svg { flex-shrink: 0; }
+        /* ANIMATIONS */
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up { animation: fadeInUp 0.3s ease both; }
+
+        /* RESPONSIVE: Dashboard */
+        @@media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+            .stat-card { padding: 16px; }
+            .stat-value { font-size: 24px; }
+            .content-grid { grid-template-columns: 1fr; }
+            .sidebar { margin-top: 16px; }
+            .system-stats { grid-template-columns: 1fr 1fr; }
+            .sys-stat { padding: 12px; }
+            .sys-stat-value { font-size: 18px; }
+            .config-grid { grid-template-columns: repeat(2, 1fr); }
+            .config-item { padding: 12px; }
+            .config-value { font-size: 16px; }
+            .records-table { font-size: 12px; }
+            .records-table th, .records-table td { padding: 10px 12px; }
+        }
+
+        @@media (max-width: 480px) {
+            .stats-grid { gap: 8px; }
+            .stat-card { padding: 14px; }
+            .stat-value { font-size: 22px; }
+            .stat-label { font-size: 10px; }
+        }
+
+        /* TABLE MODERN */
+        .table-modern { width: 100%; border-collapse: collapse; }
+        .table-modern th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+        .table-modern td { padding: 12px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+        .table-modern tr:last-child td { border-bottom: none; }
+        .table-modern tr:hover td { background: var(--surface-2); }
+        .table-modern a { color: var(--accent); text-decoration: none; }
+        .table-modern a:hover { text-decoration: underline; }
+        .table-modern .badge { font-size: 11px; padding: 2px 8px; }
+        .table-modern .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+        /* STATUS PILLS */
+        .status-pill { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 11.5px; font-weight: 500; }
+        .status-found { background: var(--success-soft); color: var(--success); }
+        .status-claimed { background: var(--accent-soft); color: var(--accent); }
+        .status-stored { background: var(--warning-soft); color: var(--warning); }
+        .status-disposed { background: var(--danger-soft); color: var(--danger); }
+        .status-transferred { background: var(--surface-2); color: var(--text-secondary); }
+
+        /* DASHBOARD STYLES */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 4px; transition: box-shadow 0.15s, transform 0.15s; }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .stat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .stat-label { font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .stat-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+        .stat-icon svg { width: 15px; height: 15px; }
+        .stat-icon.blue { background: var(--accent-soft); color: var(--accent); }
+        .stat-icon.green { background: var(--success-soft); color: var(--success); }
+        .stat-icon.amber { background: var(--warning-soft); color: var(--warning); }
+        .stat-icon.red { background: var(--danger-soft); color: var(--danger); }
+        .stat-value { font-size: 28px; font-weight: 600; font-family: 'DM Mono', monospace; letter-spacing: -0.02em; line-height: 1; }
+        .stat-note { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .stat-badge { display: inline-flex; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 20px; margin-top: 4px; }
+        .stat-badge.empty { background: var(--surface-2); color: var(--text-muted); }
+
+        .content-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+        .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+        .system-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+        .sys-stat { background: var(--surface); padding: 16px 18px; }
+        .sys-stat-value { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; }
+        .sys-stat-label { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); }
+        .config-item { background: var(--surface); padding: 14px 16px; text-align: center; }
+        .config-value { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; }
+        .config-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .role-list { padding: 4px 0; }
+        .role-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+        .role-item:last-child { border-bottom: none; }
+        .role-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .role-dot.superadmin { background: var(--accent); }
+        .role-dot.admin { background: var(--success); }
+        .role-dot.user { background: var(--warning); }
+        .role-name { flex: 1; font-size: 13px; }
+        .role-count { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; color: var(--text-secondary); }
+        .role-bar-wrap { width: 64px; height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+        .role-bar { height: 100%; border-radius: 2px; }
+        .role-bar.superadmin { background: var(--accent); }
+        .role-bar.admin { background: var(--success); }
+        .role-bar.user { background: var(--warning); }
+
+        .records-table { width: 100%; border-collapse: collapse; }
+        .records-table th { padding: 10px 20px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+        .records-table td { padding: 13px 20px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+        .records-table tr:last-child td { border-bottom: none; }
+        .records-table tr:hover td { background: var(--surface-2); }
+        .record-desc { color: var(--text-primary); font-weight: 500; }
+
+        .empty-state { padding: 48px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .empty-icon { width: 48px; height: 48px; background: var(--surface-2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .empty-icon svg { width: 22px; height: 22px; }
+        .empty-title { font-size: 14px; font-weight: 500; }
+        .empty-desc { font-size: 13px; color: var(--text-muted); max-width: 240px; }
+
+        .card-action { font-size: 12.5px; color: var(--accent); text-decoration: none; font-weight: 500; cursor: pointer; border: none; background: none; font-family: inherit; }
+        .card-action:hover { opacity: 0.7; }
+
+        /* TEXT COLORS */
+        .text-primary { color: var(--accent); }
+        .text-secondary { color: var(--text-secondary); }
+
+        /* ROW */
+        .row { display: flex; flex-wrap: wrap; margin: -8px; }
+        .row > * { padding: 8px; }
+
+        /* RESPONSIVE: Tablet */
+        @@media (max-width: 992px) {
+            .nav-links { gap: 0; }
+            .nav-link { padding: 6px 10px; font-size: 13px; }
+            .nav-link svg { width: 14px; height: 14px; }
+            .nav-brand { margin-right: 24px; }
+            .page { padding: 24px 20px; }
+            .page-full, .page-wide { padding: 20px 20px; max-width: 100%; }
+            .content-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .config-grid { grid-template-columns: repeat(3, 1fr); }
+            .row { flex-direction: column; }
+            .col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 { flex: 0 0 100%; }
+        }
+
+        /* RESPONSIVE: Mobile */
+        @@media (max-width: 768px) {
+            /* Layout */
+            .page { padding: 16px; }
+            .page-full, .page-wide { padding: 16px; max-width: 100%; }
+            .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .page-title { font-size: 20px; }
+            .page-subtitle { font-size: 13px; }
+            
+            /* Navigation */
+            nav { padding: 0 12px; height: 52px; }
+            .nav-brand { margin-right: 12px; font-size: 14px; }
+            .nav-brand-icon { width: 26px; height: 26px; }
+            .nav-links { position: fixed; top: 52px; left: 0; right: 0; bottom: 0; background: var(--bg); flex-direction: column; align-items: stretch; padding: 12px; gap: 4px; display: none; overflow-y: auto; }
+            .nav-links.mobile-open { display: flex; }
+            .nav-link { padding: 12px 14px; font-size: 15px; justify-content: flex-start; }
+            .nav-link svg { width: 18px; height: 18px; }
+            .nav-link.active { background: var(--accent-soft); }
+            
+            /* Mobile Menu Toggle */
+            .mobile-menu-toggle { display: flex; margin-left: auto; margin-right: 8px; }
+            
+            /* Nav Actions */
+            .nav-actions { gap: 4px; }
+            .nav-actions .btn-primary span { display: none; }
+            .nav-actions .btn-primary svg { margin: 0; }
+            .btn { padding: 10px 14px; font-size: 14px; }
+            .btn-sm { padding: 6px 10px; font-size: 13px; }
+            .avatar { width: 28px; height: 28px; font-size: 10px; }
+            
+            /* Dropdowns */
+            .dropdown-menu { position: static; box-shadow: none; border: none; background: var(--surface-2); padding: 4px 0; min-width: 100%; }
+            .dropdown:hover .dropdown-menu { display: none; }
+            .dropdown.mobile-open .dropdown-menu { display: block; }
+            
+            /* Stats */
+            .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+            .stat-card { padding: 16px; }
+            .stat-value { font-size: 24px; }
+            .stat-label { font-size: 11px; }
+            
+            /* Cards */
+            .card { border-radius: var(--radius-sm); }
+            .card-header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+            .card-title { font-size: 13px; }
+            .card-body { padding: 16px; }
+            .card-footer { padding: 10px 16px; flex-direction: column; gap: 8px; }
+            
+            /* Forms */
+            .form-group { margin-bottom: 14px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .form-actions { flex-direction: column; }
+            .form-actions .btn { width: 100%; justify-content: center; }
+            .form-control, .form-select { padding: 10px 12px; font-size: 14px; }
+            .form-label { font-size: 12px; }
+            .form-hint { font-size: 11.5px; }
+            
+            /* Tables */
+            .table-responsive { margin: 0 -16px; padding: 0 16px; }
+            .table-modern { font-size: 13px; }
+            .table-modern th { padding: 10px 12px; font-size: 10px; }
+            .table-modern td { padding: 10px 12px; }
+            .table-modern .btn-sm { padding: 5px 8px; font-size: 11px; }
+            
+            /* Buttons */
+            .btn-icon { width: 36px; height: 36px; }
+            .d-flex { flex-direction: column; }
+            .gap-2, .gap-3 { gap: 8px; }
+            
+            /* Badges */
+            .badge { font-size: 10.5px; padding: 2px 6px; }
+            .badge-status { font-size: 10.5px; }
+            
+            /* Alerts */
+            .alert { padding: 10px 14px; font-size: 13px; }
+            
+            /* Empty State */
+            .empty-state { padding: 32px 16px; }
+            .empty-icon { width: 40px; height: 40px; }
+            .empty-title { font-size: 13px; }
+            .empty-desc { font-size: 12px; }
+            
+            /* Pagination */
+            .table-pagination { flex-direction: column; gap: 12px; }
+            .pagination { flex-wrap: wrap; justify-content: center; }
+            
+            /* Modal */
+            .modal-content { width: 95%; max-height: 85vh; overflow-y: auto; }
+            .modal-header { padding: 12px 16px; }
+            .modal-body { padding: 16px; }
+            .modal-footer { padding: 12px 16px; flex-wrap: wrap; }
+            
+            /* Grid */
+            .col-1, .col-2, .col-3, .col-4, .col-5, .col-6, .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 { flex: 0 0 100%; }
+            .row { margin: -6px; }
+            .row > * { padding: 6px; }
+            
+            /* Messages */
+            .message-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .message-meta { flex-wrap: wrap; gap: 8px; }
+            .message-body { padding: 14px 16px; }
+            
+            /* Page Header Actions */
+            .page-header .btn, 
+            .page-header .d-flex { width: 100%; }
+            .page-header .d-flex { align-items: stretch; }
+        }
+
+        /* Small Mobile */
+        @@media (max-width: 480px) {
+            body { font-size: 13px; }
+            .page { padding: 12px; }
+            .page-full, .page-wide { padding: 12px; }
+            .page-title { font-size: 18px; }
+            nav { padding: 0 10px; }
+            .nav-brand { font-size: 13px; }
+            .stat-value { font-size: 22px; }
+            .btn { padding: 8px 12px; font-size: 13px; }
+            .table-modern th, .table-modern td { padding: 8px 10px; }
+            .card-body { padding: 12px; }
+        }
+
+        /* Touch improvements */
+        @@media (hover: none) and (pointer: coarse) {
+            .nav-link, .btn, .dropdown-item { min-height: 44px; }
+            .btn { min-height: 44px; }
+            .form-control, .form-select { min-height: 44px; }
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <nav class="navbar navbar-expand-lg sticky-top" id="mainNavbar">
-            <div class="container-fluid px-4">
-                <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
-                    <div class="brand-icon">
-                        <i class="bi bi-search-heart"></i>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    var userInitials = string.Join("", (User.Identity.Name ?? "U").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+
+    <!-- NAV -->
+    <nav>
+        <a class="nav-brand" asp-controller="Home" asp-action="Index">
+            <div class="nav-brand-icon">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                </svg>
+            </div>
+            Lost &amp; Found
+        </a>
+
+        <div class="nav-links">
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Dashboard
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "active" : "")" asp-controller="LostFoundItem" asp-action="Create">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                New Record
+            </a>
+            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "active" : "")" asp-controller="LostFoundItem" asp-action="Search">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+                Search
+            </a>
+            
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+            {
+                <div class="dropdown">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MasterData" ? "active" : "")" href="#">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        Master Data
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" asp-controller="MasterData" asp-action="Items"><i class="bi bi-box"></i> Items</a>
+                        <a class="dropdown-item" asp-controller="MasterData" asp-action="Routes"><i class="bi bi-signpost-2"></i> Routes</a>
+                        <a class="dropdown-item" asp-controller="MasterData" asp-action="Vehicles"><i class="bi bi-bus-front"></i> Vehicles</a>
+                        <a class="dropdown-item" asp-controller="MasterData" asp-action="StorageLocations"><i class="bi bi-building"></i> Storage Locations</a>
+                        <a class="dropdown-item" asp-controller="MasterData" asp-action="Statuses"><i class="bi bi-tag"></i> Statuses</a>
+                        <a class="dropdown-item" asp-controller="MasterData" asp-action="FoundByNames"><i class="bi bi-person"></i> Found By Names</a>
                     </div>
-                    <span class="brand-text">Lost &amp; Found</span>
+                </div>
+            }
+
+            @if (User.IsInRole("SuperAdmin"))
+            {
+                <div class="dropdown">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" || ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" || ViewContext.RouteData.Values["controller"]?.ToString() == "Logs" ? "active" : "")" href="#">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        Admin
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> User Management</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3"></i> AD Groups &amp; Sync</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="PasswordPolicy"><i class="bi bi-key"></i> Password Policy</a>
+                        <a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone"></i> Announcements</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Activity Logs</a>
+                    </div>
+                </div>
+            }
+            else if (User.IsInRole("Admin"))
+            {
+                <div class="dropdown">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" || ViewContext.RouteData.Values["controller"]?.ToString() == "Logs" || ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" ? "active" : "")" href="#">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        Admin
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> Users (View)</a>
+                        <a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Activity Logs</a>
+                        <a class="dropdown-item" asp-controller="Announcement" asp-action="Messages"><i class="bi bi-envelope"></i> Messages</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Logs" ? "active" : "")" asp-controller="Logs" asp-action="Index">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    My Logs
                 </a>
-                <button class="navbar-toggler" type="button">
-                    <i class="bi bi-list" style="font-size:1.5rem;"></i>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" ? "active" : "")" asp-controller="Announcement" asp-action="Messages">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    Messages
+                </a>
+            }
+        </div>
+
+        <button type="button" class="btn btn-ghost btn-icon mobile-menu-toggle" id="mobileMenuToggle" style="display: none;" aria-label="Toggle menu">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+
+        <div class="nav-actions">
+            <a class="btn btn-primary" asp-controller="LostFoundItem" asp-action="Create">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <span>New Record</span>
+            </a>
+            <a class="btn btn-ghost btn-icon" asp-controller="Account" asp-action="Profile" title="My Profile">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </a>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-ghost btn-icon" title="Logout">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                 </button>
-                <div class="navbar-collapse" id="navbarContent">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
-                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="LostFoundItem" asp-action="Create">
-                                <i class="bi bi-plus-circle me-1"></i> New Record
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="LostFoundItem" asp-action="Search">
-                                <i class="bi bi-search me-1"></i> Search
-                            </a>
-                        </li>
-                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link dropdown-toggle" href="#" role="button">
-                                    <i class="bi bi-database-gear me-1"></i> Master Data
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Items"><i class="bi bi-box me-2"></i>Items</a></li>
-                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Routes"><i class="bi bi-signpost-2 me-2"></i>Routes</a></li>
-                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Vehicles"><i class="bi bi-bus-front me-2"></i>Vehicles</a></li>
-                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="StorageLocations"><i class="bi bi-building me-2"></i>Storage Locations</a></li>
-                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="Statuses"><i class="bi bi-tag me-2"></i>Statuses</a></li>
-                                    <li><a class="dropdown-item" asp-controller="MasterData" asp-action="FoundByNames"><i class="bi bi-person me-2"></i>Found By Names</a></li>
-                                </ul>
-                            </li>
-                        }
-                        @if (User.IsInRole("SuperAdmin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link dropdown-toggle" href="#" role="button">
-                                    <i class="bi bi-shield-lock me-1"></i> Admin
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people me-2"></i>User Management</a></li>
-                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3 me-2"></i>AD Groups &amp; Sync</a></li>
-                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="PasswordPolicy"><i class="bi bi-key me-2"></i>Password Policy</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone me-2"></i>Announcements</a></li>
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li><a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text me-2"></i>Activity Logs</a></li>
-                                </ul>
-                            </li>
-                        }
-                        else if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link dropdown-toggle" href="#" role="button">
-                                    <i class="bi bi-shield me-1"></i> Admin
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people me-2"></i>Users (View)</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text me-2"></i>Activity Logs</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Announcement" asp-action="Messages"><i class="bi bi-envelope me-2"></i>Messages</a></li>
-                                </ul>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Logs" asp-action="Index">
-                                    <i class="bi bi-journal-text me-1"></i> My Logs
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Announcement" asp-action="Messages" style="position:relative;">
-                                    <i class="bi bi-envelope me-1"></i> Messages <span id="unreadBadge" class="notification-badge" style="display:none;"></span>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                    <div class="d-flex align-items-center gap-3">
-                        @if (!User.IsInRole("SuperAdmin"))
-                        {
-                            <a asp-controller="Announcement" asp-action="Messages" class="notification-bell" title="Messages">
-                                <i class="bi bi-bell"></i>
-                                <span id="navUnreadBadge" class="notification-badge" style="display:none;"></span>
-                            </a>
-                        }
-                        <div class="user-info d-none d-md-flex align-items-center gap-2">
-                            <div class="user-avatar">
-                                <i class="bi bi-person-circle"></i>
-                            </div>
-                            <span class="user-name">@User.Identity?.Name</span>
-                        </div>
-                        <!-- Mobile-only nav links -->
-                        <div class="d-flex d-md-none gap-2 mb-2 pb-2 border-bottom border-secondary">
-                            <a asp-controller="Account" asp-action="Profile" class="nav-link">
-                                <i class="bi bi-person-gear me-1"></i> My Profile
-                            </a>
-                            <a asp-controller="Account" asp-action="ChangePassword" class="nav-link">
-                                <i class="bi bi-key me-1"></i> Change Password
-                            </a>
-                        </div>
-                        <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-ghost btn-icon" title="Change Password" style="color: var(--text-muted);">
-                            <i class="bi bi-key"></i>
-                        </a>
-                        <a asp-controller="Account" asp-action="Profile" class="btn btn-ghost btn-icon" title="My Profile" style="color: var(--text-muted);">
-                            <i class="bi bi-person-gear"></i>
-                        </a>
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-3">
-                                <i class="bi bi-box-arrow-right me-1"></i> Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    }
+            </form>
+            <div class="avatar" title="@User.Identity.Name">@userInitials</div>
+        </div>
+    </nav>
+}
 
-    <main class="main-content">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="container-fluid px-4 mt-3">
-                <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" role="alert">
-                    <i class="bi bi-check-circle-fill me-2" style="font-size:1.1rem;"></i>
-                    <div>@TempData["SuccessMessage"]</div>
-                    <button type="button" class="btn-close"></button>
-                </div>
-            </div>
-        }
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="container-fluid px-4 mt-3">
-                <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2" style="font-size:1.1rem;"></i>
-                    <div>@TempData["ErrorMessage"]</div>
-                    <button type="button" class="btn-close"></button>
-                </div>
-            </div>
-        }
-
-        @RenderBody()
-    </main>
-
-    @if (User.Identity?.IsAuthenticated == true)
+<!-- MAIN CONTENT -->
+<main class="page">
+    @if (TempData["SuccessMessage"] != null)
     {
-        <div id="announcementModal" class="announcement-modal" style="display:none;">
-            <div class="announcement-modal-backdrop"></div>
-            <div class="announcement-modal-content">
-                <div class="announcement-modal-header">
-                    <i class="bi bi-megaphone"></i>
-                    <span>Announcement</span>
-                    <button type="button" class="announcement-modal-close" id="closeAnnouncementModal">&times;</button>
-                </div>
-                <div class="announcement-modal-body" id="announcementModalBody"></div>
-                <div class="announcement-modal-footer">
-                    <span class="small text-muted" id="announcementCounter"></span>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="prevAnnouncement" style="display:none;">Previous</button>
-                        <button type="button" class="btn btn-primary btn-sm" id="nextAnnouncement">Next</button>
-                    </div>
-                </div>
-            </div>
+        <div class="alert alert-success">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            @TempData["ErrorMessage"]
         </div>
     }
 
-    <script src="~/js/site.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    @RenderBody()
+</main>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div id="announcementModal" class="modal" style="display:none;">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                <span>Announcement</span>
+                <button type="button" class="modal-close" id="closeAnnouncementModal">&times;</button>
+            </div>
+            <div class="modal-body" id="announcementModalBody"></div>
+            <div class="modal-footer">
+                <span class="text-muted" style="font-size:12px; margin-right:auto;" id="announcementCounter"></span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" id="prevAnnouncement" style="display:none;">Previous</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="nextAnnouncement">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script src="~/js/site.js"></script>
+<script>
+    // Mobile menu toggle
+    (function() {
+        var toggle = document.getElementById('mobileMenuToggle');
+        var navLinks = document.querySelector('.nav-links');
+        
+        if (toggle && navLinks) {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                navLinks.classList.toggle('mobile-open');
+            });
+            
+            // Close menu when clicking a link
+            navLinks.querySelectorAll('.nav-link').forEach(function(link) {
+                link.addEventListener('click', function() {
+                    navLinks.classList.remove('mobile-open');
+                });
+            });
+            
+            // Show toggle on mobile
+            function checkMobile() {
+                if (window.innerWidth <= 768) {
+                    toggle.style.display = 'flex';
+                } else {
+                    toggle.style.display = 'none';
+                    navLinks.classList.remove('mobile-open');
+                }
+            }
+            checkMobile();
+            window.addEventListener('resize', checkMobile);
+        }
+    })();
+</script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
