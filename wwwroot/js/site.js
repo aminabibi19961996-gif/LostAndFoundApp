@@ -30,48 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Navbar toggle for mobile
-    var toggler = document.querySelector('.navbar-toggler');
-    var collapse = document.querySelector('#navbarContent');
-    if (toggler && collapse) {
-        toggler.addEventListener('click', function () {
-            collapse.classList.toggle('show');
-        });
-    }
-
-    // Dropdown toggle (pure JS, no Bootstrap JS needed)
-    document.querySelectorAll('.dropdown-toggle').forEach(function (toggle) {
-        toggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var parent = this.closest('.nav-item');
-            var wasOpen = parent.classList.contains('show');
-            // Close all dropdowns first
-            document.querySelectorAll('.nav-item.show').forEach(function (item) {
-                item.classList.remove('show');
-            });
-            if (!wasOpen) {
-                parent.classList.add('show');
-            }
-        });
-    });
-
-    // Close dropdowns and mobile nav when clicking outside
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('.nav-item')) {
-            document.querySelectorAll('.nav-item.show').forEach(function (item) {
-                item.classList.remove('show');
-            });
-        }
-        var collapse = document.getElementById('navbarContent');
-        if (collapse && collapse.classList.contains('show') && !e.target.closest('#navbarContent') && !e.target.closest('.navbar-toggler')) {
-            collapse.classList.remove('show');
-        }
-    });
 
     // Announcement popup system — only runs when user is authenticated (navbar present)
     (function () {
-        if (!document.getElementById('mainNavbar')) return;
+        if (!document.querySelector('nav')) return;
 
         var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
@@ -100,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var prevBtn = document.getElementById('prevAnnouncement');
                 var nextBtn = document.getElementById('nextAnnouncement');
                 var closeBtn = document.getElementById('closeAnnouncementModal');
-                var backdrop = document.querySelector('.announcement-modal-backdrop');
+                var backdrop = document.getElementById('modalBackdrop');
                 if (!modal) return;
 
                 var current = 0;

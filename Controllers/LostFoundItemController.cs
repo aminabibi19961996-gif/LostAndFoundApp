@@ -818,7 +818,7 @@ namespace LostAndFoundApp.Controllers
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Bulk updated status to '{Status}' for {Count} records by {User}", 
+            _logger.LogInformation("Bulk updated status to '{Status}' for {Count} records by {User}",
                 status?.Name, updatedCount, User.Identity?.Name);
             await _activityLogService.LogAsync(HttpContext, "Bulk Status Update",
                 $"Bulk updated status to '{status?.Name}' for {updatedCount} records.", "Items");

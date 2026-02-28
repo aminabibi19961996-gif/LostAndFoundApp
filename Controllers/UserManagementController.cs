@@ -57,12 +57,12 @@ namespace LostAndFoundApp.Controllers
 
             // Batched query: get all users and roles in single queries instead of N+1
             var users = await _userManager.Users.ToListAsync();
-            
+
             // Get all user-role mappings in one query
             var userRolePairs = await _context.UserRoles
                 .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, RoleName = r.Name })
                 .ToListAsync();
-            
+
             // Build a lookup dictionary for O(1) role lookup
             var userRolesLookup = userRolePairs
                 .GroupBy(x => x.UserId)
@@ -646,7 +646,7 @@ namespace LostAndFoundApp.Controllers
 
             await _activityLogService.LogAsync(HttpContext, "Update Password Policy",
                 $"Password policy updated: MinLength={model.MinimumLength}, Digit={model.RequireDigit}, Lower={model.RequireLowercase}, Upper={model.RequireUppercase}, NonAlpha={model.RequireNonAlphanumeric}.", "UserManagement");
-            
+
             TempData["SuccessMessage"] = "Password policy has been updated successfully. Changes take effect immediately for all new password operations.";
             return RedirectToAction(nameof(Index));
         }

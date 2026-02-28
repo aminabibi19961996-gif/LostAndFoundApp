@@ -279,7 +279,7 @@
                                     <td>@item.DateFound.ToString("MM/dd/yyyy")</td>
                                     <td>@item.ItemName</td>
                                     <td>@item.LocationFound</td>
-                                    <td><span class="badge-status badge-@item.StatusName.ToLower()">@item.StatusName</span></td>
+                                    <td><span class="badge-status badge-@(item.StatusName?.ToLower() ?? "unknown")">@(item.StatusName ?? "Unknown")</span></td>
                                     <td>
                                         @if (item.DaysSinceFound > 30)
                                         {

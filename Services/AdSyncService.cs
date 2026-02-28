@@ -57,7 +57,7 @@ namespace LostAndFoundApp.Services
 
                 var options = useSsl ? ContextOptions.Negotiate | ContextOptions.SecureSocketLayer : ContextOptions.Negotiate;
                 using var context = new PrincipalContext(ContextType.Domain, domain, container, options);
-                
+
                 var isValid = context.ValidateCredentials(username, password);
                 _logger.LogInformation("AD credential validation for user '{User}': {Result}", username, isValid ? "Success" : "Failed");
                 return isValid;
