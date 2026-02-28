@@ -5,51 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — Lost &amp; Found</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
     <link href="~/css/site.css" rel="stylesheet" />
-    <!-- All styles consolidated in site.css -->
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
 @if (User.Identity?.IsAuthenticated == true)
 {
     var userInitials = string.Join("", (User.Identity.Name ?? "U").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+    var userRole = User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Supervisor") ? "Supervisor" : "User";
 
     <!-- NAV -->
     <nav>
         <a class="nav-brand" asp-controller="Home" asp-action="Index">
             <div class="nav-brand-icon">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-                </svg>
+                <i class="bi bi-search"></i>
             </div>
             Lost &amp; Found
         </a>
 
         <div class="nav-links">
             <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                Dashboard
+                <i class="bi bi-grid-fill"></i> Dashboard
             </a>
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "active" : "")" asp-controller="LostFoundItem" asp-action="Create">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                New Record
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Create" && ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "active" : "")" asp-controller="LostFoundItem" asp-action="Create">
+                <i class="bi bi-plus"></i> New Record
             </a>
-            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "LostFoundItem" ? "active" : "")" asp-controller="LostFoundItem" asp-action="Search">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
-                Search
+            <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Search" ? "active" : "")" asp-controller="LostFoundItem" asp-action="Search">
+                <i class="bi bi-search"></i> Search
             </a>
-            
-            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
             {
                 <div class="dropdown">
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "MasterData" ? "active" : "")" href="#">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                        Master Data
+                        Master Data <i class="bi bi-chevron-down" style="font-size:10px;opacity:.5"></i>
                     </a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" asp-controller="MasterData" asp-action="Items"><i class="bi bi-box"></i> Items</a>
@@ -66,8 +60,7 @@
             {
                 <div class="dropdown">
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" || ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" || ViewContext.RouteData.Values["controller"]?.ToString() == "Logs" ? "active" : "")" href="#">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        Admin
+                        Admin <i class="bi bi-chevron-down" style="font-size:10px;opacity:.5"></i>
                     </a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> User Management</a>
@@ -83,49 +76,59 @@
             {
                 <div class="dropdown">
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" || ViewContext.RouteData.Values["controller"]?.ToString() == "Logs" || ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" ? "active" : "")" href="#">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        Admin
+                        Admin <i class="bi bi-chevron-down" style="font-size:10px;opacity:.5"></i>
                     </a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> Users (View)</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> User Management</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3"></i> AD Groups &amp; Sync</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdUsers"><i class="bi bi-person-badge"></i> AD Users</a>
+                        <div class="dropdown-divider"></div>
                         <a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Activity Logs</a>
                         <a class="dropdown-item" asp-controller="Announcement" asp-action="Messages"><i class="bi bi-envelope"></i> Messages</a>
                     </div>
                 </div>
             }
-            else
+            else if (User.IsInRole("Supervisor"))
             {
                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Logs" ? "active" : "")" asp-controller="Logs" asp-action="Index">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    My Logs
+                    <i class="bi bi-journal-text"></i> My Logs
                 </a>
                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" ? "active" : "")" asp-controller="Announcement" asp-action="Messages">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    Messages
+                    <i class="bi bi-envelope"></i> Messages
+                </a>
+            }
+            else
+            {
+                @* User role: no log access, only messages *@
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Announcement" ? "active" : "")" asp-controller="Announcement" asp-action="Messages">
+                    <i class="bi bi-envelope"></i> Messages
                 </a>
             }
         </div>
 
         <button type="button" class="btn btn-ghost btn-icon mobile-menu-toggle" id="mobileMenuToggle" style="display: none;" aria-label="Toggle menu">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
+            <i class="bi bi-list" style="font-size:20px"></i>
         </button>
 
-        <div class="nav-actions">
-            <a class="btn btn-primary" asp-controller="LostFoundItem" asp-action="Create">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                <span>New Record</span>
+        <div class="nav-actions" style="gap:12px;">
+            <div class="nav-user-info" style="font-size:13px;color:var(--text-secondary);padding-right:14px;border-right:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+                <strong style="color:var(--text-primary);font-weight:600;">@User.Identity.Name</strong>
+                <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;background:var(--accent-subtle);color:var(--accent);">@userRole</span>
+            </div>
+            <a class="btn btn-primary btn-sm" asp-controller="LostFoundItem" asp-action="Create" style="padding:7px 14px;">
+                <i class="bi bi-plus"></i> <span>New Record</span>
             </a>
-            <a class="btn btn-ghost btn-icon" asp-controller="Account" asp-action="Profile" title="My Profile">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            </a>
-            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-ghost btn-icon" title="Logout">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                </button>
-            </form>
+            <div style="display:flex;align-items:center;gap:4px;">
+                <a class="btn btn-ghost btn-icon" asp-controller="Account" asp-action="Profile" title="My Profile">
+                    <i class="bi bi-person" style="font-size:16px"></i>
+                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-ghost btn-icon" title="Logout">
+                        <i class="bi bi-box-arrow-right" style="font-size:16px"></i>
+                    </button>
+                </form>
+            </div>
             <div class="avatar" title="@User.Identity.Name">@userInitials</div>
         </div>
     </nav>
@@ -136,14 +139,14 @@
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <i class="bi bi-check-circle" style="font-size:16px"></i>
             @TempData["SuccessMessage"]
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <i class="bi bi-exclamation-triangle" style="font-size:16px"></i>
             @TempData["ErrorMessage"]
         </div>
     }
@@ -157,7 +160,7 @@
         <div class="modal-backdrop" id="modalBackdrop"></div>
         <div class="modal-content">
             <div class="modal-header">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                <i class="bi bi-megaphone" style="font-size:16px;color:var(--accent)"></i>
                 <span>Announcement</span>
                 <button type="button" class="modal-close" id="closeAnnouncementModal">&times;</button>
             </div>
@@ -179,21 +182,19 @@
     (function() {
         var toggle = document.getElementById('mobileMenuToggle');
         var navLinks = document.querySelector('.nav-links');
-        
+
         if (toggle && navLinks) {
             toggle.addEventListener('click', function(e) {
                 e.preventDefault();
                 navLinks.classList.toggle('mobile-open');
             });
-            
-            // Close menu when clicking a link
+
             navLinks.querySelectorAll('.nav-link').forEach(function(link) {
                 link.addEventListener('click', function() {
                     navLinks.classList.remove('mobile-open');
                 });
             });
-            
-            // Show toggle on mobile
+
             function checkMobile() {
                 if (window.innerWidth <= 768) {
                     toggle.style.display = 'flex';

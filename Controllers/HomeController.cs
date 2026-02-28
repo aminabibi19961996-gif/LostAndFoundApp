@@ -90,8 +90,9 @@ namespace LostAndFoundApp.Controllers
                 CreatedBy = x.CreatedBy
             }).ToList();
 
-            // --- SuperAdmin / Admin: system overview data ---
-            if (isSuperAdmin || isAdmin)
+            // --- SuperAdmin / Admin / Supervisor: system overview data ---
+            var isSupervisorOrAbove = isSuperAdmin || isAdmin || User.IsInRole("Supervisor");
+            if (isSupervisorOrAbove)
             {
                 var allUsers = await _userManager.Users.ToListAsync();
                 vm.TotalUsers = allUsers.Count;
@@ -110,6 +111,7 @@ namespace LostAndFoundApp.Controllers
 
                 vm.SuperAdminCount = roleCounts.FirstOrDefault(r => r.Role == "SuperAdmin")?.Count ?? 0;
                 vm.AdminCount = roleCounts.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0;
+                vm.SupervisorCount = roleCounts.FirstOrDefault(r => r.Role == "Supervisor")?.Count ?? 0;
                 vm.UserRoleCount = roleCounts.FirstOrDefault(r => r.Role == "User")?.Count ?? 0;
 
                 // Time-based item stats
@@ -127,6 +129,11 @@ namespace LostAndFoundApp.Controllers
                         && x.Status != null && x.Status.Name != "Claimed"
                         && x.Status.Name != "Disposed"
                         && x.Status.Name != "Transferred");
+
+                // Items awaiting action (Found or Stored) — needed by Supervisor+ dashboard
+                vm.ItemsAwaitingAction = await _context.LostFoundItems
+                    .CountAsync(x => x.Status != null &&
+                        (x.Status.Name == "Found" || x.Status.Name == "Stored"));
             }
 
             // --- Admin + SuperAdmin: operational analytics ---
@@ -138,11 +145,6 @@ namespace LostAndFoundApp.Controllers
                 vm.MasterStorageLocationCount = await _context.StorageLocations.CountAsync();
                 vm.MasterStatusCount = await _context.Statuses.CountAsync();
                 vm.MasterFoundByNameCount = await _context.FoundByNames.CountAsync();
-
-                // Items awaiting action
-                vm.ItemsAwaitingAction = await _context.LostFoundItems
-                    .CountAsync(x => x.Status != null &&
-                        (x.Status.Name == "Found" || x.Status.Name == "Stored"));
 
                 // Reuse statusGroups already fetched at top of method
                 var total = statusGroups.Sum(s => s.Count);

@@ -28,7 +28,7 @@ namespace LostAndFoundApp.Controllers
         // ITEMS
         // =====================================================================
 
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Items(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
             pageIndex = Math.Max(1, pageIndex);
@@ -50,12 +50,12 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult CreateItem() => View(new Item());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> CreateItem(Item model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -72,7 +72,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditItem(int id)
         {
             var item = await _context.Items.FindAsync(id);
@@ -82,7 +82,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditItem(Item model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -103,7 +103,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> DeleteItem(int id)
         {
             var item = await _context.Items.FindAsync(id);
@@ -125,7 +125,7 @@ namespace LostAndFoundApp.Controllers
         // ROUTES
         // =====================================================================
 
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Routes(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
             pageIndex = Math.Max(1, pageIndex);
@@ -147,12 +147,12 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult CreateRoute() => View(new Models.Route());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> CreateRoute(Models.Route model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -169,7 +169,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditRoute(int id)
         {
             var route = await _context.Routes.FindAsync(id);
@@ -179,7 +179,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditRoute(Models.Route model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -200,7 +200,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> DeleteRoute(int id)
         {
             var route = await _context.Routes.FindAsync(id);
@@ -221,7 +221,7 @@ namespace LostAndFoundApp.Controllers
         // VEHICLES
         // =====================================================================
 
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Vehicles(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
             pageIndex = Math.Max(1, pageIndex);
@@ -243,12 +243,12 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult CreateVehicle() => View(new Vehicle());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> CreateVehicle(Vehicle model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -265,7 +265,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditVehicle(int id)
         {
             var vehicle = await _context.Vehicles.FindAsync(id);
@@ -275,7 +275,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditVehicle(Vehicle model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -296,7 +296,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {
             var vehicle = await _context.Vehicles.FindAsync(id);
@@ -317,7 +317,7 @@ namespace LostAndFoundApp.Controllers
         // STORAGE LOCATIONS
         // =====================================================================
 
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> StorageLocations(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
             pageIndex = Math.Max(1, pageIndex);
@@ -339,12 +339,12 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult CreateStorageLocation() => View(new StorageLocation());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> CreateStorageLocation(StorageLocation model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -361,7 +361,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditStorageLocation(int id)
         {
             var location = await _context.StorageLocations.FindAsync(id);
@@ -371,7 +371,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditStorageLocation(StorageLocation model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -392,7 +392,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> DeleteStorageLocation(int id)
         {
             var location = await _context.StorageLocations.FindAsync(id);
@@ -413,7 +413,7 @@ namespace LostAndFoundApp.Controllers
         // STATUSES
         // =====================================================================
 
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Statuses(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
             pageIndex = Math.Max(1, pageIndex);
@@ -435,12 +435,12 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult CreateStatus() => View(new Status());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> CreateStatus(Status model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -457,7 +457,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditStatus(int id)
         {
             var status = await _context.Statuses.FindAsync(id);
@@ -467,7 +467,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditStatus(Status model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -488,7 +488,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> DeleteStatus(int id)
         {
             var status = await _context.Statuses.FindAsync(id);
@@ -509,7 +509,7 @@ namespace LostAndFoundApp.Controllers
         // FOUND BY NAMES
         // =====================================================================
 
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> FoundByNames(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
         {
             pageIndex = Math.Max(1, pageIndex);
@@ -531,12 +531,12 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult CreateFoundByName() => View(new FoundByName());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> CreateFoundByName(FoundByName model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -553,7 +553,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditFoundByName(int id)
         {
             var name = await _context.FoundByNames.FindAsync(id);
@@ -563,7 +563,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> EditFoundByName(FoundByName model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -584,7 +584,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> DeleteFoundByName(int id)
         {
             var name = await _context.FoundByNames.FindAsync(id);
@@ -608,7 +608,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleItemActive(int id)
         {
             var item = await _context.Items.FindAsync(id);
@@ -623,7 +623,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleRouteActive(int id)
         {
             var route = await _context.Routes.FindAsync(id);
@@ -638,7 +638,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleVehicleActive(int id)
         {
             var vehicle = await _context.Vehicles.FindAsync(id);
@@ -653,7 +653,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleStorageLocationActive(int id)
         {
             var location = await _context.StorageLocations.FindAsync(id);
@@ -668,7 +668,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleStatusActive(int id)
         {
             var status = await _context.Statuses.FindAsync(id);
@@ -683,7 +683,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleFoundByNameActive(int id)
         {
             var name = await _context.FoundByNames.FindAsync(id);
@@ -704,7 +704,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddItemAjax([FromBody] MasterDataAjaxRequest request)
         {
             if (string.IsNullOrWhiteSpace(request?.Name))
@@ -723,7 +723,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddRouteAjax([FromBody] MasterDataAjaxRequest request)
         {
             if (string.IsNullOrWhiteSpace(request?.Name))
@@ -742,7 +742,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddVehicleAjax([FromBody] MasterDataAjaxRequest request)
         {
             if (string.IsNullOrWhiteSpace(request?.Name))
@@ -761,7 +761,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddStorageLocationAjax([FromBody] MasterDataAjaxRequest request)
         {
             if (string.IsNullOrWhiteSpace(request?.Name))
@@ -780,7 +780,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddStatusAjax([FromBody] MasterDataAjaxRequest request)
         {
             if (string.IsNullOrWhiteSpace(request?.Name))
@@ -799,7 +799,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddFoundByNameAjax([FromBody] MasterDataAjaxRequest request)
         {
             if (string.IsNullOrWhiteSpace(request?.Name))

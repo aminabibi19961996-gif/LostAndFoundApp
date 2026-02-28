@@ -94,12 +94,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // --- Authorization policies for role-based access control ---
-// Only 3 roles: SuperAdmin, Admin, User
+// 4 roles: SuperAdmin, Admin, Supervisor, User
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireSuperAdmin", policy => policy.RequireRole("SuperAdmin"));
     options.AddPolicy("RequireAdminOrAbove", policy => policy.RequireRole("SuperAdmin", "Admin"));
-    options.AddPolicy("RequireAnyRole", policy => policy.RequireRole("SuperAdmin", "Admin", "User"));
+    options.AddPolicy("RequireSupervisorOrAbove", policy => policy.RequireRole("SuperAdmin", "Admin", "Supervisor"));
+    options.AddPolicy("RequireAnyRole", policy => policy.RequireRole("SuperAdmin", "Admin", "Supervisor", "User"));
 });
 
 // --- Application services ---

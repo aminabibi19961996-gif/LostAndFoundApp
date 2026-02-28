@@ -1,0 +1,267 @@
+@model List<AdUser>
+@{
+    ViewData["Title"] = "AD Users & Sync";
+}
+
+@section Styles {
+<style>
+    .ad-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .ad-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
+    .ad-header h1 i { font-size: 20px; color: var(--accent); }
+    .ad-header .subtitle { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .dc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+    .dc-head { padding: 14px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+    .dc-head i { color: var(--accent); font-size: 16px; }
+    .dc-body { padding: 20px; }
+    .stable { width: 100%; border-collapse: collapse; }
+    .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+    .stable tbody tr:last-child td { border-bottom: none; }
+    .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
+    .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+    .ra { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; text-decoration: none; transition: background .12s, color .12s; }
+    .ra:hover { background: var(--bg-hover); color: var(--accent); }
+    .info-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-row i { margin-top: 2px; color: var(--accent); }
+    .info-row strong { font-size: 14px; color: var(--text-primary); }
+    .info-row span { font-size: 13.5px; color: var(--text-muted); }
+    .ad-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
+    @@media (max-width: 992px) { .ad-grid { grid-template-columns: 1fr; } }
+    .ad-user-results-box { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; max-height: 300px; overflow-y: auto; }
+    .ad-user-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .ad-user-item:hover { background: var(--bg-hover); }
+    .ad-user-item:last-child { border-bottom: none; }
+    .ad-user-item-selected { background: var(--accent-subtle); }
+    .ad-user-item-name { font-weight: 600; font-size: 14.5px; color: var(--text-primary); }
+    .ad-user-item-info { font-size: 13.5px; color: var(--text-muted); }
+    .ad-results-header { padding: 10px 14px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+    .ad-user-msg { padding: 16px; text-align: center; color: var(--text-muted); font-size: 14px; }
+    .ad-user-err { color: var(--red); }
+    .ad-spin { animation: ad-spin-anim 1s linear infinite; display: inline-block; }
+    @@keyframes ad-spin-anim { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .selected-users { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .selected-user-item { display: inline-flex; align-items: center; gap: 4px; background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 14px; }
+    .selected-user-item .btn-remove-user { background: none; border: none; color: #fff; padding: 0; margin-left: 4px; cursor: pointer; opacity: 0.8; }
+    .selected-user-item .btn-remove-user:hover { opacity: 1; }
+</style>
+}
+
+<div class="ad-header">
+    <div>
+        <h1><i class="bi bi-person-badge"></i> Individual AD Users &amp; Sync</h1>
+        <div class="subtitle">Configure individual AD users, role mappings, and trigger synchronization</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a asp-action="AdGroups" class="btn btn-secondary"><i class="bi bi-diagram-3"></i> Back to Groups</a>
+    </div>
+</div>
+
+@if (ViewBag.AdEnabled == true)
+{
+    <div style="background:var(--accent-subtle);border:1px solid var(--accent);color:var(--accent);border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:14.5px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-check-circle-fill"></i>
+        <span><strong>Active Directory enabled.</strong> Domain: <code style="color:var(--text-primary)">@ViewBag.AdDomain</code></span>
+    </div>
+}
+else
+{
+    <div style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:14.5px;display:flex;align-items:center;gap:8px;">
+        <i class="bi bi-exclamation-triangle-fill" style="color:var(--amber)"></i>
+        <span><strong>AD integration is disabled.</strong> Set <code>ActiveDirectory:Enabled</code> to <code>true</code> in <code>appsettings.json</code>.</span>
+    </div>
+}
+
+<div class="ad-grid">
+    <div>
+        <!-- Configured Individual Users -->
+        <div class="dc">
+            <div class="dc-head"><span style="display:flex;align-items:center;gap:8px;"><i class="bi bi-gear"></i> Configured Individual Users</span><span style="padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--accent-subtle);color:var(--accent);">@Model.Count users</span></div>
+            @if (Model.Any())
+            {
+                <div style="overflow-x:auto;">
+                    <table class="stable">
+                        <thead><tr><th>Username</th><th>Mapped Role</th><th>Status</th><th>Date Added</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td style="color:var(--text-primary);font-weight:600;"><i class="bi bi-person" style="color:var(--accent);margin-right:6px;"></i>@user.Username</td>
+                                    <td><form asp-action="UpdateAdUserRole" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@user.Id" /><select name="mappedRole" class="form-select" style="width:120px;font-size:13px;padding:5px 8px;" onchange="this.form.submit()"><option value="Admin" selected="@(user.MappedRole == "Admin" ? "selected" : null)">Admin</option><option value="Supervisor" selected="@(user.MappedRole == "Supervisor" ? "selected" : null)">Supervisor</option><option value="User" selected="@(user.MappedRole == "User" ? "selected" : null)">User</option></select></form></td>
+                                    <td><span class="badge-role @(user.IsActive ? "badge-active" : "badge-inactive")">@(user.IsActive ? "Active" : "Inactive")</span></td>
+                                    <td style="font-size:12.5px;color:var(--text-muted);">@user.DateAdded.ToString("MM/dd/yyyy")</td>
+                                    <td>
+                                        <div style="display:flex;gap:3px;">
+                                            <form asp-action="ToggleAdUserActive" asp-route-id="@user.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="ra" title="@(user.IsActive ? "Deactivate" : "Activate")"><i class="bi @(user.IsActive ? "bi-pause-circle" : "bi-play-circle")" style="color:@(user.IsActive ? "var(--amber)" : "var(--green)")"></i></button></form>
+                                            <form asp-action="RemoveAdUser" asp-route-id="@user.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="ra" title="Remove" data-confirm="Remove this AD user?"><i class="bi bi-trash3" style="color:var(--red)"></i></button></form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div style="padding:40px 24px;text-align:center;color:var(--text-muted);"><i class="bi bi-person" style="font-size:2rem;display:block;margin-bottom:12px;color:var(--text-dim);"></i><div style="font-weight:600;color:var(--text-secondary);margin-bottom:4px;">No individual AD users configured</div><div style="font-size:13px;">Add your first user below.</div></div>
+            }
+        </div>
+
+        <!-- Add New User -->
+        <div class="dc">
+            <div class="dc-head"><span style="display:flex;align-items:center;gap:8px;"><i class="bi bi-plus-circle" style="color:var(--green)"></i> Add Individual AD User(s)</span></div>
+            <div class="dc-body">
+                <div style="margin-bottom:14px;">
+                    <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Step 1: Search Active Directory</label>
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" class="form-control" id="adUserSearch" placeholder="Enter username to search..." autocomplete="off" />
+                        <button type="button" class="btn btn-primary" id="adSearchBtn"><i class="bi bi-search"></i> Search</button>
+                    </div>
+                    <div style="font-size:12.5px;color:var(--text-dim);margin-top:4px;">Type a username and click Search</div>
+                </div>
+                <div id="adUserResults" class="ad-user-results-box" style="margin-bottom:14px;"></div>
+                <div id="adUserSelected" style="margin-bottom:14px;"></div>
+                <form asp-action="AddAdUser" method="post" id="addAdUserForm">
+                    @Html.AntiForgeryToken()
+                    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">
+                        <div>
+                            <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Username</label>
+                            <input type="text" name="username" id="usernameInput" class="form-control" placeholder="Enter username manually..." required />
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Role</label>
+                            <select name="mappedRole" class="form-select" required>
+                                <option value="">Select role...</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="User">User</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top:14px;width:100%;"><i class="bi bi-plus-lg"></i> Add User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right sidebar -->
+    <div>
+        <div class="dc">
+            <div class="dc-head"><span style="display:flex;align-items:center;gap:8px;"><i class="bi bi-arrow-repeat"></i> AD Synchronization</span></div>
+            <div class="dc-body" style="text-align:center;">
+                <i class="bi bi-arrow-repeat" style="font-size:2.5rem;color:var(--accent);display:block;margin-bottom:12px;"></i>
+                <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:6px;">Manual Sync</div>
+                <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">Sync users from AD groups and individual users now.</p>
+                <form asp-action="SyncNow" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-primary" data-confirm="Sync users from all active AD groups and individual users?"><i class="bi bi-arrow-repeat"></i> Sync Now</button></form>
+            </div>
+        </div>
+
+        <div class="dc">
+            <div class="dc-head"><span style="display:flex;align-items:center;gap:8px;"><i class="bi bi-clock-history"></i> Last Sync</span></div>
+            <div class="dc-body">
+                @if (ViewBag.LastSyncTimestamp != null)
+                {
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        @if ((bool)ViewBag.LastSyncSuccess) { <span style="padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;background:var(--green-light);color:var(--green);">Success</span> }
+                        else { <span style="padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;background:var(--red-light);color:var(--red);">Failed</span> }
+                        <span style="font-size:12px;color:var(--text-muted);">@((DateTime)ViewBag.LastSyncTimestamp).ToString("MMM dd, yyyy — HH:mm:ss") UTC</span>
+                    </div>
+                    <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:4px;"><i class="bi bi-person-check me-1"></i>@ViewBag.LastSyncSummary</div>
+                    <div style="font-size:12.5px;color:var(--text-muted);"><i class="bi bi-gear me-1"></i>@ViewBag.LastSyncTrigger by @ViewBag.LastSyncBy</div>
+                    @if (!string.IsNullOrEmpty((string)ViewBag.LastSyncErrors)) { <div style="font-size:12.5px;color:var(--red);margin-top:6px;"><i class="bi bi-exclamation-triangle me-1"></i>@ViewBag.LastSyncErrors</div> }
+                }
+                else { <p style="font-size:13px;color:var(--text-muted);margin:0;">No sync performed yet.</p> }
+            </div>
+        </div>
+
+        <div class="dc">
+            <div class="dc-head"><span style="display:flex;align-items:center;gap:8px;"><i class="bi bi-info-circle"></i> Sync Information</span></div>
+            <div class="dc-body">
+                <div class="info-row"><i class="bi bi-clock"></i><div><strong>Automatic Daily Sync</strong><br><span>Runs at 2:00 AM UTC</span></div></div>
+                <div class="info-row"><i class="bi bi-person-plus" style="color:var(--green)"></i><div><strong>New Users</strong><br><span>Auto-created with mapped role</span></div></div>
+                <div class="info-row"><i class="bi bi-diagram-3" style="color:var(--accent)"></i><div><strong>Groups + Individuals</strong><br><span>Both sources are synced</span></div></div>
+                <div class="info-row"><i class="bi bi-arrow-left-right" style="color:var(--amber)"></i><div><strong>Role Priority</strong><br><span>Admin > Supervisor > User</span></div></div>
+            </div>
+        </div>
+
+        <div class="dc">
+            <div class="dc-head"><span style="display:flex;align-items:center;gap:8px;"><i class="bi bi-shield-exclamation"></i> Role Mapping</span></div>
+            <div class="dc-body">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:14px;font-weight:600;color:var(--text-primary);">Individual User</span><span class="badge-role badge-admin">Admin</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--border);"><span style="font-size:14px;font-weight:600;color:var(--text-primary);">Individual User</span><span class="badge-role badge-supervisor" style="background:var(--amber-light);color:var(--amber);border-color:rgba(245,158,11,0.3);">Supervisor</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:14px;font-weight:600;color:var(--text-primary);">Individual User</span><span class="badge-role badge-user">User</span></div>
+                <div style="font-size:12px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:10px;"><i class="bi bi-shield-exclamation" style="color:var(--amber);margin-right:4px;"></i><strong>Super Admin</strong> is local-only, not mapped from AD.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function() {
+    var searchInput = document.getElementById('adUserSearch');
+    var searchBtn = document.getElementById('adSearchBtn');
+    var resultsDiv = document.getElementById('adUserResults');
+    var usernameInput = document.getElementById('usernameInput');
+    if (!searchInput || !searchBtn || !resultsDiv || !usernameInput) return;
+
+    function doSearch() {
+        var term = searchInput.value.trim();
+        if (term.length < 2) {
+            showResults('<div class="ad-user-msg"><i class="bi bi-info-circle me-1"></i>Enter at least 2 characters.</div>');
+            return;
+        }
+        showResults('<div class="ad-user-msg"><i class="bi bi-arrow-repeat ad-spin me-1"></i> Searching...</div>');
+        fetch('/UserManagement/SearchAdUsers?term=' + encodeURIComponent(term))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.error && data.error.length > 0) {
+                    showResults('<div class="ad-user-msg ad-user-err"><i class="bi bi-exclamation-triangle me-1"></i>' + escapeHtml(data.error) + '</div>');
+                    return;
+                }
+                if (!data.results || data.results.length === 0) {
+                    showResults('<div class="ad-user-msg"><i class="bi bi-search me-1"></i>No users found for "' + escapeHtml(term) + '"</div>');
+                    return;
+                }
+                renderResults(data.results);
+            })
+            .catch(function() {
+                showResults('<div class="ad-user-msg ad-user-err"><i class="bi bi-exclamation-triangle me-1"></i>Search failed.</div>');
+            });
+    }
+
+    function renderResults(results) {
+        var html = '<div class="ad-results-header"><i class="bi bi-list-check me-1"></i>' + results.length + ' user(s) — click to select</div>';
+        for (var i = 0; i < results.length; i++) {
+            var r = results[i];
+            html += '<div class="ad-user-item" data-name="' + escapeAttr(r.name) + '">';
+            html += '<div><div class="ad-user-item-name">' + escapeHtml(r.name) + '</div>';
+            if (r.displayName || r.email) {
+                html += '<div class="ad-user-item-info">' + escapeHtml(r.displayName || r.email || '') + '</div>';
+            }
+            html += '</div><i class="bi bi-plus-circle text-success"></i></div>';
+        }
+        showResults(html);
+    }
+
+    searchBtn.addEventListener('click', function() { doSearch(); });
+    searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+    
+    resultsDiv.addEventListener('click', function(e) {
+        var item = e.target.closest('.ad-user-item');
+        if (!item) return;
+        var name = item.getAttribute('data-name');
+        usernameInput.value = name;
+    });
+
+    function showResults(html) {
+        resultsDiv.innerHTML = html;
+        resultsDiv.style.display = 'block';
+    }
+
+    function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escapeAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+})();
+</script>
+}

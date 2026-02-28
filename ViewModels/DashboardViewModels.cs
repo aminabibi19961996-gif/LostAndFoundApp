@@ -27,6 +27,7 @@ namespace LostAndFoundApp.ViewModels
         public int AdGroupCount { get; set; }
         public int SuperAdminCount { get; set; }
         public int AdminCount { get; set; }
+        public int SupervisorCount { get; set; }
         public int UserRoleCount { get; set; }
         public int ItemsThisWeek { get; set; }
         public int ItemsThisMonth { get; set; }

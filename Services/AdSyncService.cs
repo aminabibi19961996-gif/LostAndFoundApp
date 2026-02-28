@@ -17,10 +17,10 @@ namespace LostAndFoundApp.Services
         private readonly ILogger<AdSyncService> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        // Valid roles that can be mapped from AD groups
+        // Valid roles that can be mapped from AD groups or individual users
         private static readonly HashSet<string> ValidRoles = new(StringComparer.OrdinalIgnoreCase)
         {
-            "Admin", "User"
+            "Admin", "Supervisor", "User"
         };
 
         public AdSyncService(IConfiguration config, ILogger<AdSyncService> logger, IServiceScopeFactory scopeFactory)
@@ -75,10 +75,10 @@ namespace LostAndFoundApp.Services
         }
 
         /// <summary>
-        /// Synchronizes users from all configured AD groups into the local database.
-        /// New members are created with IsAdUser=true and assigned the role mapped to their AD group.
+        /// Synchronizes users from all configured AD groups AND individual AD users into the local database.
+        /// New members are created with IsAdUser=true and assigned the role mapped to their AD group or individual user entry.
         /// Members no longer in any group are flagged inactive.
-        /// Role mapping: Each AD group has a MappedRole — users get the highest-priority role
+        /// Role mapping: Each AD group or individual user has a MappedRole — users get the highest-priority role
         /// if they appear in multiple groups.
         /// Returns a summary of the sync operation.
         /// </summary>
@@ -109,14 +109,16 @@ namespace LostAndFoundApp.Services
                 }
 
                 var adGroups = await context.AdGroups.Where(g => g.IsActive).ToListAsync();
-                if (!adGroups.Any())
+                var adUsers = await context.AdUsers.Where(u => u.IsActive).ToListAsync();
+
+                if (!adGroups.Any() && !adUsers.Any())
                 {
-                    result.Errors.Add("No active AD groups configured for synchronization.");
+                    result.Errors.Add("No active AD groups or individual users configured for synchronization.");
                     return result;
                 }
 
                 // Track which users were found and their highest-priority role
-                // Priority: Admin > User
+                // Priority: Admin > Supervisor > User
                 // NOTE: We store only extracted strings (not UserPrincipal references) because
                 // UserPrincipal objects are disposed at the end of each iteration's `using` block.
                 var userRoleMap = new Dictionary<string, (string Role, string DisplayName, string? Email)>(StringComparer.OrdinalIgnoreCase);
@@ -125,6 +127,44 @@ namespace LostAndFoundApp.Services
                 var options = useSsl ? ContextOptions.Negotiate | ContextOptions.SecureSocketLayer : ContextOptions.Negotiate;
                 using var principalContext = new PrincipalContext(ContextType.Domain, domain, container, options);
 
+                // Process individual AD users first
+                foreach (var adUser in adUsers)
+                {
+                    try
+                    {
+                        using var userPrincipal = UserPrincipal.FindByIdentity(principalContext, adUser.Username);
+                        if (userPrincipal == null)
+                        {
+                            result.Warnings.Add($"AD user '{adUser.Username}' not found in directory.");
+                            _logger.LogWarning("AD user '{Username}' not found in directory — skipping.", adUser.Username);
+                            continue;
+                        }
+
+                        var mappedRole = ValidRoles.Contains(adUser.MappedRole) ? adUser.MappedRole : "User";
+                        var displayName = userPrincipal.DisplayName ?? adUser.Username;
+                        var email = userPrincipal.EmailAddress;
+
+                        // If user is also in a group, they'll get the highest-priority role
+                        if (userRoleMap.TryGetValue(adUser.Username, out var existing))
+                        {
+                            if (GetRolePriority(mappedRole) > GetRolePriority(existing.Role))
+                            {
+                                userRoleMap[adUser.Username] = (mappedRole, displayName, email);
+                            }
+                        }
+                        else
+                        {
+                            userRoleMap[adUser.Username] = (mappedRole, displayName, email);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Warnings.Add($"Error processing AD user '{adUser.Username}': {ex.Message}");
+                        _logger.LogError(ex, "Error processing AD user '{Username}'", adUser.Username);
+                    }
+                }
+
+                // Process AD groups
                 foreach (var adGroup in adGroups)
                 {
                     try
@@ -342,7 +382,8 @@ namespace LostAndFoundApp.Services
         /// </summary>
         private static int GetRolePriority(string role) => role switch
         {
-            "Admin" => 2,
+            "Admin" => 3,
+            "Supervisor" => 2,
             "User" => 1,
             _ => 0
         };
@@ -359,10 +400,12 @@ namespace LostAndFoundApp.Services
         public int UsersDeactivated { get; set; }
         public int RolesUpdated { get; set; }
         public List<string> Errors { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
 
         public string Summary =>
             $"Sync {(Success ? "completed" : "failed")}. " +
             $"Created: {UsersCreated}, Updated: {UsersUpdated}, Deactivated: {UsersDeactivated}, Roles Updated: {RolesUpdated}." +
-            (Errors.Any() ? $" Errors: {string.Join("; ", Errors)}" : "");
+            (Errors.Any() ? $" Errors: {string.Join("; ", Errors)}" : "") +
+            (Warnings.Any() ? $" Warnings: {string.Join("; ", Warnings)}" : "");
     }
 }

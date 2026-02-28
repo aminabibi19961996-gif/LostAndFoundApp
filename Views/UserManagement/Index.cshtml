@@ -3,47 +3,79 @@
     ViewData["Title"] = "User Management";
 }
 
-<div class="page-header">
-    <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
-        <div>
-            <h1 class="page-title"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>User Management</h1>
-            <p class="page-subtitle">
-                    @if (ViewBag.TotalCount > 0)
-                    {
-                        <span>@ViewBag.TotalCount total user(s)</span>
-                    }
-                    else
-                    {
-                        <span>Manage local and Active Directory users</span>
-                    }
-                </p>
-            </div>
-            @if (User.IsInRole("SuperAdmin"))
-            {
-                <a asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-person-plus"></i> Create Local User
-                </a>
-            }
+@section Styles {
+<style>
+    .um-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .um-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
+    .um-header h1 i { font-size: 20px; color: var(--accent); }
+    .um-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+
+    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+    .fc-body { padding: 18px 20px; }
+    .fg { display: grid; grid-template-columns: 1fr 140px 160px 140px auto; gap: 12px; align-items: end; }
+    .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; }
+    .fg .form-control, .fg .form-select { font-size: 14px; padding: 9px 12px; }
+    .fg-actions { display: flex; gap: 8px; align-self: end; }
+
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+    .stable { width: 100%; border-collapse: collapse; }
+    .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--bg-elevated); }
+    .stable thead th:first-child { padding-left: 20px; }
+    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+    .stable tbody td:first-child { padding-left: 20px; }
+    .stable tbody tr:last-child td { border-bottom: none; }
+    .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
+    .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+    .ra { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; text-decoration: none; transition: background .12s, color .12s; }
+    .ra:hover { background: var(--bg-hover); color: var(--accent); }
+
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .rc-footer-info { font-size: 13.5px; color: var(--text-dim); font-weight: 500; }
+
+    @@media (max-width: 768px) { .fg { grid-template-columns: 1fr 1fr; } }
+</style>
+}
+
+<!-- HEADER -->
+<div class="um-header">
+    <div>
+        <h1><i class="bi bi-people"></i> User Management</h1>
+        <div class="count">
+            @if (ViewBag.TotalCount > 0) { <span>@ViewBag.TotalCount total user(s)</span> }
+            else { <span>Manage local and Active Directory users</span> }
         </div>
+    </div>
+    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+    {
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus"></i> Create Local User</a>
+    }
 </div>
-    <!-- Filters -->
-    <div class="card mb-3 fade-in-up">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3 align-items-end">
-                <div class="col-md-3">
+
+<!-- FILTERS -->
+<div class="fc">
+    <div class="fc-body">
+        <form method="get" asp-action="Index">
+            <div class="fg">
+                <div>
                     <label class="form-label">Search</label>
-                    <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Username, name, or email..." />
+                    <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Username, name, email..." />
                 </div>
-                <div class="col-md-2">
+                <div>
                     <label class="form-label">Role</label>
                     <select name="role" class="form-select">
                         <option value="All">All Roles</option>
-                        <option value="SuperAdmin" selected="@(ViewBag.Role == "SuperAdmin" ? "selected" : null)">SuperAdmin</option>
+                        @if (User.IsInRole("SuperAdmin"))
+                        {
+                            <option value="SuperAdmin" selected="@(ViewBag.Role == "SuperAdmin" ? "selected" : null)">SuperAdmin</option>
+                        }
                         <option value="Admin" selected="@(ViewBag.Role == "Admin" ? "selected" : null)">Admin</option>
+                        <option value="Supervisor" selected="@(ViewBag.Role == "Supervisor" ? "selected" : null)">Supervisor</option>
                         <option value="User" selected="@(ViewBag.Role == "User" ? "selected" : null)">User</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <label class="form-label">Account Type</label>
                     <select name="accountType" class="form-select">
                         <option value="All">All Types</option>
@@ -51,7 +83,7 @@
                         <option value="Local" selected="@(ViewBag.AccountType == "Local" ? "selected" : null)">Local</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div>
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
                         <option value="All">All Status</option>
@@ -59,156 +91,89 @@
                         <option value="Inactive" selected="@(ViewBag.Status == "Inactive" ? "selected" : null)">Inactive</option>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search me-1"></i> Search
-                    </button>
-                    <a asp-action="Index" class="btn btn-ghost">
-                        <i class="bi bi-x-circle"></i> Clear
-                    </a>
+                <div class="fg-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+                    <a asp-action="Index" class="btn btn-ghost"><i class="bi bi-x-circle"></i></a>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-    <div class="card">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table-modern" id="usersTable">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Display Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
-                            {
-                                <th>Actions</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var user in Model)
+</div>
+
+<!-- TABLE -->
+<div class="rc">
+    <div style="overflow-x:auto;">
+        <table class="stable">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Display Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                    { <th></th> }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    var roleClass = user.Role.ToLower() switch { "superadmin" => "badge-superadmin", "admin" => "badge-admin", _ => "badge-user" };
+                    <tr>
+                        <td style="color:var(--text-primary);font-weight:600;">@user.UserName</td>
+                        <td>@(user.DisplayName ?? "—")</td>
+                        <td style="color:var(--text-muted);font-size:12.5px;">@(user.Email ?? "—")</td>
+                        <td><span class="badge-role @roleClass">@user.Role</span></td>
+                        <td><span class="badge-role @(user.AccountType == "Active Directory" ? "badge-ad" : "badge-local")"><i class="bi @(user.AccountType == "Active Directory" ? "bi-diagram-3" : "bi-person")"></i> @user.AccountType</span></td>
+                        <td><span class="badge-role @(user.IsActive ? "badge-active" : "badge-inactive")">@(user.IsActive ? "Active" : "Inactive")</span></td>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                         {
-                            <tr>
-                                <td><strong>@user.UserName</strong></td>
-                                <td>@(user.DisplayName ?? "—")</td>
-                                <td class="text-muted">@(user.Email ?? "—")</td>
-                                <td>
-                                    @{
-                                        var roleClass = user.Role.ToLower() switch
-                                        {
-                                            "superadmin" => "badge-superadmin",
-                                            "admin" => "badge-admin",
-                                            _ => "badge-user"
-                                        };
-                                    }
-                                    <span class="badge-role @roleClass">@user.Role</span>
-                                </td>
-                                <td>
-                                    <span class="badge-role @(user.AccountType == "Active Directory" ? "badge-ad" : "badge-local")">
-                                        <i class="bi @(user.AccountType == "Active Directory" ? "bi-diagram-3" : "bi-person")"></i>
-                                        @user.AccountType
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge-role @(user.IsActive ? "badge-active" : "badge-inactive")">
-                                        @(user.IsActive ? "Active" : "Inactive")
-                                    </span>
-                                </td>
+                        <td>
+                            <div style="display:flex;gap:3px;">
+                                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+                                { <a asp-action="EditRole" asp-route-id="@user.Id" class="ra" title="Edit Role"><i class="bi bi-pencil"></i></a> }
+                                @if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && user.AccountType != "Active Directory")
+                                {
+                                    <form asp-action="ResetPassword" asp-route-id="@user.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="ra" title="Reset Password" data-confirm="Reset password for '@user.UserName'?"><i class="bi bi-key" style="color:var(--amber)"></i></button>
+                                    </form>
+                                }
                                 @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
                                 {
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        @if (User.IsInRole("SuperAdmin"))
-                                        {
-                                            <a asp-action="EditRole" asp-route-id="@user.Id" class="btn btn-ghost btn-icon" title="Edit Role">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        }
-                                        @if (User.IsInRole("SuperAdmin") && user.AccountType != "Active Directory")
-                                        {
-                                            <form asp-action="ResetPassword" asp-route-id="@user.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-ghost btn-icon" title="Reset Password"
-                                                        data-confirm="Reset password for '@user.UserName'? A temporary password will be generated.">
-                                                    <i class="bi bi-key text-warning"></i>
-                                                </button>
-                                            </form>
-                                        }
-                                        @if (User.IsInRole("SuperAdmin"))
-                                        {
-                                            <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-ghost btn-icon" title="@(user.IsActive ? "Deactivate" : "Activate")"
-                                                        data-confirm="Are you sure you want to @(user.IsActive ? "deactivate" : "activate") this user?">
-                                                    <i class="bi @(user.IsActive ? "bi-person-slash text-danger" : "bi-person-check text-success")"></i>
-                                                </button>
-                                            </form>
-                                            <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-ghost btn-icon" title="Delete User"
-                                                        data-confirm="PERMANENTLY delete user '@user.UserName'? This cannot be undone.">
-                                                    <i class="bi bi-trash3 text-danger"></i>
-                                                </button>
-                                            </form>
-                                        }
-                                        @if (User.IsInRole("Admin") && !User.IsInRole("SuperAdmin"))
-                                        {
-                                            // Admin can only toggle active status, not edit role or delete
-                                            <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-ghost btn-icon" title="@(user.IsActive ? "Deactivate" : "Activate")"
-                                                        data-confirm="Are you sure you want to @(user.IsActive ? "deactivate" : "activate") this user?">
-                                                    <i class="bi @(user.IsActive ? "bi-person-slash text-danger" : "bi-person-check text-success")"></i>
-                                                </button>
-                                            </form>
-                                        }
-                                    </div>
-                                </td>
+                                    <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="ra" title="@(user.IsActive ? "Deactivate" : "Activate")" data-confirm="@(user.IsActive ? "Deactivate" : "Activate") this user?"><i class="bi @(user.IsActive ? "bi-person-slash" : "bi-person-check")" style="color:@(user.IsActive ? "var(--red)" : "var(--green)")"></i></button>
+                                    </form>
+                                    <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="ra" title="Delete" data-confirm="PERMANENTLY delete '@user.UserName'?"><i class="bi bi-trash3" style="color:var(--red)"></i></button>
+                                    </form>
                                 }
-                            </tr>
+                            </div>
+                        </td>
                         }
-                    </tbody>
-                </table>
-            </div>
-
-            @if (ViewBag.TotalPages > 1)
-            {
-                <div style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border);">
-                    <span class="text-muted" style="font-size: 0.8125rem;">
-                        Showing page @ViewBag.CurrentPage of @ViewBag.TotalPages
-                        (@ViewBag.FilteredCount user(s) found)
-                    </span>
-                    <div class="d-flex gap-2">
-                        @if (ViewBag.CurrentPage > 1)
-                        {
-                            <a asp-action="Index"
-                               asp-route-page="@(ViewBag.CurrentPage - 1)"
-                               asp-route-search="@ViewBag.Search"
-                               asp-route-role="@ViewBag.Role"
-                               asp-route-accountType="@ViewBag.AccountType"
-                               asp-route-status="@ViewBag.Status"
-                               class="btn btn-secondary btn-sm">
-                                <i class="bi bi-chevron-left"></i> Previous
-                            </a>
-                        }
-                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
-                        {
-                            <a asp-action="Index"
-                               asp-route-page="@(ViewBag.CurrentPage + 1)"
-                               asp-route-search="@ViewBag.Search"
-                               asp-route-role="@ViewBag.Role"
-                               asp-route-accountType="@ViewBag.AccountType"
-                               asp-route-status="@ViewBag.Status"
-                               class="btn btn-secondary btn-sm">
-                                Next <i class="bi bi-chevron-right"></i>
-                            </a>
-                        }
-                    </div>
-                </div>
-            }
-        </div>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="rc-footer">
+            <span class="rc-footer-info">Page @ViewBag.CurrentPage of @ViewBag.TotalPages · @ViewBag.FilteredCount user(s)</span>
+            <div style="display:flex;gap:6px;">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <a asp-action="Index" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-search="@ViewBag.Search" asp-route-role="@ViewBag.Role" asp-route-accountType="@ViewBag.AccountType" asp-route-status="@ViewBag.Status" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-left"></i> Previous</a>
+                }
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <a asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-search="@ViewBag.Search" asp-route-role="@ViewBag.Role" asp-route-accountType="@ViewBag.AccountType" asp-route-status="@ViewBag.Status" class="btn btn-secondary btn-sm">Next <i class="bi bi-chevron-right"></i></a>
+                }
+            </div>
+        </div>
+    }
 </div>

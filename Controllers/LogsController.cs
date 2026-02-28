@@ -35,13 +35,25 @@ namespace LostAndFoundApp.Controllers
         {
             var query = _context.ActivityLogs.AsQueryable();
 
-            var isAdminOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
+            // Permission matrix:
+            // - SuperAdmin, Admin: can view all logs
+            // - Supervisor: can view own logs only
+            // - User: cannot view logs at all
+            var canViewAllLogs = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
+            var isSupervisor = User.IsInRole("Supervisor");
 
-            // User role: can only see their own logs
-            if (!isAdminOrAbove)
+            // User role: cannot view logs at all
+            if (!canViewAllLogs && !isSupervisor)
             {
-                var currentUserName = User.Identity?.Name ?? "";
-                query = query.Where(l => l.PerformedBy == currentUserName);
+                // Redirect to access denied or return empty
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Supervisor: filter to own logs only
+            if (isSupervisor && !canViewAllLogs)
+            {
+                var currentUser = User.Identity?.Name ?? "";
+                query = query.Where(l => l.PerformedBy == currentUser);
             }
 
             // Apply filters
@@ -74,7 +86,7 @@ namespace LostAndFoundApp.Controllers
                 Logs = logs,
                 TotalCount = totalCount,
                 CanClearLogs = User.IsInRole("SuperAdmin"),
-                CanViewAllLogs = isAdminOrAbove,
+                CanViewAllLogs = canViewAllLogs,
                 CategoryFilter = category,
                 SearchTerm = search,
                 DateFrom = dateFrom,
@@ -115,7 +127,7 @@ namespace LostAndFoundApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: /Logs/Export — Export logs as CSV (Admin and SuperAdmin)
+        // GET: /Logs/Export — Export logs as CSV (SuperAdmin and Admin only, NOT Supervisor)
         [HttpGet]
         [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Export(string? category, DateTime? dateFrom, DateTime? dateTo)
@@ -131,26 +143,27 @@ namespace LostAndFoundApp.Controllers
 
             var logs = await query.OrderByDescending(l => l.Timestamp).ToListAsync();
 
-            var csv = "Timestamp,Action,Details,Performed By,Category,IP Address,Status\n";
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Timestamp,Action,Details,Performed By,Category,IP Address,Status");
             foreach (var log in logs)
             {
-                csv += $"\"{log.Timestamp:yyyy-MM-dd HH:mm:ss}\",\"{EscapeCsv(log.Action)}\",\"{EscapeCsv(log.Details)}\",\"{EscapeCsv(log.PerformedBy)}\",\"{EscapeCsv(log.Category)}\",\"{log.IpAddress}\",\"{log.Status}\"\n";
+                sb.AppendLine($"\"{log.Timestamp:yyyy-MM-dd HH:mm:ss}\",\"{EscapeCsv(log.Action)}\",\"{EscapeCsv(log.Details)}\",\"{EscapeCsv(log.PerformedBy)}\",\"{EscapeCsv(log.Category)}\",\"{log.IpAddress}\",\"{log.Status}\"");
             }
 
             await _activityLogService.LogAsync(HttpContext, "Export Logs", $"Exported {logs.Count} activity log records.", "System");
 
-            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
             return File(bytes, "text/csv", $"activity_logs_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv");
         }
 
         private static string EscapeCsv(string? value)
         {
             if (string.IsNullOrEmpty(value)) return "";
-            // Escape embedded double-quotes
-            var escaped = value.Replace("\"", "\"\"");
-            // Neutralize formula injection: if value starts with =, +, -, or @,
+            // Escape embedded double-quotes and normalize whitespace
+            var escaped = value.Replace("\"", "\"\"").Replace("\n", " ").Replace("\r", " ").Replace("\t", " ");
+            // Neutralize formula injection: if value starts with =, +, -, @, or tab,
             // Excel may interpret it as a formula. Prefix with a single quote to prevent this.
-            if (escaped.Length > 0 && "=+-@".Contains(escaped[0]))
+            if (escaped.Length > 0 && "=+-@\t".Contains(escaped[0]))
             {
                 escaped = "'" + escaped;
             }

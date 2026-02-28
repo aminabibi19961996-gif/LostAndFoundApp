@@ -16,7 +16,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Item Type")]
         public int ItemId { get; set; }
 
-        [StringLength(500)]
+        [StringLength(512)]
         [Display(Name = "Description")]
         public string? Description { get; set; }
 
@@ -49,7 +49,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Claimed By")]
         public string? ClaimedBy { get; set; }
 
-        [StringLength(1000)]
+        [StringLength(512)]
         [Display(Name = "Notes")]
         public string? Notes { get; set; }
 
@@ -82,7 +82,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Item Type")]
         public int ItemId { get; set; }
 
-        [StringLength(500)]
+        [StringLength(512)]
         [Display(Name = "Description")]
         public string? Description { get; set; }
 
@@ -115,7 +115,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Claimed By")]
         public string? ClaimedBy { get; set; }
 
-        [StringLength(1000)]
+        [StringLength(512)]
         [Display(Name = "Notes")]
         public string? Notes { get; set; }
 
@@ -216,5 +216,6 @@ namespace LostAndFoundApp.ViewModels
         public int DaysSinceFound { get; set; }
         public string FoundByName { get; set; } = string.Empty;
         public string? ClaimedBy { get; set; }
+        public string? CreatedBy { get; set; }
     }
 }

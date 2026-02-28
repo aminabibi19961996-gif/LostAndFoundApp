@@ -3,155 +3,77 @@
     ViewData["Title"] = "Announcements";
 }
 
-<div class="page page-full">
-    <div class="page-header">
-        <div>
-            <div class="page-title">Announcements</div>
-            <div class="page-subtitle">@Model.TotalCount announcements — Send messages to Admin and User roles</div>
-        </div>
-        <a asp-action="Create" class="btn btn-primary">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-            New Announcement
-        </a>
-    </div>
+@section Styles {
+<style>
+    .an-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .an-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
+    .an-header h1 i { font-size: 20px; color: var(--accent); }
+    .an-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .stable { width: 100%; border-collapse: collapse; }
+    .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
+    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+    .stable tbody tr:last-child td { border-bottom: none; }
+    .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
+    .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+    .ra { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; transition: background .12s, color .12s; }
+    .ra:hover { background: var(--bg-hover); color: var(--accent); }
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+</style>
+}
 
-    <div class="card">
-        <div class="card-body p-0">
-            @if (Model.Announcements.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table-modern">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Target</th>
-                                <th>Created</th>
-                                <th>Expires</th>
-                                <th>Read By</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.Announcements)
-                            {
-                                <tr style="@(item.IsActive ? "" : "opacity: 0.55;")">
-                                    <td>
-                                        <strong>@item.Title</strong>
-                                        <div class="small text-muted" style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                            @item.Message
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @{
-                                            var targetClass = item.TargetRole switch
-                                            {
-                                                "Admin" => "badge-admin",
-                                                "User" => "badge-user",
-                                                _ => "badge-active"
-                                            };
-                                            var targetLabel = item.TargetRole == "All" ? "All Users" : item.TargetRole;
-                                        }
-                                        <span class="badge-role @targetClass">@targetLabel</span>
-                                    </td>
-                                    <td class="small" style="white-space:nowrap;">
-                                        @item.CreatedAt.ToString("MM/dd/yyyy HH:mm")
-                                        <div class="text-muted">by @item.CreatedBy</div>
-                                    </td>
-                                    <td class="small">
-                                        @if (item.ExpiresAt.HasValue)
-                                        {
-                                            if (item.IsExpired)
-                                            {
-                                                <span class="text-danger">@item.ExpiresAt.Value.ToString("MM/dd/yyyy")</span>
-                                            }
-                                            else
-                                            {
-                                                @item.ExpiresAt.Value.ToString("MM/dd/yyyy")
-                                            }
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">Never</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="badge-role badge-info">@item.ReadCount</span>
-                                    </td>
-                                    <td>
-                                        @if (item.IsExpired)
-                                        {
-                                            <span class="badge-role badge-inactive">Expired</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">
-                                                @(item.IsActive ? "Active" : "Inactive")
-                                            </span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <form asp-action="ToggleActive" asp-route-id="@item.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-icon" title="@(item.IsActive ? "Deactivate" : "Activate")">
-                                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                            </button>
-                                            </form>
-                                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-icon btn-icon-danger" title="Delete"
-                                                        data-confirm="Are you sure you want to delete this announcement?">
-                                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="table-pagination">
-                        <span class="text-muted">Page @Model.CurrentPage of @Model.TotalPages (@Model.TotalCount entries)</span>
-                        <div class="pagination-links">
-                            @if (Model.CurrentPage > 1)
-                            {
-                                <a asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="page-link">
-                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                                </a>
-                            }
-                            @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
-                            {
-                                <a asp-action="Index" asp-route-page="@i" class="page-link @(i == Model.CurrentPage ? "active" : "")">@i</a>
-                            }
-                            @if (Model.CurrentPage < Model.TotalPages)
-                            {
-                                <a asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="page-link">
-                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-                                </a>
-                            }
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                    </div>
-                    <div class="empty-title">No announcements yet</div>
-                    <div class="empty-desc">Create your first announcement to notify Admin and User roles.</div>
-                    <a asp-action="Create" class="btn btn-primary">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                        New Announcement
-                    </a>
-                </div>
-            }
-        </div>
+<div class="an-header">
+    <div>
+        <h1><i class="bi bi-megaphone"></i> Announcements</h1>
+        <div class="count">@Model.TotalCount announcement(s) — Messages to Admin and User roles</div>
     </div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Announcement</a>
+</div>
+
+<div class="rc">
+    @if (Model.Announcements.Any())
+    {
+        <div style="overflow-x:auto;">
+            <table class="stable">
+                <thead><tr><th>Title</th><th>Target</th><th>Created</th><th>Expires</th><th>Read</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var item in Model.Announcements)
+                    {
+                        var targetClass = item.TargetRole switch { "Admin" => "badge-admin", "User" => "badge-user", _ => "badge-active" };
+                        var targetLabel = item.TargetRole == "All" ? "All Users" : item.TargetRole;
+                        <tr style="@(item.IsActive ? "" : "opacity:0.5;")">
+                            <td><strong style="color:var(--text-primary);">@item.Title</strong><div style="font-size:12px;color:var(--text-muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@item.Message</div></td>
+                            <td><span class="badge-role @targetClass">@targetLabel</span></td>
+                            <td style="font-size:12.5px;white-space:nowrap;">@item.CreatedAt.ToString("MM/dd/yyyy HH:mm")<div style="color:var(--text-muted);">by @item.CreatedBy</div></td>
+                            <td style="font-size:12.5px;">@if (item.ExpiresAt.HasValue) { if (item.IsExpired) { <span style="color:var(--red)">@item.ExpiresAt.Value.ToString("MM/dd/yyyy")</span> } else { @item.ExpiresAt.Value.ToString("MM/dd/yyyy") } } else { <span style="color:var(--text-muted)">Never</span> }</td>
+                            <td><span style="padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;background:var(--blue-light);color:var(--blue);">@item.ReadCount</span></td>
+                            <td>@if (item.IsExpired) { <span class="badge-role badge-inactive">Expired</span> } else { <span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">@(item.IsActive ? "Active" : "Inactive")</span> }</td>
+                            <td>
+                                <div style="display:flex;gap:3px;">
+                                    <form asp-action="ToggleActive" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="ra" title="@(item.IsActive ? "Deactivate" : "Activate")"><i class="bi @(item.IsActive ? "bi-eye-slash" : "bi-eye")"></i></button></form>
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="ra" title="Delete" data-confirm="Delete this announcement?"><i class="bi bi-trash3" style="color:var(--red)"></i></button></form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="rc-footer">
+                <span style="font-size:12.5px;color:var(--text-dim);">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount entries</span>
+                <div style="display:flex;gap:6px;">
+                    @if (Model.CurrentPage > 1) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-left"></i></a> }
+                    @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++) { <a asp-action="Index" asp-route-page="@i" class="btn btn-sm @(i == Model.CurrentPage ? "btn-primary" : "btn-secondary")">@i</a> }
+                    @if (Model.CurrentPage < Model.TotalPages) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-right"></i></a> }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div style="padding:48px 24px;text-align:center;"><i class="bi bi-megaphone" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i><div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No announcements yet</div><div style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Create your first to notify users.</div><a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Announcement</a></div>
+    }
 </div>

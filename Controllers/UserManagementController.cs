@@ -15,7 +15,7 @@ namespace LostAndFoundApp.Controllers
     /// Index (user list) is accessible to Admin and Super Admin.
     /// All mutating actions (create, edit, delete, AD sync) are Super Admin only.
     /// </summary>
-    [Authorize(Policy = "RequireAdminOrAbove")]
+    [Authorize(Policy = "RequireSupervisorOrAbove")]
     public class UserManagementController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -29,7 +29,7 @@ namespace LostAndFoundApp.Controllers
         // Whitelist of valid roles to prevent arbitrary role assignment via crafted POST requests
         private static readonly HashSet<string> ValidRoles = new(StringComparer.OrdinalIgnoreCase)
         {
-            "SuperAdmin", "Admin", "User"
+            "SuperAdmin", "Admin", "Supervisor", "User"
         };
 
         public UserManagementController(
@@ -84,6 +84,12 @@ namespace LostAndFoundApp.Controllers
                 });
             }
 
+            // SuperAdmin invisibility: non-SuperAdmin users cannot see SuperAdmin accounts
+            if (!User.IsInRole("SuperAdmin"))
+            {
+                userList = userList.Where(u => !u.Role.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
             // Apply filters
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -128,7 +134,7 @@ namespace LostAndFoundApp.Controllers
             ViewBag.Role = role;
             ViewBag.AccountType = accountType;
             ViewBag.Status = status;
-            ViewBag.TotalCount = users.Count;
+            ViewBag.TotalCount = userList.Count; // Use filtered count (excludes hidden SuperAdmins)
             ViewBag.FilteredCount = totalFiltered;
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
@@ -138,7 +144,7 @@ namespace LostAndFoundApp.Controllers
 
         // GET: /UserManagement/Create
         [HttpGet]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public IActionResult Create()
         {
             return View(new CreateUserViewModel());
@@ -146,7 +152,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Create(CreateUserViewModel model)
         {
             if (!ModelState.IsValid)
@@ -155,7 +161,14 @@ namespace LostAndFoundApp.Controllers
             // Server-side role validation — reject arbitrary role names from crafted POST requests
             if (!ValidRoles.Contains(model.Role))
             {
-                ModelState.AddModelError("Role", $"Invalid role '{model.Role}'. Must be SuperAdmin, Admin, or User.");
+                ModelState.AddModelError("Role", $"Invalid role '{model.Role}'. Must be Admin, Supervisor, or User.");
+                return View(model);
+            }
+
+            // SuperAdmin role can only be assigned by SuperAdmin
+            if (model.Role.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) && !User.IsInRole("SuperAdmin"))
+            {
+                ModelState.AddModelError("Role", "You do not have permission to assign the SuperAdmin role.");
                 return View(model);
             }
 
@@ -201,7 +214,7 @@ namespace LostAndFoundApp.Controllers
 
         // GET: /UserManagement/EditRole/userId
         [HttpGet]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> EditRole(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -223,7 +236,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> EditRole(EditUserRoleViewModel model)
         {
             if (!ModelState.IsValid)
@@ -239,8 +252,22 @@ namespace LostAndFoundApp.Controllers
             var user = await _userManager.FindByIdAsync(model.UserId);
             if (user == null) return NotFound();
 
+            // SuperAdmin protection: non-SuperAdmin cannot edit SuperAdmin users
             var currentRoles = await _userManager.GetRolesAsync(user);
             var actualCurrentRole = currentRoles.FirstOrDefault() ?? "None";
+
+            if (actualCurrentRole.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) && !User.IsInRole("SuperAdmin"))
+            {
+                TempData["ErrorMessage"] = "You do not have permission to modify SuperAdmin users.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // SuperAdmin role can only be assigned by SuperAdmin
+            if (model.NewRole.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) && !User.IsInRole("SuperAdmin"))
+            {
+                ModelState.AddModelError("NewRole", "You do not have permission to assign the SuperAdmin role.");
+                return View(model);
+            }
 
             if (currentRoles.Any())
             {
@@ -259,11 +286,19 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> ToggleActive(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            // SuperAdmin protection
+            var userRoles = await _userManager.GetRolesAsync(user);
+            if (userRoles.Contains("SuperAdmin") && !User.IsInRole("SuperAdmin"))
+            {
+                TempData["ErrorMessage"] = "You do not have permission to modify SuperAdmin users.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (user.UserName == User.Identity?.Name)
             {
@@ -288,11 +323,19 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> ResetPassword(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            // SuperAdmin protection
+            var userRoles = await _userManager.GetRolesAsync(user);
+            if (userRoles.Contains("SuperAdmin") && !User.IsInRole("SuperAdmin"))
+            {
+                TempData["ErrorMessage"] = "You do not have permission to reset SuperAdmin passwords.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (user.IsAdUser)
             {
@@ -329,11 +372,19 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            // SuperAdmin protection
+            var userRoles = await _userManager.GetRolesAsync(user);
+            if (userRoles.Contains("SuperAdmin") && !User.IsInRole("SuperAdmin"))
+            {
+                TempData["ErrorMessage"] = "You do not have permission to delete SuperAdmin users.";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (user.UserName == User.Identity?.Name)
             {
@@ -397,7 +448,7 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         // GET: /UserManagement/AdGroups
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> AdGroups()
         {
             ViewBag.AdEnabled = _config.GetValue<bool>("ActiveDirectory:Enabled", false);
@@ -422,7 +473,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> AddAdGroups(string groupNames, string mappedRole)
         {
             if (string.IsNullOrWhiteSpace(groupNames))
@@ -432,7 +483,7 @@ namespace LostAndFoundApp.Controllers
             }
 
             // Validate mapped role
-            var validRoles = new[] { "Admin", "User" };
+            var validRoles = new[] { "Admin", "Supervisor", "User" };
             if (string.IsNullOrWhiteSpace(mappedRole) || !validRoles.Contains(mappedRole))
             {
                 TempData["ErrorMessage"] = "Please select a valid role mapping (Admin or User).";
@@ -501,13 +552,13 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> UpdateAdGroupRole(int id, string mappedRole)
         {
             var group = await _context.AdGroups.FindAsync(id);
             if (group == null) return NotFound();
 
-            var validRoles = new[] { "Admin", "User" };
+            var validRoles = new[] { "Admin", "Supervisor", "User" };
             if (!validRoles.Contains(mappedRole))
             {
                 TempData["ErrorMessage"] = "Invalid role mapping.";
@@ -528,7 +579,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> ToggleAdGroupActive(int id)
         {
             var group = await _context.AdGroups.FindAsync(id);
@@ -546,7 +597,7 @@ namespace LostAndFoundApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> RemoveAdGroup(int id)
         {
             var group = await _context.AdGroups.FindAsync(id);
@@ -562,9 +613,196 @@ namespace LostAndFoundApp.Controllers
             return RedirectToAction(nameof(AdGroups));
         }
 
+        // =====================================================================
+        // INDIVIDUAL AD USERS MANAGEMENT
+        // =====================================================================
+
+        // GET: /UserManagement/AdUsers
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> AdUsers()
+        {
+            ViewBag.AdEnabled = _config.GetValue<bool>("ActiveDirectory:Enabled", false);
+            ViewBag.AdDomain = _config["ActiveDirectory:Domain"] ?? "(not configured)";
+
+            // Fetch last sync info for display
+            var lastSync = await _context.AdSyncLogs
+                .OrderByDescending(l => l.Timestamp)
+                .FirstOrDefaultAsync();
+            ViewBag.LastSyncTimestamp = lastSync?.Timestamp;
+            ViewBag.LastSyncSuccess = lastSync?.Success;
+            ViewBag.LastSyncSummary = lastSync != null
+                ? $"Created: {lastSync.UsersCreated}, Updated: {lastSync.UsersUpdated}, Deactivated: {lastSync.UsersDeactivated}, Roles: {lastSync.RolesUpdated}"
+                : null;
+            ViewBag.LastSyncTrigger = lastSync?.TriggerType;
+            ViewBag.LastSyncBy = lastSync?.TriggeredBy;
+            ViewBag.LastSyncErrors = lastSync?.ErrorSummary;
+
+            var adUsers = await _context.AdUsers.OrderBy(u => u.Username).ToListAsync();
+            return View(adUsers);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> AddAdUser(string username, string mappedRole)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                TempData["ErrorMessage"] = "Username is required.";
+                return RedirectToAction(nameof(AdUsers));
+            }
+
+            // Validate mapped role
+            var validRoles = new[] { "Admin", "Supervisor", "User" };
+            if (string.IsNullOrWhiteSpace(mappedRole) || !validRoles.Contains(mappedRole))
+            {
+                TempData["ErrorMessage"] = "Please select a valid role mapping (Admin, Supervisor, or User).";
+                return RedirectToAction(nameof(AdUsers));
+            }
+
+            // Check for duplicates
+            if (await _context.AdUsers.AnyAsync(u => u.Username.ToLower() == username.ToLower()))
+            {
+                TempData["ErrorMessage"] = $"User '{username}' is already added.";
+                return RedirectToAction(nameof(AdUsers));
+            }
+
+            _context.AdUsers.Add(new AdUser
+            {
+                Username = username.Trim(),
+                MappedRole = mappedRole,
+                IsActive = true,
+                DateAdded = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+
+            await _activityLogService.LogAsync(HttpContext, "Add AD User",
+                $"Added individual AD user '{username}' with role mapping '{mappedRole}'.", "ADSync");
+            _logger.LogInformation("Added individual AD user '{Username}' with role '{Role}'.", username, mappedRole);
+            TempData["SuccessMessage"] = $"User '{username}' added successfully with role '{mappedRole}'.";
+            return RedirectToAction(nameof(AdUsers));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> UpdateAdUserRole(int id, string mappedRole)
+        {
+            var adUser = await _context.AdUsers.FindAsync(id);
+            if (adUser == null) return NotFound();
+
+            var validRoles = new[] { "Admin", "Supervisor", "User" };
+            if (!validRoles.Contains(mappedRole))
+            {
+                TempData["ErrorMessage"] = "Invalid role mapping.";
+                return RedirectToAction(nameof(AdUsers));
+            }
+
+            var oldRole = adUser.MappedRole;
+            adUser.MappedRole = mappedRole;
+            await _context.SaveChangesAsync();
+
+            await _activityLogService.LogAsync(HttpContext, "Update AD User Role",
+                $"AD user '{adUser.Username}' role mapping changed from '{oldRole}' to '{mappedRole}'.", "ADSync");
+            _logger.LogInformation("AD user '{Username}' role changed from '{OldRole}' to '{NewRole}' by '{User}'.",
+                adUser.Username, oldRole, mappedRole, User.Identity?.Name);
+            TempData["SuccessMessage"] = $"Role mapping for '{adUser.Username}' updated to '{mappedRole}'.";
+            return RedirectToAction(nameof(AdUsers));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> ToggleAdUserActive(int id)
+        {
+            var adUser = await _context.AdUsers.FindAsync(id);
+            if (adUser == null) return NotFound();
+
+            adUser.IsActive = !adUser.IsActive;
+            await _context.SaveChangesAsync();
+
+            var status = adUser.IsActive ? "activated" : "deactivated";
+            await _activityLogService.LogAsync(HttpContext, "Toggle AD User",
+                $"AD user '{adUser.Username}' has been {status}.", "ADSync");
+            TempData["SuccessMessage"] = $"AD user '{adUser.Username}' has been {status}.";
+            return RedirectToAction(nameof(AdUsers));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> RemoveAdUser(int id)
+        {
+            var adUser = await _context.AdUsers.FindAsync(id);
+            if (adUser == null) return NotFound();
+
+            var username = adUser.Username;
+            _context.AdUsers.Remove(adUser);
+            await _context.SaveChangesAsync();
+
+            await _activityLogService.LogAsync(HttpContext, "Remove AD User",
+                $"Individual AD user '{username}' (role: {adUser.MappedRole}) removed.", "ADSync");
+            _logger.LogInformation("Individual AD user '{Username}' removed by '{User}'.", username, User.Identity?.Name);
+            TempData["SuccessMessage"] = $"AD user '{username}' has been removed.";
+            return RedirectToAction(nameof(AdUsers));
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public IActionResult SearchAdUsers(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+                return Json(new { results = Array.Empty<object>(), error = "" });
+
+            if (!_config.GetValue<bool>("ActiveDirectory:Enabled", false))
+                return Json(new { results = Array.Empty<object>(), error = "Active Directory integration is disabled." });
+
+            var domain = _config["ActiveDirectory:Domain"];
+            var container = _config["ActiveDirectory:Container"];
+            var useSsl = _config.GetValue<bool>("ActiveDirectory:UseSSL", false);
+
+            if (string.IsNullOrEmpty(domain))
+                return Json(new { results = Array.Empty<object>(), error = "AD domain not configured." });
+
+            try
+            {
+                var options = useSsl
+                    ? ContextOptions.Negotiate | ContextOptions.SecureSocketLayer
+                    : ContextOptions.Negotiate;
+                using var ctx = new PrincipalContext(ContextType.Domain, domain, container, options);
+
+                // Use UserPrincipal query to find users matching by name
+                using var queryFilter = new UserPrincipal(ctx) { SamAccountName = $"*{term.Trim()}*" };
+                using var searcher = new PrincipalSearcher(queryFilter);
+
+                var results = searcher.FindAll()
+                    .Take(15)
+                    .OfType<UserPrincipal>()
+                    .Select(p => new
+                    {
+                        name = p.SamAccountName,
+                        displayName = p.DisplayName,
+                        email = p.EmailAddress
+                    })
+                    .ToList();
+
+                return Json(new { results, error = "" });
+            }
+            catch (PrincipalServerDownException)
+            {
+                _logger.LogWarning("AD server not reachable during user search.");
+                return Json(new { results = Array.Empty<object>(), error = "AD server is not reachable." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching AD users for term '{Term}'.", term);
+                return Json(new { results = Array.Empty<object>(), error = "Error searching Active Directory." });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public IActionResult SyncNow()
         {
             // Fire sync in background to avoid HTTP timeout on large directories (Gap 3 fix)
@@ -660,7 +898,7 @@ namespace LostAndFoundApp.Controllers
         /// Returns JSON array of { name, distinguishedName } for the autocomplete UI.
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public IActionResult SearchAdGroups(string term)
         {
             if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)

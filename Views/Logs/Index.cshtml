@@ -3,189 +3,98 @@
     ViewData["Title"] = "Activity Logs";
 }
 
-<div class="page-header">
-    <div class="container-fluid px-4">
-        <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
-            <div>
-                <h1><i class="bi bi-journal-text me-2"></i>Activity Logs</h1>
-                <p class="subtitle mb-0">@Model.TotalCount record(s) found</p>
+@section Styles {
+<style>
+    .log-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .log-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
+    .log-header h1 i { font-size: 20px; color: var(--accent); }
+    .log-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+    .fc-body { padding: 18px 20px; }
+    .fg { display: grid; grid-template-columns: 1fr 150px 140px 140px auto; gap: 12px; align-items: end; }
+    .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; }
+    .fg-actions { display: flex; gap: 8px; align-self: end; }
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .stable { width: 100%; border-collapse: collapse; }
+    .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
+    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+    .stable tbody tr:last-child td { border-bottom: none; }
+    .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
+    .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    @@media (max-width: 768px) { .fg { grid-template-columns: 1fr 1fr; } }
+</style>
+}
+
+<div class="log-header">
+    <div>
+        <h1><i class="bi bi-journal-text"></i> Activity Logs</h1>
+        <div class="count">@Model.TotalCount record(s) found</div>
+    </div>
+    @if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && Model.TotalCount > 0)
+    {
+        <div style="display:flex;gap:6px;">
+            <a asp-action="Export" asp-route-category="@Model.CategoryFilter" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary"><i class="bi bi-download"></i> Export CSV</a>
+            @if (User.IsInRole("SuperAdmin"))
+            {
+                <form asp-action="Clear" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-danger" data-confirm="Clear ALL activity logs? This cannot be undone."><i class="bi bi-trash3"></i> Clear All</button></form>
+            }
+        </div>
+    }
+</div>
+
+<div class="fc">
+    <div class="fc-body">
+        <form method="get" asp-action="Index">
+            <div class="fg">
+                <div><label class="form-label">Search</label><input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Action, details, user..." /></div>
+                <div><label class="form-label">Category</label><select name="category" class="form-select"><option value="">All</option><option value="Auth" selected="@(Model.CategoryFilter == "Auth" ? "selected" : null)">Auth</option><option value="Items" selected="@(Model.CategoryFilter == "Items" ? "selected" : null)">Items</option><option value="MasterData" selected="@(Model.CategoryFilter == "MasterData" ? "selected" : null)">MasterData</option><option value="UserManagement" selected="@(Model.CategoryFilter == "UserManagement" ? "selected" : null)">UserManagement</option><option value="Announcement" selected="@(Model.CategoryFilter == "Announcement" ? "selected" : null)">Announcement</option><option value="ADSync" selected="@(Model.CategoryFilter == "ADSync" ? "selected" : null)">ADSync</option><option value="System" selected="@(Model.CategoryFilter == "System" ? "selected" : null)">System</option></select></div>
+                <div><label class="form-label">Date From</label><input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+                <div><label class="form-label">Date To</label><input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" /></div>
+                <div class="fg-actions"><button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button><a asp-action="Index" class="btn btn-ghost"><i class="bi bi-x-circle"></i></a></div>
             </div>
-            @if (User.IsInRole("SuperAdmin") && Model.TotalCount > 0)
-            {
-                <div class="d-flex gap-2">
-                    <a asp-action="Export"
-                       asp-route-category="@Model.CategoryFilter"
-                       asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
-                       asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
-                       class="btn btn-light rounded-pill px-3" title="Export to CSV">
-                        <i class="bi bi-download"></i> Export CSV
-                    </a>
-                    <form asp-action="Clear" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-outline-danger rounded-pill px-3"
-                                data-confirm="Are you sure you want to CLEAR ALL activity logs? This cannot be undone.">
-                            <i class="bi bi-trash3 me-1"></i> Clear All
-                        </button>
-                    </form>
-                </div>
-            }
-        </div>
+        </form>
     </div>
 </div>
 
-<div class="container-fluid px-4">
-    <!-- Filters -->
-    <div class="card mb-3 fade-in-up">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label">Search</label>
-                    <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Action, details, or user..." />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Category</label>
-                    <select name="category" class="form-select">
-                        <option value="">All Categories</option>
-                        <option value="Auth" selected="@(Model.CategoryFilter == "Auth" ? "selected" : null)">Auth</option>
-                        <option value="Items" selected="@(Model.CategoryFilter == "Items" ? "selected" : null)">Items</option>
-                        <option value="MasterData" selected="@(Model.CategoryFilter == "MasterData" ? "selected" : null)">MasterData</option>
-                        <option value="UserManagement" selected="@(Model.CategoryFilter == "UserManagement" ? "selected" : null)">UserManagement</option>
-                        <option value="Announcement" selected="@(Model.CategoryFilter == "Announcement" ? "selected" : null)">Announcement</option>
-                        <option value="ADSync" selected="@(Model.CategoryFilter == "ADSync" ? "selected" : null)">ADSync</option>
-                        <option value="System" selected="@(Model.CategoryFilter == "System" ? "selected" : null)">System</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Date From</label>
-                    <input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Date To</label>
-                    <input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" />
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search me-1"></i> Search
-                    </button>
-                    <a asp-action="Index" class="btn btn-ghost">
-                        <i class="bi bi-x-circle"></i> Clear
-                    </a>
-                </div>
-            </form>
+<div class="rc">
+    @if (Model.Logs.Any())
+    {
+        <div style="overflow-x:auto;">
+            <table class="stable">
+                <thead><tr><th>Timestamp</th><th>Action</th><th>Details</th><th>Performed By</th><th>Category</th><th>IP</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var log in Model.Logs)
+                    {
+                        var catClass = log.Category?.ToLower() switch { "auth" => "badge-auth", "items" => "badge-items", "masterdata" => "badge-masterdata", "usermanagement" => "badge-usermanagement", "adsync" => "badge-adsync", "announcement" => "badge-announcement", "system" => "badge-system", _ => "badge-user" };
+                        <tr>
+                            <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);white-space:nowrap;">@log.Timestamp.ToString("MM/dd/yyyy HH:mm")</td>
+                            <td style="font-weight:600;color:var(--text-primary);">@log.Action</td>
+                            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@log.Details">@log.Details</td>
+                            <td>@log.PerformedBy</td>
+                            <td><span class="badge-status @catClass">@log.Category</span></td>
+                            <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">@log.IpAddress</td>
+                            <td><span class="badge-role @(log.Status == "Success" ? "badge-active" : "badge-inactive")">@log.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    </div>
-</div>
 
-<div class="container-fluid px-4">
-    <div class="card fade-in-up">
-        <div class="card-body p-0">
-            @if (Model.Logs.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table-modern">
-                        <thead>
-                            <tr>
-                                <th>Timestamp</th>
-                                <th>Action</th>
-                                <th>Details</th>
-                                <th>Performed By</th>
-                                <th>Category</th>
-                                <th>IP Address</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var log in Model.Logs)
-                            {
-                                <tr>
-                                    <td class="text-muted small">@log.Timestamp.ToString("MM/dd/yyyy HH:mm")</td>
-                                    <td><strong>@log.Action</strong></td>
-                                    <td class="text-truncate" style="max-width: 250px;" title="@log.Details">@log.Details</td>
-                                    <td>@log.PerformedBy</td>
-                                    <td>
-                                        @{
-                                            var catClass = log.Category?.ToLower() switch
-                                            {
-                                                "auth" => "badge-auth",
-                                                "items" => "badge-items",
-                                                "masterdata" => "badge-masterdata",
-                                                "usermanagement" => "badge-usermanagement",
-                                                "adsync" => "badge-adsync",
-                                                "announcement" => "badge-announcement",
-                                                "system" => "badge-system",
-                                                _ => "badge-user"
-                                            };
-                                        }
-                                        <span class="badge-status @catClass">@log.Category</span>
-                                    </td>
-                                    <td class="text-muted small">@log.IpAddress</td>
-                                    <td>
-                                        <span class="badge-role @(log.Status == "Success" ? "badge-active" : "badge-inactive")">
-                                            @log.Status
-                                        </span>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+        @if (Model.TotalPages > 1)
+        {
+            <div class="rc-footer">
+                <span style="font-size:12.5px;color:var(--text-dim);">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount records</span>
+                <div style="display:flex;gap:6px;">
+                    @if (Model.CurrentPage > 1) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-left"></i></a> }
+                    @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++) { <a asp-action="Index" asp-route-page="@i" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-sm @(i == Model.CurrentPage ? "btn-primary" : "btn-secondary")">@i</a> }
+                    @if (Model.CurrentPage < Model.TotalPages) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-right"></i></a> }
                 </div>
-
-                @if (Model.TotalPages > 1)
-                {
-                    <div class="d-flex justify-content-between align-items-center px-3 py-3">
-                        <span class="small text-muted">Page @Model.CurrentPage of @Model.TotalPages (@Model.TotalCount records)</span>
-                        <nav>
-                            <ul class="pagination">
-                                @if (Model.CurrentPage > 1)
-                                {
-                                    <li class="page-item">
-                                        <a class="page-link" asp-action="Index"
-                                           asp-route-page="@(Model.CurrentPage - 1)"
-                                           asp-route-category="@Model.CategoryFilter"
-                                           asp-route-search="@Model.SearchTerm"
-                                           asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
-                                           asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                }
-                                @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
-                                {
-                                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                        <a class="page-link" asp-action="Index"
-                                           asp-route-page="@i"
-                                           asp-route-category="@Model.CategoryFilter"
-                                           asp-route-search="@Model.SearchTerm"
-                                           asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
-                                           asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")">@i</a>
-                                    </li>
-                                }
-                                @if (Model.CurrentPage < Model.TotalPages)
-                                {
-                                    <li class="page-item">
-                                        <a class="page-link" asp-action="Index"
-                                           asp-route-page="@(Model.CurrentPage + 1)"
-                                           asp-route-category="@Model.CategoryFilter"
-                                           asp-route-search="@Model.SearchTerm"
-                                           asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
-                                           asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                }
-                            </ul>
-                        </nav>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="empty-state">
-                    <i class="bi bi-journal-text"></i>
-                    <h3>No activity logs found</h3>
-                    <p>Activity will be logged as you use the application.</p>
-                </div>
-            }
-        </div>
-    </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div style="padding:48px 24px;text-align:center;"><i class="bi bi-journal-text" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i><div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No activity logs found</div><div style="font-size:13px;color:var(--text-muted);">Activity will be logged as you use the application.</div></div>
+    }
 </div>

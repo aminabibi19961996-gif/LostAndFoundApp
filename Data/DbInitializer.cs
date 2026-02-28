@@ -22,8 +22,9 @@ namespace LostAndFoundApp.Data
             // ─── Seed Roles ────────────────────────────────────────
             // SuperAdmin: full system control (not from AD, local-only)
             // Admin: administrative access (from AD group "LostandFound Admin")
+            // Supervisor: intermediate level with edit permissions
             // User: standard data entry (from AD group "LostandFound User")
-            string[] roles = { "SuperAdmin", "Admin", "User" };
+            string[] roles = { "SuperAdmin", "Admin", "Supervisor", "User" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -56,7 +57,18 @@ namespace LostAndFoundApp.Data
                 MustChangePassword = true
             });
 
-            // Account 3: User — standard data entry operator
+            // Account 3: Supervisor — intermediate level with edit permissions
+            await SeedUserAsync(userManager, logger, new SeedAccount
+            {
+                UserName = "supervisor",
+                Email = "supervisor@lostandfound.local",
+                DisplayName = "Supervisor User",
+                Password = "Rider@2025",
+                Role = "Supervisor",
+                MustChangePassword = true
+            });
+
+            // Account 4: User — standard data entry operator
             await SeedUserAsync(userManager, logger, new SeedAccount
             {
                 UserName = "user",

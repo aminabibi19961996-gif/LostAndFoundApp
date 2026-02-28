@@ -110,7 +110,7 @@ namespace LostAndFoundApp.Controllers
                 return View(model);
             }
 
-            var validTargets = new[] { "Admin", "User", "All" };
+            var validTargets = new[] { "Admin", "Supervisor", "User", "All" };
             if (!validTargets.Contains(model.TargetRole))
             {
                 ModelState.AddModelError("TargetRole", "Invalid target audience.");

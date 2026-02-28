@@ -29,6 +29,9 @@ namespace LostAndFoundApp.Data
         // AD groups table
         public DbSet<AdGroup> AdGroups { get; set; }
 
+        // Individual AD users table
+        public DbSet<AdUser> AdUsers { get; set; }
+
         // Activity logs table
         public DbSet<ActivityLog> ActivityLogs { get; set; }
 
@@ -144,6 +147,16 @@ namespace LostAndFoundApp.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.GroupName).IsRequired().HasMaxLength(256);
                 entity.HasIndex(e => e.GroupName).IsUnique();
+                entity.Property(e => e.MappedRole).IsRequired().HasMaxLength(50).HasDefaultValue("User");
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.DateAdded).HasDefaultValueSql("GETUTCDATE()");
+            });
+
+            builder.Entity<AdUser>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Username).IsRequired().HasMaxLength(256);
+                entity.HasIndex(e => e.Username).IsUnique();
                 entity.Property(e => e.MappedRole).IsRequired().HasMaxLength(50).HasDefaultValue("User");
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.DateAdded).HasDefaultValueSql("GETUTCDATE()");

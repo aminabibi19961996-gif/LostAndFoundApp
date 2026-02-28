@@ -170,9 +170,9 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // Ownership check: User role can only edit their own records
-            if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin")
-                && item.CreatedBy != User.Identity?.Name)
+            // Permission matrix: User can only edit their own records, Supervisor+ can edit any
+            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
+            if (!isSupervisorOrAbove && item.CreatedBy != User.Identity?.Name)
             {
                 return Forbid();
             }
@@ -219,9 +219,9 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // Ownership check: User role can only edit their own records
-            if (!User.IsInRole("Admin") && !User.IsInRole("SuperAdmin")
-                && item.CreatedBy != User.Identity?.Name)
+            // Permission matrix: User can only edit their own records, Supervisor+ can edit any
+            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
+            if (!isSupervisorOrAbove && item.CreatedBy != User.Identity?.Name)
             {
                 return Forbid();
             }
@@ -418,7 +418,8 @@ namespace LostAndFoundApp.Controllers
                     StorageLocationName = x.StorageLocation != null ? x.StorageLocation.Name : "",
                     StatusName = x.Status != null ? x.Status.Name : "",
                     FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
-                    x.ClaimedBy
+                    x.ClaimedBy,
+                    x.CreatedBy
                 })
                 .ToListAsync();
 
@@ -435,7 +436,8 @@ namespace LostAndFoundApp.Controllers
                 StatusName = x.StatusName,
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
                 FoundByName = x.FoundByName,
-                ClaimedBy = x.ClaimedBy
+                ClaimedBy = x.ClaimedBy,
+                CreatedBy = x.CreatedBy
             }).ToList();
 
             return View(vm);
@@ -525,7 +527,8 @@ namespace LostAndFoundApp.Controllers
                     StorageLocationName = x.StorageLocation != null ? x.StorageLocation.Name : "",
                     StatusName = x.Status != null ? x.Status.Name : "",
                     FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
-                    x.ClaimedBy
+                    x.ClaimedBy,
+                    x.CreatedBy
                 })
                 .ToListAsync();
 
@@ -542,7 +545,8 @@ namespace LostAndFoundApp.Controllers
                 StatusName = x.StatusName,
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
                 FoundByName = x.FoundByName,
-                ClaimedBy = x.ClaimedBy
+                ClaimedBy = x.ClaimedBy,
+                CreatedBy = x.CreatedBy
             }).ToList();
 
             vm.Results = results;

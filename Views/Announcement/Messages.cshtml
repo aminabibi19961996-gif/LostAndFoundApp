@@ -3,77 +3,52 @@
     ViewData["Title"] = "Messages";
 }
 
-<div class="page page-full">
-    <div class="page-header">
-        <div>
-            <div class="page-title">Messages</div>
-            <div class="page-subtitle">
-                @if (Model.UnreadCount > 0)
-                {
-                    <span>@Model.UnreadCount unread announcement@(Model.UnreadCount != 1 ? "s" : "")</span>
-                }
-                else
-                {
-                    <span>All caught up — no unread announcements</span>
-                }
-            </div>
-        </div>
-    </div>
+@section Styles {
+<style>
+    .msg-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
+    .msg-header h1 i { font-size: 20px; color: var(--accent); }
+    .msg-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .msg-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+    .msg-card.dismissed { opacity: 0.5; }
+    .msg-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+    .msg-title { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--text-primary); }
+    .msg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .msg-meta { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text-muted); }
+    .msg-body { padding: 18px 20px; font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+    .msg-dismissed-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; background: var(--bg-hover); color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
+</style>
+}
 
-    <div class="messages-list">
-    @if (Model.Messages.Any())
+<div class="msg-header" style="margin-bottom:20px;">
+    <h1><i class="bi bi-envelope"></i> Messages</h1>
+    <div class="count">@if (Model.UnreadCount > 0) { <span>@Model.UnreadCount unread announcement@(Model.UnreadCount != 1 ? "s" : "")</span> } else { <span>All caught up — no unread announcements</span> }</div>
+</div>
+
+@if (Model.Messages.Any())
+{
+    @foreach (var msg in Model.Messages)
     {
-        @foreach (var msg in Model.Messages)
-        {
-            <div class="message-card" style="@(msg.IsDismissed ? "opacity: 0.55;" : "")">
-                <div class="message-header">
-                    <div class="message-title-row">
-                        @if (!msg.IsDismissed)
-                        {
-                            <span class="unread-dot"></span>
-                        }
-                        <svg class="message-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                        <strong>@msg.Title</strong>
-                    </div>
-                    <div class="message-meta">
-                        <span class="text-muted">@msg.CreatedAt.ToString("MMM dd, yyyy") · by @msg.CreatedBy</span>
-                        @if (!msg.IsDismissed)
-                        {
-                            <form asp-action="Dismiss" asp-route-id="@msg.AnnouncementId" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-secondary">
-                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    Dismiss
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <span class="badge badge-muted">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                Dismissed
-                            </span>
-                        }
-                    </div>
+        <div class="msg-card @(msg.IsDismissed ? "dismissed" : "")">
+            <div class="msg-top">
+                <div class="msg-title">
+                    @if (!msg.IsDismissed) { <span class="msg-dot"></span> }
+                    <i class="bi bi-megaphone" style="color:var(--accent);font-size:13px;"></i>
+                    @msg.Title
                 </div>
-                <div class="message-body">
-                    <p style="white-space: pre-line;">@msg.Message</p>
+                <div class="msg-meta">
+                    <span>@msg.CreatedAt.ToString("MMM dd, yyyy") · by @msg.CreatedBy</span>
+                    @if (!msg.IsDismissed)
+                    {
+                        <form asp-action="Dismiss" asp-route-id="@msg.AnnouncementId" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-secondary"><i class="bi bi-check-lg"></i> Dismiss</button></form>
+                    }
+                    else { <span class="msg-dismissed-badge"><i class="bi bi-check-lg"></i> Dismissed</span> }
                 </div>
             </div>
-        }
-    }
-    else
-    {
-        <div class="card">
-            <div class="card-body">
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
-                    </div>
-                    <div class="empty-title">No messages</div>
-                    <div class="empty-desc">Announcements from the system administrator will appear here.</div>
-                </div>
-            </div>
+            <div class="msg-body"><p style="white-space:pre-line;margin:0;">@msg.Message</p></div>
         </div>
     }
-</div>
+}
+else
+{
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:48px 24px;text-align:center;"><i class="bi bi-envelope-open" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i><div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No messages</div><div style="font-size:13px;color:var(--text-muted);">Announcements from the system administrator will appear here.</div></div>
+}
