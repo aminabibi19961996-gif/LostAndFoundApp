@@ -1,0 +1,191 @@
+@model LogListViewModel
+@{
+    ViewData["Title"] = "Activity Logs";
+}
+
+<div class="page-header">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap:wrap; gap:12px;">
+            <div>
+                <h1><i class="bi bi-journal-text me-2"></i>Activity Logs</h1>
+                <p class="subtitle mb-0">@Model.TotalCount record(s) found</p>
+            </div>
+            @if (User.IsInRole("SuperAdmin") && Model.TotalCount > 0)
+            {
+                <div class="d-flex gap-2">
+                    <a asp-action="Export"
+                       asp-route-category="@Model.CategoryFilter"
+                       asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                       asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")"
+                       class="btn btn-light rounded-pill px-3" title="Export to CSV">
+                        <i class="bi bi-download"></i> Export CSV
+                    </a>
+                    <form asp-action="Clear" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-3"
+                                data-confirm="Are you sure you want to CLEAR ALL activity logs? This cannot be undone.">
+                            <i class="bi bi-trash3 me-1"></i> Clear All
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <!-- Filters -->
+    <div class="card mb-3 fade-in-up">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Action, details, or user..." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        <option value="Auth" selected="@(Model.CategoryFilter == "Auth" ? "selected" : null)">Auth</option>
+                        <option value="Items" selected="@(Model.CategoryFilter == "Items" ? "selected" : null)">Items</option>
+                        <option value="MasterData" selected="@(Model.CategoryFilter == "MasterData" ? "selected" : null)">MasterData</option>
+                        <option value="UserManagement" selected="@(Model.CategoryFilter == "UserManagement" ? "selected" : null)">UserManagement</option>
+                        <option value="Announcement" selected="@(Model.CategoryFilter == "Announcement" ? "selected" : null)">Announcement</option>
+                        <option value="ADSync" selected="@(Model.CategoryFilter == "ADSync" ? "selected" : null)">ADSync</option>
+                        <option value="System" selected="@(Model.CategoryFilter == "System" ? "selected" : null)">System</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" />
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    <a asp-action="Index" class="btn btn-ghost">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4">
+    <div class="card fade-in-up">
+        <div class="card-body p-0">
+            @if (Model.Logs.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>Performed By</th>
+                                <th>Category</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in Model.Logs)
+                            {
+                                <tr>
+                                    <td class="text-muted small">@log.Timestamp.ToString("MM/dd/yyyy HH:mm")</td>
+                                    <td><strong>@log.Action</strong></td>
+                                    <td class="text-truncate" style="max-width: 250px;" title="@log.Details">@log.Details</td>
+                                    <td>@log.PerformedBy</td>
+                                    <td>
+                                        @{
+                                            var catClass = log.Category?.ToLower() switch
+                                            {
+                                                "auth" => "badge-auth",
+                                                "items" => "badge-items",
+                                                "masterdata" => "badge-masterdata",
+                                                "usermanagement" => "badge-usermanagement",
+                                                "adsync" => "badge-adsync",
+                                                "announcement" => "badge-announcement",
+                                                "system" => "badge-system",
+                                                _ => "badge-user"
+                                            };
+                                        }
+                                        <span class="badge-status @catClass">@log.Category</span>
+                                    </td>
+                                    <td class="text-muted small">@log.IpAddress</td>
+                                    <td>
+                                        <span class="badge-role @(log.Status == "Success" ? "badge-active" : "badge-inactive")">
+                                            @log.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="d-flex justify-content-between align-items-center px-3 py-3">
+                        <span class="small text-muted">Page @Model.CurrentPage of @Model.TotalPages (@Model.TotalCount records)</span>
+                        <nav>
+                            <ul class="pagination">
+                                @if (Model.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-page="@(Model.CurrentPage - 1)"
+                                           asp-route-category="@Model.CategoryFilter"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+                                @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-page="@i"
+                                           asp-route-category="@Model.CategoryFilter"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")">@i</a>
+                                    </li>
+                                }
+                                @if (Model.CurrentPage < Model.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-page="@(Model.CurrentPage + 1)"
+                                           asp-route-category="@Model.CategoryFilter"
+                                           asp-route-search="@Model.SearchTerm"
+                                           asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-journal-text"></i>
+                    <h3>No activity logs found</h3>
+                    <p>Activity will be logged as you use the application.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
