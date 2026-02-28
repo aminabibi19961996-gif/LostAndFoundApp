@@ -5,6 +5,27 @@ using LostAndFoundApp.Models;
 using LostAndFoundApp.Services;
 using LostAndFoundApp.Middleware;
 using Serilog;
+using ServerLog = Serilog.Log; // Alias to avoid confusion if needed
+using System.IO;
+using System.Text.RegularExpressions;
+
+// Pre-sanitize appsettings.json to fix common true/false boolean capitalization bugs 
+// which break the .NET strict JSON parser and crash IIS/Kestrel on boot permanently
+try
+{
+    foreach (var file in Directory.GetFiles(Directory.GetCurrentDirectory(), "appsettings*.json"))
+    {
+        var content = File.ReadAllText(file);
+        // Look for values that start with a capital T or F after a colon (meaning a boolean value)
+        var sanitized = Regex.Replace(content, @"(?<=\:\s*)True\b", "true");
+        sanitized = Regex.Replace(sanitized, @"(?<=\:\s*)False\b", "false");
+        if (content != sanitized)
+        {
+            File.WriteAllText(file, sanitized);
+        }
+    }
+}
+catch { /* Ignore read/write locks, let builder handle failures normally */ }
 
 var builder = WebApplication.CreateBuilder(args);
 
