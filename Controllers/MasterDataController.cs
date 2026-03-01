@@ -9,19 +9,23 @@ using LostAndFoundApp.ViewModels;
 namespace LostAndFoundApp.Controllers
 {
     /// <summary>
-    /// Handles full CRUD for all six master data tables (Admin+) and
-    /// AJAX inline creation endpoints for dynamic dropdown population (all authenticated users).
+    /// Handles full CRUD for all six master data tables and
+    /// AJAX inline creation endpoints for dynamic dropdown population.
+    /// SuperAdmin, Admin, and Supervisor can manage master data.
+    /// User role has no access.
     /// </summary>
     [Authorize]
     public class MasterDataController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly ActivityLogService _activityLogService;
+        private readonly ILogger<MasterDataController> _logger;
 
-        public MasterDataController(ApplicationDbContext context, ActivityLogService activityLogService)
+        public MasterDataController(ApplicationDbContext context, ActivityLogService activityLogService, ILogger<MasterDataController> logger)
         {
             _context = context;
             _activityLogService = activityLogService;
+            _logger = logger;
         }
 
         // =====================================================================
@@ -698,8 +702,8 @@ namespace LostAndFoundApp.Controllers
 
         // =====================================================================
         // AJAX ENDPOINTS FOR INLINE DROPDOWN CREATION
-        // All authenticated users can create new values inline from the item form
-        // FIXED: Removed [Authorize(Policy = "RequireAdminOrAbove")] - was breaking for User role
+        // Supervisor, Admin, and SuperAdmin can create new values inline from the item form.
+        // User role cannot create inline master data.
         // =====================================================================
 
         [HttpPost]
@@ -707,18 +711,26 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddItemAjax([FromBody] MasterDataAjaxRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request?.Name))
-                return Json(new { success = false, message = "Name is required." });
-            var trimmed = request.Name.Trim();
-            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
-            var existing = await _context.Items.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
-            if (existing != null)
-                return Json(new { success = true, id = existing.Id, name = existing.Name });
-            var entity = new Item { Name = trimmed };
-            _context.Items.Add(entity);
-            await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Item", $"Created item '{trimmed}' via inline dropdown.", "MasterData");
-            return Json(new { success = true, id = entity.Id, name = entity.Name });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                    return Json(new { success = false, message = "Name is required." });
+                var trimmed = request.Name.Trim();
+                // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+                var existing = await _context.Items.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
+                if (existing != null)
+                    return Json(new { success = true, id = existing.Id, name = existing.Name });
+                var entity = new Item { Name = trimmed };
+                _context.Items.Add(entity);
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Inline Create Item", $"Created item '{trimmed}' via inline dropdown.", "MasterData");
+                return Json(new { success = true, id = entity.Id, name = entity.Name });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating item via AJAX");
+                return Json(new { success = false, message = "An error occurred while creating the item. Please try again." });
+            }
         }
 
         [HttpPost]
@@ -726,18 +738,26 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddRouteAjax([FromBody] MasterDataAjaxRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request?.Name))
-                return Json(new { success = false, message = "Name is required." });
-            var trimmed = request.Name.Trim();
-            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
-            var existing = await _context.Routes.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
-            if (existing != null)
-                return Json(new { success = true, id = existing.Id, name = existing.Name });
-            var entity = new Models.Route { Name = trimmed };
-            _context.Routes.Add(entity);
-            await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Route", $"Created route '{trimmed}' via inline dropdown.", "MasterData");
-            return Json(new { success = true, id = entity.Id, name = entity.Name });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                    return Json(new { success = false, message = "Name is required." });
+                var trimmed = request.Name.Trim();
+                // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+                var existing = await _context.Routes.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
+                if (existing != null)
+                    return Json(new { success = true, id = existing.Id, name = existing.Name });
+                var entity = new Models.Route { Name = trimmed };
+                _context.Routes.Add(entity);
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Inline Create Route", $"Created route '{trimmed}' via inline dropdown.", "MasterData");
+                return Json(new { success = true, id = entity.Id, name = entity.Name });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating route via AJAX");
+                return Json(new { success = false, message = "An error occurred while creating the route. Please try again." });
+            }
         }
 
         [HttpPost]
@@ -745,18 +765,26 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddVehicleAjax([FromBody] MasterDataAjaxRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request?.Name))
-                return Json(new { success = false, message = "Name is required." });
-            var trimmed = request.Name.Trim();
-            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
-            var existing = await _context.Vehicles.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
-            if (existing != null)
-                return Json(new { success = true, id = existing.Id, name = existing.Name });
-            var entity = new Vehicle { Name = trimmed };
-            _context.Vehicles.Add(entity);
-            await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Vehicle", $"Created vehicle '{trimmed}' via inline dropdown.", "MasterData");
-            return Json(new { success = true, id = entity.Id, name = entity.Name });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                    return Json(new { success = false, message = "Name is required." });
+                var trimmed = request.Name.Trim();
+                // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+                var existing = await _context.Vehicles.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
+                if (existing != null)
+                    return Json(new { success = true, id = existing.Id, name = existing.Name });
+                var entity = new Vehicle { Name = trimmed };
+                _context.Vehicles.Add(entity);
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Inline Create Vehicle", $"Created vehicle '{trimmed}' via inline dropdown.", "MasterData");
+                return Json(new { success = true, id = entity.Id, name = entity.Name });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating vehicle via AJAX");
+                return Json(new { success = false, message = "An error occurred while creating the vehicle. Please try again." });
+            }
         }
 
         [HttpPost]
@@ -764,18 +792,26 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddStorageLocationAjax([FromBody] MasterDataAjaxRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request?.Name))
-                return Json(new { success = false, message = "Name is required." });
-            var trimmed = request.Name.Trim();
-            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
-            var existing = await _context.StorageLocations.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
-            if (existing != null)
-                return Json(new { success = true, id = existing.Id, name = existing.Name });
-            var entity = new StorageLocation { Name = trimmed };
-            _context.StorageLocations.Add(entity);
-            await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Storage Location", $"Created storage location '{trimmed}' via inline dropdown.", "MasterData");
-            return Json(new { success = true, id = entity.Id, name = entity.Name });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                    return Json(new { success = false, message = "Name is required." });
+                var trimmed = request.Name.Trim();
+                // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+                var existing = await _context.StorageLocations.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
+                if (existing != null)
+                    return Json(new { success = true, id = existing.Id, name = existing.Name });
+                var entity = new StorageLocation { Name = trimmed };
+                _context.StorageLocations.Add(entity);
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Inline Create Storage Location", $"Created storage location '{trimmed}' via inline dropdown.", "MasterData");
+                return Json(new { success = true, id = entity.Id, name = entity.Name });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating storage location via AJAX");
+                return Json(new { success = false, message = "An error occurred while creating the storage location. Please try again." });
+            }
         }
 
         [HttpPost]
@@ -783,18 +819,26 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddStatusAjax([FromBody] MasterDataAjaxRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request?.Name))
-                return Json(new { success = false, message = "Name is required." });
-            var trimmed = request.Name.Trim();
-            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
-            var existing = await _context.Statuses.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
-            if (existing != null)
-                return Json(new { success = true, id = existing.Id, name = existing.Name });
-            var entity = new Status { Name = trimmed };
-            _context.Statuses.Add(entity);
-            await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Status", $"Created status '{trimmed}' via inline dropdown.", "MasterData");
-            return Json(new { success = true, id = entity.Id, name = entity.Name });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                    return Json(new { success = false, message = "Name is required." });
+                var trimmed = request.Name.Trim();
+                // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+                var existing = await _context.Statuses.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
+                if (existing != null)
+                    return Json(new { success = true, id = existing.Id, name = existing.Name });
+                var entity = new Status { Name = trimmed };
+                _context.Statuses.Add(entity);
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Inline Create Status", $"Created status '{trimmed}' via inline dropdown.", "MasterData");
+                return Json(new { success = true, id = entity.Id, name = entity.Name });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating status via AJAX");
+                return Json(new { success = false, message = "An error occurred while creating the status. Please try again." });
+            }
         }
 
         [HttpPost]
@@ -802,18 +846,26 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> AddFoundByNameAjax([FromBody] MasterDataAjaxRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request?.Name))
-                return Json(new { success = false, message = "Name is required." });
-            var trimmed = request.Name.Trim();
-            // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
-            var existing = await _context.FoundByNames.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
-            if (existing != null)
-                return Json(new { success = true, id = existing.Id, name = existing.Name });
-            var entity = new FoundByName { Name = trimmed };
-            _context.FoundByNames.Add(entity);
-            await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Found By Name", $"Created found by name '{trimmed}' via inline dropdown.", "MasterData");
-            return Json(new { success = true, id = entity.Id, name = entity.Name });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                    return Json(new { success = false, message = "Name is required." });
+                var trimmed = request.Name.Trim();
+                // Case-insensitive comparison to prevent DbUpdateException on duplicates differing only by case
+                var existing = await _context.FoundByNames.FirstOrDefaultAsync(x => x.Name.ToLower() == trimmed.ToLower());
+                if (existing != null)
+                    return Json(new { success = true, id = existing.Id, name = existing.Name });
+                var entity = new FoundByName { Name = trimmed };
+                _context.FoundByNames.Add(entity);
+                await _context.SaveChangesAsync();
+                await _activityLogService.LogAsync(HttpContext, "Inline Create Found By Name", $"Created found by name '{trimmed}' via inline dropdown.", "MasterData");
+                return Json(new { success = true, id = entity.Id, name = entity.Name });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating found by name via AJAX");
+                return Json(new { success = false, message = "An error occurred while creating the name. Please try again." });
+            }
         }
     }
 }

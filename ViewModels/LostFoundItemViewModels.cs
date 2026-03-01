@@ -16,7 +16,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Item")]
         public int ItemId { get; set; }
 
-        [StringLength(512)]
+        [StringLength(500)]
         [Display(Name = "Description")]
         public string? Description { get; set; }
 
@@ -49,7 +49,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Claimed By")]
         public string? ClaimedBy { get; set; }
 
-        [StringLength(512)]
+        [StringLength(1000)]
         [Display(Name = "Notes")]
         public string? Notes { get; set; }
 
@@ -83,7 +83,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Item")]
         public int ItemId { get; set; }
 
-        [StringLength(512)]
+        [StringLength(500)]
         [Display(Name = "Description")]
         public string? Description { get; set; }
 
@@ -116,7 +116,7 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Claimed By")]
         public string? ClaimedBy { get; set; }
 
-        [StringLength(512)]
+        [StringLength(1000)]
         [Display(Name = "Notes")]
         public string? Notes { get; set; }
 

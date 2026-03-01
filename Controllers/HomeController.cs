@@ -331,7 +331,7 @@ namespace LostAndFoundApp.Controllers
                 var yesterday = now.AddDays(-1);
                 vm.RecentFailedLogins = await _context.ActivityLogs
                     .CountAsync(x => x.Category == "Auth"
-                        && x.Status == "Failure"
+                        && x.Status == "Failed"
                         && x.Timestamp >= yesterday);
 
                 // Audit log stats

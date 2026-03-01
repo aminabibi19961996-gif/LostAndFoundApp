@@ -91,6 +91,9 @@ namespace LostAndFoundApp.Data
                 // Index on DateFound for efficient range queries in search
                 entity.HasIndex(e => e.DateFound);
                 entity.HasIndex(e => e.StatusId);
+
+                // FIX: Unique index on CustomTrackingId to prevent duplicate IDs from race condition
+                entity.HasIndex(e => e.CustomTrackingId).IsUnique();
             });
 
             // Master table configurations

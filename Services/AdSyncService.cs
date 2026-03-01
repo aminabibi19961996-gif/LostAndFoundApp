@@ -58,6 +58,9 @@ namespace LostAndFoundApp.Services
                 var options = useSsl ? ContextOptions.Negotiate | ContextOptions.SecureSocketLayer : ContextOptions.Negotiate;
                 using var context = new PrincipalContext(ContextType.Domain, domain, container, options);
 
+                // Note: PrincipalContext uses default AD timeout. For custom timeout, use Task.Run with CancellationToken
+                // to wrap the ValidateCredentials call if needed. The default timeout is typically 30 seconds.
+
                 var isValid = context.ValidateCredentials(username, password);
                 _logger.LogInformation("AD credential validation for user '{User}': {Result}", username, isValid ? "Success" : "Failed");
                 return isValid;

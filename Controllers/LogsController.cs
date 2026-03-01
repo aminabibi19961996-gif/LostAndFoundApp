@@ -9,9 +9,10 @@ namespace LostAndFoundApp.Controllers
 {
     /// <summary>
     /// Activity Logs management.
-    /// All users can view their own logs.
-    /// Admin and SuperAdmin can view all logs.
-    /// Only SuperAdmin can clear or export logs.
+    /// SuperAdmin and Admin can view all logs and export CSV.
+    /// Supervisor can view own logs only.
+    /// User role has no log access.
+    /// Only SuperAdmin can clear all logs.
     /// </summary>
     [Authorize]
     public class LogsController : Controller

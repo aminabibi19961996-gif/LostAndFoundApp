@@ -1,3 +1,16 @@
+// Client-side adapter for [NotFutureDate] server attribute
+// Registered before DOMContentLoaded so unobtrusive validation picks it up
+if (window.jQuery && jQuery.validator && jQuery.validator.unobtrusive) {
+    jQuery.validator.addMethod('notfuturedate', function (value, element) {
+        if (!value) return true; // let [Required] handle empty
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var input = new Date(value);
+        return input <= today;
+    });
+    jQuery.validator.unobtrusive.adapters.addBool('notfuturedate');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // Confirmation dialogs for destructive actions
     document.querySelectorAll('[data-confirm]').forEach(function (el) {
@@ -165,7 +178,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function showToast(message, type) {
         var toast = document.createElement('div');
         toast.className = 'toast-notification toast-' + (type || 'info');
-        toast.innerHTML = '<i class="bi bi-' + (type === 'error' ? 'exclamation-circle-fill' : 'info-circle-fill') + '"></i><span>' + message + '</span>';
+        var icon = document.createElement('i');
+        icon.className = 'bi bi-' + (type === 'error' ? 'exclamation-circle-fill' : 'info-circle-fill');
+        var span = document.createElement('span');
+        span.textContent = message;
+        toast.appendChild(icon);
+        toast.appendChild(span);
         document.body.appendChild(toast);
         setTimeout(function () { toast.classList.add('show'); }, 10);
         setTimeout(function () {

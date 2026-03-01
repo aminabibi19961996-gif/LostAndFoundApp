@@ -45,9 +45,9 @@
 <div class="form-card">
     <div class="form-card-header"><i class="bi bi-clipboard-data"></i> Item Information</div>
     <div class="form-card-body">
-        <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="margin-bottom:14px;"></div>
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="margin-bottom:14px;"></div>
             <input type="hidden" asp-for="TrackingId" />
 
             <div class="form-grid">

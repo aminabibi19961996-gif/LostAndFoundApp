@@ -95,6 +95,27 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // --- Authorization policies for role-based access control ---
 // 4 roles: SuperAdmin, Admin, Supervisor, User
+//
+// Permission Matrix:
+//   Feature                          SuperAdmin  Admin  Supervisor  User
+//   ─────────────────────────────────────────────────────────────────────
+//   Dashboard (Full Analytics)         ✓          ✓       ✓        Basic
+//   Create Lost & Found Records        ✓          ✓       ✓          ✓
+//   Edit Any Record                    ✓          ✓       ✓     Own Only
+//   Delete Records                     ✓          ✓       ✗          ✗
+//   Manage Master Data                 ✓          ✓       ✓          ✗
+//   Inline AJAX Master Data            ✓          ✓       ✓          ✗
+//   View All Activity Logs             ✓          ✓       ✗          ✗
+//   View Own Activity Logs             ✓          ✓       ✓          ✗
+//   Export Logs (CSV)                  ✓          ✓       ✗          ✗
+//   Clear All Logs                     ✓          ✗       ✗          ✗
+//   View User List                     ✓          ✓  ReadOnly       ✗
+//   Create/Edit/Delete Users           ✓          ✓       ✗          ✗
+//   Change User Roles                  ✓          ✓       ✗          ✗
+//   Activate/Deactivate Users          ✓          ✓       ✗          ✗
+//   Manage AD Groups                   ✓          ✓       ✗          ✗
+//   Trigger AD Sync                    ✓          ✓       ✗          ✗
+//
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireSuperAdmin", policy => policy.RequireRole("SuperAdmin"));

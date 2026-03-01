@@ -122,24 +122,26 @@ namespace LostAndFoundApp.Services
         };
 
         /// <summary>
-        /// Retrieves a file stream for authenticated download. Returns null if file not found.
+        /// Retrieves file bytes for authenticated download. Returns null if file not found.
+        /// FIX: Changed from returning FileStream (which caused memory leaks) to returning byte array.
         /// </summary>
-        public (FileStream? Stream, string ContentType)? GetPhoto(string fileName)
+        public (byte[]? Bytes, string ContentType)? GetPhoto(string fileName)
         {
             var storagePath = _config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos";
             return GetFile(fileName, storagePath);
         }
 
         /// <summary>
-        /// Retrieves a file stream for authenticated download. Returns null if file not found.
+        /// Retrieves file bytes for authenticated download. Returns null if file not found.
+        /// FIX: Changed from returning FileStream (which caused memory leaks) to returning byte array.
         /// </summary>
-        public (FileStream? Stream, string ContentType)? GetAttachment(string fileName)
+        public (byte[]? Bytes, string ContentType)? GetAttachment(string fileName)
         {
             var storagePath = _config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments";
             return GetFile(fileName, storagePath);
         }
 
-        private (FileStream? Stream, string ContentType)? GetFile(string fileName, string storagePath)
+        private (byte[]? Bytes, string ContentType)? GetFile(string fileName, string storagePath)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 return null;
@@ -168,8 +170,19 @@ namespace LostAndFoundApp.Services
                 contentType = "application/octet-stream";
             }
 
-            var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return (stream, contentType);
+            // FIX: Read file into byte array and properly dispose the FileStream
+            byte[] fileBytes;
+            try
+            {
+                fileBytes = File.ReadAllBytes(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to read file: {Path}", filePath);
+                return null;
+            }
+
+            return (fileBytes, contentType);
         }
 
         /// <summary>

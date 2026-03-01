@@ -12,8 +12,9 @@ namespace LostAndFoundApp.Controllers
 {
     /// <summary>
     /// User management and AD sync.
-    /// Index (user list) is accessible to Admin and Super Admin.
-    /// All mutating actions (create, edit, delete, AD sync) are Super Admin only.
+    /// SuperAdmin and Admin: Full CRUD on users, roles, AD groups, AD sync.
+    /// Supervisor: Read-only access to user list (Index only).
+    /// User role: No access.
     /// </summary>
     [Authorize(Policy = "RequireSupervisorOrAbove")]
     public class UserManagementController : Controller

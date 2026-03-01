@@ -26,15 +26,17 @@ namespace LostAndFoundApp.Services
         {
             try
             {
+                // FIX: Add null check for details parameter to prevent NullReferenceException
+                var safeDetails = details ?? string.Empty;
                 var log = new ActivityLog
                 {
                     Timestamp = DateTime.UtcNow,
-                    Action = action,
-                    Details = details.Length > 2000 ? details[..2000] : details,
-                    PerformedBy = performedBy,
-                    Category = category,
+                    Action = action ?? string.Empty,
+                    Details = safeDetails.Length > 2000 ? safeDetails[..2000] : safeDetails,
+                    PerformedBy = performedBy ?? "System",
+                    Category = category ?? "General",
                     IpAddress = ipAddress,
-                    Status = status
+                    Status = status ?? "Success"
                 };
 
                 _context.ActivityLogs.Add(log);

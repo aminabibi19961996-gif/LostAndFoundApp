@@ -136,6 +136,13 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
+            // FIX: IDOR Protection - Users can only view their own records unless Supervisor+
+            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
+            if (!isSupervisorOrAbove && item.CreatedBy != User.Identity?.Name)
+            {
+                return Forbid();
+            }
+
             var vm = new LostFoundItemDetailViewModel
             {
                 TrackingId = item.TrackingId,
@@ -329,8 +336,18 @@ namespace LostAndFoundApp.Controllers
 
             await PopulateSearchDropdowns(vm);
 
+            // FIX: IDOR Protection - Users can only search their own records unless Supervisor+
+            var currentUserName = User.Identity?.Name ?? "";
+            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
+
             // Build query
             var query = _context.LostFoundItems.AsQueryable();
+
+            // Apply role-based filtering - User role can only see their own records
+            if (!isSupervisorOrAbove)
+            {
+                query = query.Where(x => x.CreatedBy == currentUserName);
+            }
 
             // Build filter summary for print
             var filters = new List<string>();
@@ -577,7 +594,7 @@ namespace LostAndFoundApp.Controllers
             try
             {
                 var result = _fileService.GetPhoto(id);
-                if (result == null || result.Value.Stream == null)
+                if (result == null || result.Value.Bytes == null)
                 {
                     // Return a 1x1 transparent PNG so <img> tags don't show broken icons
                     // This prevents UseStatusCodePagesWithReExecute from turning 404 into HTML
@@ -585,7 +602,7 @@ namespace LostAndFoundApp.Controllers
                     return File(placeholder, "image/png");
                 }
 
-                return File(result.Value.Stream, result.Value.ContentType);
+                return File(result.Value.Bytes, result.Value.ContentType);
             }
             catch (Exception ex)
             {
@@ -638,14 +655,14 @@ namespace LostAndFoundApp.Controllers
             try
             {
                 var result = _fileService.GetAttachment(id);
-                if (result == null || result.Value.Stream == null)
+                if (result == null || result.Value.Bytes == null)
                 {
                     TempData["ErrorMessage"] = "The requested attachment was not found. It may have been deleted.";
                     return RedirectToAction(nameof(Search));
                 }
 
                 var fileName = Path.GetFileName(id);
-                return File(result.Value.Stream, result.Value.ContentType, fileName);
+                return File(result.Value.Bytes, result.Value.ContentType, fileName);
             }
             catch (Exception ex)
             {
