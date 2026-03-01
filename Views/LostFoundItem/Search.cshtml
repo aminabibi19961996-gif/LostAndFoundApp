@@ -82,6 +82,8 @@
                     </ul>
                 </div>
             }
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+            {
             <a asp-action="Export"
                asp-route-TrackingId="@Model.TrackingId"
                asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
@@ -108,6 +110,7 @@
                class="btn btn-secondary" target="_blank">
                 <i class="bi bi-printer"></i> Print
             </a>
+            }
         </div>
     }
 </div>

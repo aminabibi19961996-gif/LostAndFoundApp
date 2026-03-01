@@ -445,6 +445,7 @@ namespace LostAndFoundApp.Controllers
 
         // GET: /LostFoundItem/PrintSearch — full results for print (no pagination)
         [HttpGet]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> PrintSearch(SearchViewModel? vm)
         {
             vm ??= new SearchViewModel();
