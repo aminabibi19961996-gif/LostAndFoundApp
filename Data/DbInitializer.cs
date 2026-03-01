@@ -79,41 +79,7 @@ namespace LostAndFoundApp.Data
                 MustChangePassword = true
             });
 
-            // ─── Test Accounts (no password change required) ──────────
-            // These accounts allow immediate login for testing each role's dashboard and features.
 
-            // Test Admin — login: testadmin / Test@2025
-            await SeedUserAsync(userManager, logger, new SeedAccount
-            {
-                UserName = "testadmin",
-                Email = "testadmin@lostandfound.local",
-                DisplayName = "Test Admin",
-                Password = "Test@2025",
-                Role = "Admin",
-                MustChangePassword = false
-            });
-
-            // Test Supervisor — login: testsupervisor / Test@2025
-            await SeedUserAsync(userManager, logger, new SeedAccount
-            {
-                UserName = "testsupervisor",
-                Email = "testsupervisor@lostandfound.local",
-                DisplayName = "Test Supervisor",
-                Password = "Test@2025",
-                Role = "Supervisor",
-                MustChangePassword = false
-            });
-
-            // Test User — login: testuser / Test@2025
-            await SeedUserAsync(userManager, logger, new SeedAccount
-            {
-                UserName = "testuser",
-                Email = "testuser@lostandfound.local",
-                DisplayName = "Test User",
-                Password = "Test@2025",
-                Role = "User",
-                MustChangePassword = false
-            });
 
             // ─── Seed Default Status Values ────────────────────────
             if (!await context.Statuses.AnyAsync())
