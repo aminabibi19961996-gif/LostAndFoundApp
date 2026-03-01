@@ -447,7 +447,7 @@
                     _ => "db-found"
                 };
                 <tr>
-                  <td><span class="d-tid">#@record.TrackingId</span></td>
+                  <td><span class="d-tid">@record.CustomTrackingId</span></td>
                   <td>@record.DateFound.ToString("MM/dd/yyyy")</td>
                   <td><span class="d-item-name">@record.ItemName</span></td>
                   <td><span class="d-loc-text">@record.LocationFound</span></td>
@@ -473,6 +473,7 @@
                       {
                           <a class="d-ra" asp-controller="LostFoundItem" asp-action="Edit" asp-route-id="@record.TrackingId" title="Edit"><i class="bi bi-pencil"></i></a>
                       }
+                      <a class="d-ra" asp-controller="LostFoundItem" asp-action="PrintLabel" asp-route-id="@record.TrackingId" target="_blank" title="Print Label"><i class="bi bi-qr-code"></i></a>
                     </div>
                   </td>
                 </tr>

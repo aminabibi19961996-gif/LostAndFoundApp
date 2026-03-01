@@ -179,6 +179,7 @@ namespace LostAndFoundApp.Controllers
                 .Select(x => new
                 {
                     x.TrackingId,
+                    x.CustomTrackingId,
                     x.DateFound,
                     ItemName = x.Item != null ? x.Item.Name : "",
                     x.LocationFound,
@@ -191,6 +192,7 @@ namespace LostAndFoundApp.Controllers
             vm.RecentRecords = recentItems.Select(x => new DashboardRecentItem
             {
                 TrackingId = x.TrackingId,
+                CustomTrackingId = x.CustomTrackingId,
                 DateFound = x.DateFound,
                 ItemName = x.ItemName,
                 LocationFound = x.LocationFound,
@@ -279,7 +281,7 @@ namespace LostAndFoundApp.Controllers
                     Percentage = totalItems > 0 ? (int)Math.Round((double)s.Count / totalItems * 100) : 0
                 }).OrderByDescending(s => s.Count).ToList();
 
-                // Top item types
+                // Top items
                 vm.TopItemTypes = await _context.LostFoundItems
                     .Include(x => x.Item)
                     .Where(x => x.Item != null)

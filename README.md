@@ -132,16 +132,18 @@ On first run, the app automatically:
 
 ## User Roles
 
-The application has **three user roles** arranged in a permission hierarchy:
+The application has **four user roles** arranged in a permission hierarchy:
 
 ```mermaid
 graph TD
  SA["SuperAdmin<br/><i>Full System Control</i>"]
  A["Admin<br/><i>Operations Manager</i>"]
+ S["Supervisor<br/><i>Team Lead</i>"]
  U["User<br/><i>Regular Staff</i>"]
 
  SA -->|"inherits all"| A
- A -->|"inherits all"| U
+ A -->|"inherits all"| S
+ S -->|"inherits all"| U
 
 ```
 
@@ -151,9 +153,10 @@ graph TD
 
 | Role | Username | Password | Description |
 |:----:|----------|----------|-------------|
-| **SuperAdmin** | `superadmin` | `SuperAdmin123!` | IT administrator — full system control |
-| **Admin** | `admin` | `Admin123!` | Supervisor / team lead — day-to-day operations |
-| **User** | `user` | `User123!` | Regular staff — registers and edits items |
+| **SuperAdmin** | `sadmin` | `Rider@2025` | System administrator — full system control |
+| **Admin** | `admin` | `Rider@2025` | Operations manager — user management & AD sync |
+| **Supervisor** | `supervisor` | `Rider@2025` | Team lead — master data management & team oversight |
+| **User** | `user` | `Rider@2025` | Regular staff — registers and edits items |
 
 ---
 
@@ -163,12 +166,15 @@ graph TD
 <tr><td>
 
 **What SuperAdmin can do:**
-- **User Management** — Create, edit, delete user accounts; assign roles
-- **AD Synchronization** — Configure and manage Active Directory integration; sync users from corporate directory
-- **Full Dashboard** — View complete system analytics, charts, statistics, user & role distribution
-- **Master Data** — Add, edit, delete any master data (items, routes, vehicles, locations, statuses, found by names)
+- **User Management** — Create, edit, delete user accounts; assign roles; reset passwords
+- **AD Synchronization** — Configure AD groups & individual AD users; manual & scheduled sync
+- **Password Policy** — Configure system-wide password requirements (stored in database, effective immediately)
+- **Announcements** — Create, manage, and target announcements to specific roles
+- **Full Dashboard** — Complete system analytics with KPIs, trends, alerts, user stats, AD sync health
+- **Master Data** — Full CRUD on all 6 master data tables with soft delete (activate/deactivate)
 - **All Logs** — View all activity logs, export as CSV, clear logs
-- **Delete Records** — Permanently delete lost & found records
+- **Delete Records** — Permanently delete lost & found records (single & bulk)
+- **Bulk Operations** — Bulk delete and bulk status update on search results
 - **File Management** — Upload, replace, and view photos/attachments
 
 </td></tr>
@@ -182,16 +188,41 @@ graph TD
 <tr><td>
 
 **What Admin can do:**
-- **Full Dashboard** — Operational analytics, status breakdown, top item types
+- **User Management** — Create users, edit roles, toggle active, reset passwords, delete users
+- **AD Management** — Manage AD Groups & individual AD Users, trigger manual sync
+- **Full Dashboard** — Operational analytics, user stats, master data health, status breakdown
 - **Master Data** — Full CRUD on all master data tables
 - **View All Logs** — See activity logs for all users (cannot export or clear)
-- **Delete Records** — Permanently delete lost & found records
-- **View Users** — See user list (read-only — cannot edit roles or manage accounts)
+- **Delete Records** — Permanently delete lost & found records (single & bulk)
+- **Messages** — View announcements targeted to their role
 
 **What Admin CANNOT do:**
-- Cannot create/delete users or change roles
-- Cannot access AD Groups synchronization
+- Cannot configure Password Policy
+- Cannot create or manage Announcements
 - Cannot export or clear logs
+
+</td></tr>
+</table>
+
+---
+
+### Supervisor — Team Lead
+
+<table>
+<tr><td>
+
+**What Supervisor can do:**
+- **Master Data** — Full CRUD on all master data tables + inline AJAX creation
+- **Dashboard** — Team performance, top contributors, operational KPIs
+- **My Logs** — View their own activity history
+- **Create & Edit Records** — Full item management with file uploads
+- **Search & Print** — Find items with filters, export results
+- **Messages** — View announcements targeted to their role
+
+**What Supervisor CANNOT do:**
+- Cannot delete any lost & found records
+- Cannot access User Management or AD settings
+- Cannot view other users' activity logs
 
 </td></tr>
 </table>
@@ -222,24 +253,28 @@ graph TD
 
 ### Role Comparison Matrix
 
-| Feature | SuperAdmin | Admin | User |
-|---------|:---:|:---:|:---:|
-| View Dashboard (Full Analytics) | Yes | Yes | Basic |
-| Create Lost & Found Records | Yes | Yes | Yes |
-| Edit Any Record | Yes | Yes | Yes |
-| Delete Records | Yes | Yes | No |
-| Manage Master Data | Yes | Yes | No |
-| Inline AJAX Master Data Creation | Yes | Yes | No |
-| View All Activity Logs | Yes | Yes | No |
-| View Own Activity Logs | Yes | Yes | Yes |
-| Export Logs (CSV) | Yes | No | No |
-| Clear All Logs | Yes | No | No |
-| View User List | Yes | Read-only | No |
-| Create / Edit / Delete Users | Yes | No | No |
-| Change User Roles | Yes | No | No |
-| Activate / Deactivate Users | Yes | No | No |
-| Manage AD Groups | Yes | No | No |
-| Trigger AD Sync | Yes | No | No |
+| Feature | SuperAdmin | Admin | Supervisor | User |
+|---------|:---:|:---:|:---:|:---:|
+| View Dashboard (Full Analytics) | Full | Full | Team | Basic |
+| Create Lost & Found Records | Yes | Yes | Yes | Yes |
+| Edit Any Record | Yes | Yes | Yes | Yes |
+| Delete Records (Single & Bulk) | Yes | Yes | No | No |
+| Bulk Status Update | Yes | Yes | No | No |
+| Export Search to CSV | Yes | Yes | Yes | Yes |
+| Manage Master Data | Yes | Yes | Yes | No |
+| Inline AJAX Master Data Creation | Yes | Yes | Yes | No |
+| View All Activity Logs | Yes | Yes | No | No |
+| View Own Activity Logs | Yes | Yes | Yes | No |
+| Export Logs (CSV) | Yes | No | No | No |
+| Clear All Logs | Yes | No | No | No |
+| Create / Edit / Delete Users | Yes | Yes | No | No |
+| Change User Roles | Yes | Yes | No | No |
+| Reset User Passwords | Yes | Yes | No | No |
+| Manage AD Groups & Users | Yes | Yes | No | No |
+| Trigger AD Sync | Yes | Yes | No | No |
+| Configure Password Policy | Yes | No | No | No |
+| Manage Announcements | Yes | No | No | No |
+| View Messages | Yes | Yes | Yes | Yes |
 
 ---
 
@@ -247,13 +282,15 @@ graph TD
 
 | Module | Capabilities |
 |--------|-------------|
-| **Item Management** | Create, Edit, View Details, Delete, Photo Upload, Attachment Upload, Search & Filter, Print Results |
-| **Master Data** | Items, Routes, Vehicles, Storage Locations, Statuses, Found By Names, AJAX Inline Create |
-| **User Management** | Create Users, Edit Roles, Activate/Deactivate, User List |
-| **Active Directory** | AD Group Mapping, Manual Sync, Scheduled Daily Sync, Role Assignment |
-| **Activity Logs** | Audit Trail, Filter & Search, CSV Export, Clear Logs |
-| **Security** | Role-Based Auth, Password Policy, Account Lockout, CSRF Protection, File Validation |
-| **Dashboard** | Status Cards, Recent Records, Analytics Charts, Top Items |
+| **Item Management** | Create, Edit, View Details, Delete, Photo Upload, Attachment Upload, Search & Filter, Print Results, Export CSV, Bulk Delete, Bulk Status Update |
+| **Master Data** | Items, Routes, Vehicles, Storage Locations, Statuses, Found By Names — CRUD + Toggle Active + AJAX Inline Create |
+| **User Management** | Create Users, Edit Roles, Activate/Deactivate, Delete Users, Reset Passwords, User List with filters |
+| **Active Directory** | AD Group Mapping, Individual AD User Mapping, Manual & Scheduled Sync, Role Assignment, Live AD Search, Sync History |
+| **Announcements** | Create/Edit/Delete, Role-Targeted Delivery, Popup Notifications (max 3 shows), Message Inbox, Dismiss/Read Tracking |
+| **Activity Logs** | Full Audit Trail, Filter by Category/Date/Search, CSV Export, Clear Logs |
+| **Password Policy** | Database-Driven Dynamic Policy, SuperAdmin Configurable, Immediate Effect |
+| **Security** | Role-Based Auth (4 levels), Dynamic Password Policy, Account Lockout, AD Rate Limiting, CSRF Protection, File Validation, MIME Checking, Security Headers |
+| **Dashboard** | Role-Specific Views (4 variants), KPIs, Trends, Alerts, Team Performance, Storage Utilization, AD Sync Health |
 
 ### Feature Details
 
@@ -272,7 +309,7 @@ graph TD
 | **Download Attachment** | `GET /LostFoundItem/Attachment/{name}` | All Users |
 
 **Create/Edit Form Fields:**
-Date Found · Item Type (dropdown) · Description · Location Found · Route # · Vehicle # · Storage Location · Status · Status Date · Found By · Claimed By · Notes · Photo Upload · Attachment Upload
+Date Found · Item (dropdown) · Description · Location Found · Route # · Vehicle # · Storage Location · Status · Status Date · Found By · Claimed By · Notes · Photo Upload · Attachment Upload
 
 **Upload Rules:**
 - Photos: `.jpg`, `.jpeg`, `.png`, `.gif` — max 10MB
@@ -296,7 +333,7 @@ Six master data tables, each with identical CRUD operations:
 
 | Table | Purpose | Name Max Length |
 |-------|---------|:---:|
-| **Items** | Types of lost/found items (Wallet, Phone, Keys…) | 200 |
+| **Items** | Pieces of lost/found items (Wallet, Phone, Keys…) | 200 |
 | **Routes** | Route numbers for transit context | 100 |
 | **Vehicles** | Vehicle numbers/identifiers | 100 |
 | **Storage Locations** | Physical locations where items are stored | 200 |
@@ -307,7 +344,32 @@ Six master data tables, each with identical CRUD operations:
 
 **In-Use Protection:** Cannot delete entries referenced by existing items — must deactivate instead.
 
-**AJAX Inline Creation:** Admin+ can create new master data entries directly from item form dropdowns without leaving the page.
+**AJAX Inline Creation:** Supervisor+ can create new master data entries directly from item form dropdowns without leaving the page.
+
+</details>
+
+<details>
+<summary><b>📢 Announcement System</b></summary>
+
+| Operation | Route | Access |
+|-----------|-------|--------|
+| **Manage Announcements** | `GET /Announcement` | SuperAdmin only |
+| **Create Announcement** | `GET/POST /Announcement/Create` | SuperAdmin only |
+| **Toggle Active** | `POST /Announcement/ToggleActive/{id}` | SuperAdmin only |
+| **Delete Announcement** | `POST /Announcement/Delete/{id}` | SuperAdmin only |
+| **View My Messages** | `GET /Announcement/Messages` | All authenticated users |
+| **Dismiss Message** | `POST /Announcement/Dismiss/{id}` | All authenticated users |
+| **Get Popups** | `GET /Announcement/GetPopupAnnouncements` | All authenticated users (JSON) |
+| **Mark Popup Shown** | `POST /Announcement/MarkPopupShown` | All authenticated users (AJAX) |
+| **Unread Count** | `GET /Announcement/UnreadCount` | All authenticated users (JSON) |
+
+**Features:**
+- Target announcements to specific roles: `All`, `Admin`, `Supervisor`, `User`
+- Popup notifications auto-show on page load (max 3 times per announcement)
+- Users can dismiss announcements permanently
+- Optional expiry date for time-limited announcements
+- Unread badge count in navigation bar
+- Multi-announcement carousel with Previous/Next navigation
 
 </details>
 
@@ -316,40 +378,62 @@ Six master data tables, each with identical CRUD operations:
 
 | Operation | Route | Access |
 |-----------|-------|--------|
-| **View User List** | `GET /UserManagement` | Admin+ (read-only for Admin) |
-| **Create User** | `GET/POST /UserManagement/Create` | SuperAdmin only |
-| **Edit Role** | `GET/POST /UserManagement/EditRole/{id}` | SuperAdmin only |
-| **Toggle Active** | `POST /UserManagement/ToggleActive/{id}` | SuperAdmin only |
+| **View User List** | `GET /UserManagement` | Supervisor+ (filterable by search/role/status) |
+| **Create User** | `GET/POST /UserManagement/Create` | Admin+ |
+| **Edit Role** | `GET/POST /UserManagement/EditRole/{id}` | Admin+ |
+| **Toggle Active** | `POST /UserManagement/ToggleActive/{id}` | Admin+ |
+| **Reset Password** | `POST /UserManagement/ResetPassword/{id}` | Admin+ |
+| **Delete User** | `POST /UserManagement/DeleteUser/{id}` | Admin+ |
+| **Password Policy** | `GET/POST /UserManagement/PasswordPolicy` | SuperAdmin only |
 
 - New users have `MustChangePassword = true` (forced change on first login)
-- Server-side role whitelist prevents arbitrary role injection
-- Cannot deactivate your own account (safety check)
+- Server-side role whitelist prevents arbitrary role injection via crafted POST
+- SuperAdmin accounts are invisible to non-SuperAdmin users
+- Cannot deactivate or delete your own account (safety check)
+- Admin password reset generates a cryptographically secure 12-character temporary password
+- AD users cannot have their passwords reset (redirected to organization's password management)
+- User list supports pagination (50 per page) with search, role, account type, and status filters
 
 </details>
 
 <details>
-<summary><b> Active Directory Integration</b></summary>
+<summary><b>📡 Active Directory Integration</b></summary>
 
 | Operation | Route | Access |
 |-----------|-------|--------|
-| **View AD Groups** | `GET /UserManagement/AdGroups` | SuperAdmin only |
-| **Add Group** | `POST /UserManagement/AddAdGroup` | SuperAdmin only |
-| **Update Group Role** | `POST /UserManagement/UpdateAdGroupRole` | SuperAdmin only |
-| **Toggle Group** | `POST /UserManagement/ToggleAdGroupActive/{id}` | SuperAdmin only |
-| **Remove Group** | `POST /UserManagement/RemoveAdGroup/{id}` | SuperAdmin only |
-| **Sync Now** | `POST /UserManagement/SyncNow` | SuperAdmin only |
+| **View AD Groups** | `GET /UserManagement/AdGroups` | Admin+ |
+| **Add Groups** | `POST /UserManagement/AddAdGroups` | Admin+ |
+| **Update Group Role** | `POST /UserManagement/UpdateAdGroupRole` | Admin+ |
+| **Toggle Group** | `POST /UserManagement/ToggleAdGroupActive/{id}` | Admin+ |
+| **Remove Group** | `POST /UserManagement/RemoveAdGroup/{id}` | Admin+ |
+| **Search AD Groups** | `GET /UserManagement/SearchAdGroups?term=` | Admin+ |
+| **View AD Users** | `GET /UserManagement/AdUsers` | Admin+ |
+| **Add AD User** | `POST /UserManagement/AddAdUser` | Admin+ |
+| **Update AD User Role** | `POST /UserManagement/UpdateAdUserRole` | Admin+ |
+| **Toggle AD User** | `POST /UserManagement/ToggleAdUserActive/{id}` | Admin+ |
+| **Remove AD User** | `POST /UserManagement/RemoveAdUser/{id}` | Admin+ |
+| **Search AD Users** | `GET /UserManagement/SearchAdUsers?term=` | Admin+ |
+| **Sync Now** | `POST /UserManagement/SyncNow` | Admin+ |
+
+**Two Sync Modes:**
+1. **AD Group Sync** — Map AD security groups to application roles; all members are synced
+2. **Individual AD User Sync** — Add specific AD usernames with role mappings
 
 **Sync Engine Behavior:**
-1. Reads all active `AdGroup` configurations
+1. Reads all active `AdGroup` and `AdUser` configurations
 2. Connects to AD using configured domain, container, and SSL settings
-3. Enumerates members of each group (recursive)
+3. Processes individual AD users first, then enumerates group members (recursive)
 4. Creates new users / updates existing / deactivates removed
-5. Role priority: Admin > User (highest wins if user is in multiple groups)
-6. AD groups can only map to Admin or User — **never SuperAdmin** (security design)
+5. Role priority: Admin (3) > Supervisor (2) > User (1) — highest wins if in multiple groups
+6. AD mappings can only map to Admin, Supervisor, or User — **never SuperAdmin** (security design)
 
 **Safety:** If any AD group fails to process, user deactivation is skipped entirely to prevent false deactivations.
 
-**Background Service:** `AdSyncHostedService` runs sync daily at a configurable hour (default: 2 AM UTC). On failure, retries in 1 hour.
+**Background Service:** `AdSyncHostedService` runs sync daily at a configurable hour (default: 2 AM UTC). On failure, retries after a configurable interval (default: 60 minutes).
+
+**Sync History:** Every sync operation (manual or scheduled) is logged to the `AdSyncLogs` table with created/updated/deactivated counts and error summaries.
+
+**Live Search:** Admin+ can search AD for groups and users in real time using autocomplete endpoints that query the domain controller.
 
 </details>
 
@@ -371,20 +455,33 @@ Six master data tables, each with identical CRUD operations:
 </details>
 
 <details>
-<summary><b> Dashboard</b></summary>
+<summary><b>📊 Dashboard (4 Role-Specific Views)</b></summary>
+
+The dashboard renders a different view per role: `DashboardUser`, `DashboardSupervisor`, `DashboardAdmin`, `DashboardSuperAdmin`.
 
 **All Roles see:**
 - Status summary cards (Total, Found, Claimed, Stored, Disposed, Transferred)
-- Recent records table (10 for Users, 15 for Admin/SuperAdmin)
+- KPIs: Claim Rate %, Avg Days to Claim, Avg Storage Duration, Disposal Rate %
+- Trends: Items This Week vs Last Week, This Month vs Last Month (% change)
+- My Work: items created by current user, items this week, items awaiting action
+- Critical Alerts: unclaimed 30+ days, items awaiting action
+- Recent records table
+
+**Supervisor additionally sees:**
+- Top Contributors: team member performance rankings (items created, items this week)
 
 **Admin + SuperAdmin additionally see:**
 - User statistics (Total, Active, Inactive, Local, AD users)
-- Role distribution (SuperAdmin / Admin / User counts)
-- Time-based stats (Items This Week, This Month, Unclaimed 30+ Days)
-- Master data counts (all 6 tables)
-- Items awaiting action (Found + Stored)
+- Role distribution (SuperAdmin / Admin / Supervisor / User counts)
+- Master data health (all 6 tables + inactive count)
 - Status breakdown with percentages
-- Top 5 most frequently found item types
+- Top 5 most frequently found items
+- Storage utilization per location
+
+**SuperAdmin exclusively sees:**
+- System Health: AD sync status (enabled/last sync/success/errors)
+- Recent failed logins (last 24 hours)
+- Activity log volume (total + last 24 hours)
 
 </details>
 
@@ -407,11 +504,12 @@ Six master data tables, each with identical CRUD operations:
                         |  (MustChangePassword)         |
                         |         |                     |
                         |  Controllers ----------+      |
-                        |  - Account     Services |     |
-                        |  - Home        - ActivityLog  |
-                        |  - Logs        - FileService  |
-                        |  - LostFound   - AdSync       |
-                        |  - MasterData  - AdSync       |
+                        |  - Account     Services|      |
+                        |  - Announcement- ActiveLog    |
+                        |  - Home        - FileService  |
+                        |  - Logs        - AdSync       |
+                        |  - LostFound   - PassValidator|
+                        |  - MasterData  - RateLimiter  |
                         |  - UserMgmt    (Hosted)       |
                         |         |        |            |
                         |  Security Layer               |
@@ -492,9 +590,10 @@ flowchart LR
 | Identity | ASP.NET Core Identity | 8.0.24 |
 | Logging | Serilog | 10.0.0 |
 | AD Integration | System.DirectoryServices.AccountManagement | 8.0.0 |
+| Page Compilation | Razor Runtime Compilation | 8.0.24 |
 | Frontend | Razor Views + Vanilla CSS + Vanilla JS | — |
 | Icons | Bootstrap Icons (CDN) | — |
-| Fonts | Google Fonts (Inter) | — |
+| Fonts | Syne, JetBrains Mono, Inter | — |
 
 ---
 
@@ -510,6 +609,9 @@ erDiagram
  LostFoundItem }o--o{ Vehicle : "VehicleId (FK, nullable)"
  LostFoundItem }o--o{ StorageLocation : "StorageLocationId (FK, nullable)"
  LostFoundItem }o--o{ FoundByName : "FoundById (FK, nullable)"
+ 
+ Announcement ||--o{ AnnouncementRead : "AnnouncementId (FK)"
+ ApplicationUser ||--o{ AnnouncementRead : "UserId (FK)"
 
  LostFoundItem {
  int TrackingId PK "Auto-increment"
@@ -580,13 +682,63 @@ erDiagram
  string SamAccountName "For AD users"
  }
 
- AdGroup {
- int Id PK
- string GroupName "Required, unique, max 256"
- string MappedRole "Admin or User"
- datetime DateAdded "Auto UTC"
- bool IsActive "Default true"
- }
+  AdGroup {
+    int Id PK
+    string GroupName "Required, unique, max 256"
+    string MappedRole "Admin, Supervisor, or User"
+    datetime DateAdded "Auto UTC"
+    bool IsActive "Default true"
+  }
+
+  AdUser {
+    int Id PK
+    string Username "Required, unique, max 256"
+    string MappedRole "Admin, Supervisor, or User"
+    datetime DateAdded "Auto UTC"
+    bool IsActive "Default true"
+  }
+
+  Announcement {
+    int Id PK
+    string Title "Required, max 200"
+    string Message "Required, max 4000"
+    string TargetRole "Admin, Supervisor, User, or All"
+    string CreatedBy "Username"
+    datetime CreatedAt "UTC"
+    datetime ExpiresAt "Nullable"
+    bool IsActive "Default true"
+  }
+
+  AnnouncementRead {
+    int Id PK
+    int AnnouncementId FK
+    string UserId FK
+    int PopupShownCount "Max 3"
+    datetime FirstReadAt
+    datetime DismissedAt "Nullable"
+  }
+
+  PasswordPolicySetting {
+    int Id PK
+    int MinimumLength "Default 8"
+    bool RequireDigit
+    bool RequireLowercase
+    bool RequireUppercase
+    bool RequireNonAlphanumeric
+  }
+
+  AdSyncLog {
+    int Id PK
+    datetime Timestamp
+    bool Success
+    int UsersCreated
+    int UsersUpdated
+    int UsersDeactivated
+    int RolesUpdated
+    string TriggerType "Manual/Scheduled"
+    string TriggeredBy
+    string ErrorSummary "Max 2000"
+  }
 
  ActivityLog {
  int Id PK
@@ -610,37 +762,46 @@ erDiagram
 | `VehicleId` | → `Vehicle` | **SetNull** |
 | `StorageLocationId` | → `StorageLocation` | **SetNull** |
 | `FoundById` | → `FoundByName` | **SetNull** |
+| `AnnouncementId` | → `Announcement` | **Cascade** |
+| `UserId` | → `ApplicationUser` | **Cascade** |
 
 ### Database Indexes
 
 | Table | Indexed Columns |
 |-------|----------------|
-| `LostFoundItem` | `DateFound`, `StatusId` |
+| `LostFoundItem` | `DateFound`, `StatusId`, `ItemId`, `TrackingId` |
 | `ActivityLog` | `Timestamp`, `Category`, `PerformedBy` |
+| `AdSyncLog` | `Timestamp` |
+| `Announcement` | `IsActive`, `TargetRole` |
+| `AnnouncementRead` | `UserId`, `AnnouncementId` |
 | All Master Data tables | `Name` (unique) |
 | `AdGroup` | `GroupName` (unique) |
+| `AdUser` | `Username` (unique) |
 
 ---
 
 ## Authentication & Security
 
-### Password Policy
+### Password Policy (Dynamic)
+
+The password policy is stored in the database and can be updated by a SuperAdmin via the UI without restarting the application.
 
 | Rule | Requirement |
 |------|:-----------:|
-| Minimum Length | 8 characters |
-| Require Digit | |
-| Require Lowercase | |
-| Require Uppercase | |
-| Require Special Character | |
+| Minimum Length | 8–32 characters (configurable) |
+| Require Digit | Configurable (Yes/No) |
+| Require Lowercase | Configurable (Yes/No) |
+| Require Uppercase | Configurable (Yes/No) |
+| Require Special Character | Configurable (Yes/No) |
 
-### Account Lockout
+### Account Lockout & Rate Limiting
 
-| Setting | Default |
-|---------|:-------:|
-| Max Failed Attempts | 5 |
-| Lockout Duration | 15 minutes |
-| Apply to New Users | |
+| Setting | Default | Notes |
+|---------|:-------:|-------|
+| Max Failed Attempts (Local) | 5 | Standard Identity lockout |
+| Lockout Duration | 15 minutes | |
+| AD Login Rate Limit | 10 per min | Prevents brute force on AD (In-memory) |
+| AD Lockout Cache | 5 minutes | sliding expiration |
 
 ### Session / Cookie Configuration
 
@@ -656,11 +817,12 @@ erDiagram
 
 | Layer | Measures |
 |-------|----------|
+| **Security Headers** | `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin` |
 | **CSRF Protection** | `ValidateAntiForgeryToken` on every POST, `RequestVerificationToken` header for AJAX |
-| **Input Validation** | Data Annotations (`[Required]`, `[StringLength]`, `[EmailAddress]`), `[NotFutureDate]` custom attribute, Server-side role whitelist, Duplicate name checks |
-| **File Upload Security** | Extension whitelist, File size limit (10MB), Double extension detection, GUID renaming, Path traversal prevention, Files outside web root, Authenticated access only |
-| **Auth Security** | Password complexity, Account lockout, Forced password change on first login, AD credentials never stored, Deactivated user blocking |
-| **Error Handling** | Custom error pages (400, 403, 404, 405, 408, 500, 503), No stack traces in production |
+| **Input Validation** | Data Annotations, `[NotFutureDate]` attribute, Server-side role whitelist, Duplicate name checks |
+| **File Upload Security** | Extension whitelist, MIME type validation, 10MB limit, Double extension detection, GUID renaming, Path traversal prevention, Outside web root |
+| **Auth Security** | Dynamic password complexity, Account lockout, AD rate limiting, Force PW change, Deactivated user blocking |
+| **Error Handling** | Custom error pages (400-503), No stack traces in production, AJAX 401/403 support |
 
 ---
 
@@ -669,50 +831,44 @@ erDiagram
 <details>
 <summary><b> Click to expand full route table</b></summary>
 
-| Action | Method | Route | SA | A | U |
-|--------|:------:|-------|:---:|:---:|:---:|
-| **Dashboard** | GET | `/` | Full | Full | Basic |
-| **Login** | GET/POST | `/Account/Login` | Public | Public | Public |
-| **Change Password** | GET/POST | `/Account/ChangePassword` | Yes | Yes | Yes |
-| **Logout** | POST | `/Account/Logout` | Yes | Yes | Yes |
-| **Access Denied** | GET | `/Account/AccessDenied` | Public | Public | Public |
-| **Error Page** | GET | `/Home/Error` | Public | Public | Public |
-| | | | | | |
-| **Create Record** | GET/POST | `/LostFoundItem/Create` | Yes | Yes | Yes |
-| **View Details** | GET | `/LostFoundItem/Details/{id}` | Yes | Yes | Yes |
-| **Edit Record** | GET/POST | `/LostFoundItem/Edit/{id}` | Yes | Yes | Yes |
-| **Delete Record** | POST | `/LostFoundItem/Delete/{id}` | Yes | Yes | No |
-| **Search** | GET | `/LostFoundItem/Search` | Yes | Yes | Yes |
-| **Print Search** | GET | `/LostFoundItem/PrintSearch` | Yes | Yes | Yes |
-| **View Photo** | GET | `/LostFoundItem/Photo/{name}` | Yes | Yes | Yes |
-| **Download Attachment** | GET | `/LostFoundItem/Attachment/{name}` | Yes | Yes | Yes |
-| | | | | | |
-| **List Master Data** | GET | `/MasterData/{Table}` | Yes | Yes | No |
-| **Create Master Data** | GET/POST | `/MasterData/Create{Entity}` | Yes | Yes | No |
-| **Edit Master Data** | GET/POST | `/MasterData/Edit{Entity}/{id}` | Yes | Yes | No |
-| **Delete Master Data** | POST | `/MasterData/Delete{Entity}/{id}` | Yes | Yes | No |
-| **Toggle Master Data** | POST | `/MasterData/Toggle{Entity}Active/{id}` | Yes | Yes | No |
-| **AJAX Create** | POST | `/MasterData/Add{Entity}Ajax` | Yes | Yes | No |
-| | | | | | |
-| **User List** | GET | `/UserManagement` | Yes | Read-only | No |
-| **Create User** | GET/POST | `/UserManagement/Create` | Yes | No | No |
-| **Edit User Role** | GET/POST | `/UserManagement/EditRole/{id}` | Yes | No | No |
-| **Toggle User Active** | POST | `/UserManagement/ToggleActive/{id}` | Yes | No | No |
-| | | | | | |
-| **AD Groups** | GET | `/UserManagement/AdGroups` | Yes | No | No |
-| **Add AD Group** | POST | `/UserManagement/AddAdGroup` | Yes | No | No |
-| **Update AD Role** | POST | `/UserManagement/UpdateAdGroupRole` | Yes | No | No |
-| **Toggle AD Group** | POST | `/UserManagement/ToggleAdGroupActive/{id}` | Yes | No | No |
-| **Remove AD Group** | POST | `/UserManagement/RemoveAdGroup/{id}` | Yes | No | No |
-| **Sync Now** | POST | `/UserManagement/SyncNow` | Yes | No | No |
-| | | | | | |
-| **View Logs** | GET | `/Logs` | All | All | Own |
-| **Export Logs** | GET | `/Logs/Export` | Yes | No | No |
-| **Clear Logs** | POST | `/Logs/Clear` | Yes | No | No |
-
-> Public = No auth required · Read-only = Can view but not modify · Own = Own records only
+| Action | Method | Route | SA | A | S | U |
+|--------|:------:|-------|:---:|:---:|:---:|:---:|
+| **Dashboard** | GET | `/` | Full | Full | Team | Basic |
+| **Login** | GET/POST | `/Account/Login` | Public | Public | Public | Public |
+| **Change Password** | GET/POST | `/Account/ChangePassword` | Yes | Yes | Yes | Yes |
+| **Logout** | POST | `/Account/Logout` | Yes | Yes | Yes | Yes |
+| **Profile** | GET/POST | `/Account/Profile` | Yes | Yes | Yes | Yes |
+| **Forgot Username** | GET/POST | `/Account/ForgotUsername` | Public | Public | Public | Public |
+| | | | | | | |
+| **Create Record** | GET/POST | `/LostFoundItem/Create` | Yes | Yes | Yes | Yes |
+| **View Details** | GET | `/LostFoundItem/Details/{id}` | Yes | Yes | Yes | Yes |
+| **Edit Record** | GET/POST | `/LostFoundItem/Edit/{id}` | Yes | Yes | Yes | Yes |
+| **Delete Record** | POST | `/LostFoundItem/Delete/{id}` | Yes | Yes | No | No |
+| **Bulk Actions** | POST | `/LostFoundItem/BulkActions` | Yes | Yes | No | No |
+| **Search** | GET | `/LostFoundItem/Search` | Yes | Yes | Yes | Yes |
+| **Print Search** | GET | `/LostFoundItem/PrintSearch` | Yes | Yes | Yes | Yes |
+| **Photo / File** | GET | `/LostFoundItem/Photo/{name}` | Yes | Yes | Yes | Yes |
+| | | | | | | |
+| **Master Data** | GET | `/MasterData/{Table}` | Yes | Yes | Yes | No |
+| **CRUD Master** | GET/POST | `/MasterData/{Action}{Entity}` | Yes | Yes | Yes | No |
+| **AJAX Create** | POST | `/MasterData/Add{Entity}Ajax` | Yes | Yes | Yes | No |
+| | | | | | | |
+| **User List** | GET | `/UserManagement` | Yes | Yes | Yes | No |
+| **Create/Edit User**| GET/POST | `/UserManagement/{Action}` | Yes | Yes | No | No |
+| **Reset Password** | POST | `/UserManagement/ResetPassword` | Yes | Yes | No | No |
+| **Delete User** | POST | `/UserManagement/DeleteUser` | Yes | Yes | No | No |
+| **AD Config** | GET/POST | `/UserManagement/Ad{Groups|Users}` | Yes | Yes | No | No |
+| **Config Policy** | GET/POST | `/UserManagement/PasswordPolicy` | Yes | No | No | No |
+| | | | | | | |
+| **Announcements** | GET/POST | `/Announcement/{Action}` | Yes | No | No | No |
+| **Messages/Inbox** | GET | `/Announcement/Messages` | Yes | Yes | Yes | Yes |
+| | | | | | | |
+| **View Logs** | GET | `/Logs` | All | All | Own | Own |
+| **Export/Clear** | GET/POST | `/Logs/{Action}` | Yes | No | No | No |
 
 </details>
+
+> Public = No auth required · Read-only = Can view but not modify · Own = Own records only
 
 ---
 
@@ -723,9 +879,11 @@ erDiagram
 | Service | Used By | Purpose |
 |---------|---------|--------|
 | **ActivityLogService** | All Controllers | Audit trail for all actions |
-| **FileService** | LostFoundItemController | Upload, download, delete photos & attachments |
-| **AdSyncService** | UserManagementController | AD credential validation + user synchronization |
+| **FileService** | LostFoundItemController | Secure upload/download, MIME validation, GUID renaming |
+| **AdSyncService** | UserManagementController | AD credential validation + user/group synchronization |
 | **AdSyncHostedService** | Background (daily) | Scheduled automatic AD sync |
+| **DatabasePasswordValidator**| ASP.NET Identity | Custom validator that reads policy from database |
+| **AdLoginRateLimiter** | AccountController | In-memory rate limiting for AD login attempts |
 
 <details>
 <summary><b> ActivityLogService — Details</b></summary>
@@ -771,10 +929,10 @@ erDiagram
 | Method | Description |
 |--------|-------------|
 | `ValidateAdCredentials(username, password)` | Real-time AD validation at login — credentials never stored |
-| `SyncUsersAsync()` | Full sync: create, update, deactivate users |
+| `SyncUsersAsync()` | Full sync: process AdUsers + AdGroups (recursive) |
 
-**Role priority:** Admin (2) > User (1) — highest wins if in multiple groups 
-**AD groups can ONLY map to Admin or User — never SuperAdmin**
+**Role priority:** Admin (3) > Supervisor (2) > User (1) — highest wins
+**AD mappings can ONLY map to Admin, Supervisor, or User — never SuperAdmin**
 
 </details>
 
@@ -789,17 +947,18 @@ erDiagram
 | Fonts | Google Fonts — Inter (300–800) | CDN |
 | Icons | Bootstrap Icons | CDN |
 
-### Razor Views (35 total)
+### Razor Views (48 total)
 
 | Folder | Views | Purpose |
 |--------|:-----:|---------|
-| `Account/` | 3 | Login, ChangePassword, AccessDenied |
-| `Home/` | 2 | Dashboard, Error |
-| `Logs/` | 1 | Activity logs with filters |
+| `Account/` | 5 | Login, ChangePassword, Profile, ForgotUsername, AccessDenied |
+| `Home/` | 6 | 4 Dashboard variants, Index, Error |
 | `LostFoundItem/` | 5 | Create, Details, Edit, Search, PrintSearch |
 | `MasterData/` | 18 | 3 views × 6 tables (List, Create, Edit) |
-| `UserManagement/` | 4 | UserList, CreateUser, EditRole, AdGroups |
-| `Shared/` | 1 | _Layout.cshtml |
+| `UserManagement/` | 6 | Index, Create, EditRole, AdGroups, AdUsers, PasswordPolicy |
+| `Announcement/` | 3 | Index, Create, Messages (Inbox) |
+| `Logs/` | 1 | Activity logs with filters |
+| `Shared/` | 2 | _Layout.cshtml, _Pagination.cshtml |
 | Root | 2 | _ViewImports, _ViewStart |
 
 ### Layout Features
@@ -860,13 +1019,12 @@ erDiagram
 flowchart LR
  A[App Starts] --> B["Run EF Core<br/>Migrations"]
  B --> C{SEED_DATABASE<br/>= true?}
- C -->|Yes| D["Create 3 Roles<br/><small>SuperAdmin, Admin, User</small>"]
- D --> E["Create 3 Default<br/>User Accounts"]
+ C -->|Yes| D["Create 4 Roles<br/><small>SuperAdmin, Admin, Supervisor, User</small>"]
+ D --> E["Create 4 Default<br/>Accounts (Pass: Rider@2025)"]
  E --> F["Seed Master Data<br/><small>6 tables</small>"]
- F --> G["Seed AD Group<br/>Configurations"]
+ F --> G["Seed AD Configs<br/>& Password Policy"]
  G --> H["Ready"]
  C -->|No| H
-
 ```
 
 ---
@@ -877,79 +1035,60 @@ flowchart LR
 LostAndFoundApp/
 │
 ├── Controllers/
-│ ├── AccountController.cs (210 lines) — Login, Logout, ChangePassword, AccessDenied
-│ ├── HomeController.cs (188 lines) — Dashboard, Error page
-│ ├── LogsController.cs (161 lines) — View, Export, Clear activity logs
-│ ├── LostFoundItemController.cs (649 lines) — Full CRUD + Search + Print + Files
-│ ├── MasterDataController.cs (719 lines) — CRUD for 6 tables + Toggle + AJAX
-│ └── UserManagementController.cs (363 lines) — Users + AD Groups + Sync
+│   ├── AccountController.cs (327 lines) — Auth, Profile, Rate Limiting
+│   ├── AnnouncementController.cs (405 lines) — Management + Popup API
+│   ├── HomeController.cs (367 lines) — Dashboard logic (4 roles)
+│   ├── LogsController.cs (174 lines) — Audit log management
+│   ├── LostFoundItemController.cs (906 lines) — CRUD + Bulk Actions + Files
+│   ├── MasterDataController.cs (821 lines) — CRUD for 6 tables + AJAX
+│   └── UserManagementController.cs (952 lines) — User/AD/Policy management
 │
 ├── Data/
-│ ├── ApplicationDbContext.cs (161 lines) — EF Core context + Fluent API
-│ └── DbInitializer.cs (224 lines) — Seed roles, users, master data
+│   ├── ApplicationDbContext.cs (242 lines) — EF Core context + Fluent API
+│   └── DbInitializer.cs (253 lines) — Seed roles, users, master data, policy
 │
 ├── Middleware/
-│ └── MustChangePasswordMiddleware.cs (103 lines) — Force password change on first login
-│
-├── Migrations/
-│ ├── 20250217...Initial.cs — Initial schema
-│ ├── 20250217...Initial.Designer.cs — Migration metadata
-│ └── ApplicationDbContextModelSnapshot.cs — Current schema snapshot
+│   └── MustChangePasswordMiddleware.cs (103 lines) — Security enforcement
 │
 ├── Models/
-│ ├── ActivityLog.cs (53 lines) — Audit trail entity
-│ ├── AdGroup.cs (35 lines) — AD group configuration
-│ ├── ApplicationUser.cs (34 lines) — Extended Identity user
-│ ├── ErrorViewModel.cs (50 lines) — Error page model
-│ ├── LostFoundItem.cs (121 lines) — Primary tracking entity
-│ ├── MasterDataModels.cs (83 lines) — 6 master data entities
-│ └── NotFutureDateAttribute.cs (29 lines) — Custom validation attribute
+│   ├── ActivityLog.cs (53 lines) · AdGroup.cs (35 lines) · AdSyncLog.cs (33 lines)
+│   ├── AdUser.cs (35 lines) · Announcement.cs (38 lines) · AnnouncementRead.cs (39 lines)
+│   ├── ApplicationUser.cs (40 lines) · LostFoundItem.cs (139 lines) 
+│   ├── MasterDataModels.cs (83 lines) · PasswordPolicySetting.cs (36 lines)
+│   └── NotFutureDateAttribute.cs (29 lines)
 │
 ├── Services/
-│ ├── ActivityLogService.cs (79 lines) — Centralized activity logging
-│ ├── AdSyncHostedService.cs (101 lines) — Daily background AD sync
-│ ├── AdSyncService.cs (330 lines) — AD validation + user sync
-│ └── FileService.cs (181 lines) — Secure file upload/download/delete
+│   ├── ActivityLogService.cs (87 lines) — Internal logging
+│   ├── AdLoginRateLimiter.cs (64 lines) — Security service
+│   ├── AdSyncHostedService.cs (101 lines) — Background worker
+│   ├── AdSyncService.cs (410 lines) — AD orchestration
+│   ├── DatabasePasswordValidator.cs (89 lines) — Dynamic policy engine
+│   └── FileService.cs (185 lines) — Secure storage management
 │
-├── ViewModels/
-│ ├── AccountViewModels.cs (40 lines) — Login, ChangePassword
-│ ├── DashboardViewModels.cs (73 lines) — Dashboard data models
-│ ├── LogViewModels.cs (24 lines) — Log list model
-│ ├── LostFoundItemViewModels.cs (221 lines) — Create, Edit, Detail, Search
-│ └── UserManagementViewModels.cs (54 lines) — UserList, CreateUser, EditRole
+├── ViewModels/ (8 file groups)
+│   ├── Account / Announcement / Dashboard / Log
+│   └── LostFoundItem / MasterData / Pagination / UserManagement
 │
-├── Views/
-│ ├── Account/ (3 views) — Login, ChangePassword, AccessDenied
-│ ├── Home/ (2 views) — Dashboard, Error
-│ ├── Logs/ (1 view) — Activity logs list
-│ ├── LostFoundItem/ (5 views) — Create, Details, Edit, Search, Print
-│ ├── MasterData/ (18 views) — 3 views × 6 tables
-│ ├── UserManagement/ (4 views) — Users, Create, EditRole, AdGroups
-│ ├── Shared/ (1 view) — _Layout.cshtml
-│ ├── _ViewImports.cshtml
-│ └── _ViewStart.cshtml
+├── Views/ (48 views)
+│   ├── Account / Announcement / Home / Logs
+│   ├── LostFoundItem / MasterData / UserManagement
+│   └── Shared (_Layout, _Pagination)
 │
 ├── wwwroot/
-│ ├── css/site.css (27 KB) — Custom design system
-│ └── js/site.js (4 KB) — Interactive behaviors
+│   ├── css/site.css (27 KB) — Design system
+│   └── js/site.js (8 KB) — Interactive behaviors (Popups, AJAX)
 │
-├── Properties/
-│ └── launchSettings.json — VS launch profiles
-│
-├── .gitignore
-├── .env.example — Environment template
-├── appsettings.json — App configuration
-├── LostAndFoundApp.csproj — Project file
-├── Program.cs (161 lines) — Entry point, DI, pipeline
-└── README.md — This file
+├── .github/workflows/main.yml — CI/CD Pipeline
+├── appsettings.json · .env.example · Program.cs (205 lines)
+└── README.md
 ```
 
 ---
 
 <div align="center">
 
-**~62 files · ~4,600+ lines of C# · 35 Razor Views · 27KB CSS · 4KB JS**
+**~76 files · ~6,800+ lines of C# · 48 Razor Views · 27KB CSS · 8KB JS**
 
-Built with using ASP.NET Core 8.0
+Built with ❤️ using ASP.NET Core 8.0 & MSSQL
 
 </div>

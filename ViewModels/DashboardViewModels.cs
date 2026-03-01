@@ -99,6 +99,7 @@ namespace LostAndFoundApp.ViewModels
     public class DashboardRecentItem
     {
         public int TrackingId { get; set; }
+        public string? CustomTrackingId { get; set; }
         public DateTime DateFound { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string LocationFound { get; set; } = string.Empty;

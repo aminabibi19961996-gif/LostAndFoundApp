@@ -39,7 +39,7 @@
             @foreach (var item in Model.Results)
             {
                 <tr>
-                    <td>@item.TrackingId</td>
+                    <td>@item.CustomTrackingId</td>
                     <td>@item.DateFound.ToString("MM/dd/yy")</td>
                     <td>@item.ItemName</td>
                     <td>@(item.Description?.Length > 50 ? item.Description[..50] + "..." : item.Description)</td>

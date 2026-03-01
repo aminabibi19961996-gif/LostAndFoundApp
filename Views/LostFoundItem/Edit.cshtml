@@ -37,7 +37,7 @@
 <!-- HEADER -->
 <div class="form-header">
     <div>
-        <h1><i class="bi bi-pencil-square"></i> Edit Record #@Model.TrackingId</h1>
+        <h1><i class="bi bi-pencil-square"></i> Edit Record @(Model.CustomTrackingId ?? $"#{Model.TrackingId}")</h1>
         <div class="subtitle">Update the details for this record</div>
     </div>
 </div>
@@ -57,15 +57,11 @@
                     <span asp-validation-for="DateFound" class="text-danger small"></span>
                 </div>
                 <div class="fg-item">
-                    <label asp-for="StatusDate" class="form-label">Status Date</label>
-                    <input asp-for="StatusDate" class="form-control" type="date" />
-                </div>
-                <div class="fg-item">
-                    <label asp-for="ItemId" class="form-label">Item Type *</label>
+                    <label asp-for="ItemId" class="form-label">Item *</label>
                     <div class="field-with-add">
-                        <select asp-for="ItemId" asp-items="Model.Items" class="form-select"><option value="">Select item type...</option></select>
+                        <select asp-for="ItemId" asp-items="Model.Items" class="form-select"><option value="">Select item...</option></select>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                        { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new"><i class="bi bi-plus"></i></button> }
+                        { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item" title="Add new"><i class="bi bi-plus"></i></button> }
                     </div>
                 </div>
                 <div class="fg-item">
@@ -75,6 +71,10 @@
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
                         { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new"><i class="bi bi-plus"></i></button> }
                     </div>
+                </div>
+                <div class="fg-item">
+                    <label asp-for="StatusDate" class="form-label">Status Date</label>
+                    <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
                 </div>
 
                 <div class="fg-item">
@@ -178,3 +178,20 @@
         </form>
     </div>
 </div>
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var statusSelect = document.getElementById('StatusId');
+            var statusDateInput = document.getElementById('StatusDate');
+            if (statusSelect && statusDateInput) {
+                statusSelect.addEventListener('change', function () {
+                    var today = new Date();
+                    var dd = String(today.getDate()).padStart(2, '0');
+                    var mm = String(today.getMonth() + 1).padStart(2, '0');
+                    var yyyy = today.getFullYear();
+                    statusDateInput.value = yyyy + '-' + mm + '-' + dd;
+                });
+            }
+        });
+    </script>
+}

@@ -12,6 +12,10 @@ namespace LostAndFoundApp.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TrackingId { get; set; }
+        
+        [StringLength(20)]
+        [Display(Name = "Tracking ID")]
+        public string? CustomTrackingId { get; set; }
 
         [Required(ErrorMessage = "Date Found is required.")]
         [DataType(DataType.Date)]
@@ -19,7 +23,7 @@ namespace LostAndFoundApp.Models
         [NotFutureDate(ErrorMessage = "Date Found cannot be in the future.")]
         public DateTime DateFound { get; set; }
 
-        [Required(ErrorMessage = "Item type is required.")]
+        [Required(ErrorMessage = "Item is required.")]
         [Display(Name = "Item")]
         public int ItemId { get; set; }
 

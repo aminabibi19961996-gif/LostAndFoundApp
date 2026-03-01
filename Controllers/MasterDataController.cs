@@ -67,7 +67,7 @@ namespace LostAndFoundApp.Controllers
             _context.Items.Add(model);
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Item '{model.Name}' created successfully.";
-            await _activityLogService.LogAsync(HttpContext, "Create Item", $"Created item type '{model.Name}'.", "MasterData");
+            await _activityLogService.LogAsync(HttpContext, "Create Item", $"Created item '{model.Name}'.", "MasterData");
             return RedirectToAction(nameof(Items));
         }
 
@@ -97,7 +97,7 @@ namespace LostAndFoundApp.Controllers
             existing.IsActive = model.IsActive;
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Item '{existing.Name}' updated successfully.";
-            await _activityLogService.LogAsync(HttpContext, "Edit Item", $"Updated item type '{existing.Name}'.", "MasterData");
+            await _activityLogService.LogAsync(HttpContext, "Edit Item", $"Updated item '{existing.Name}'.", "MasterData");
             return RedirectToAction(nameof(Items));
         }
 
@@ -117,7 +117,7 @@ namespace LostAndFoundApp.Controllers
             _context.Items.Remove(item);
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Item '{item.Name}' deleted successfully.";
-            await _activityLogService.LogAsync(HttpContext, "Delete Item", $"Deleted item type '{item.Name}'.", "MasterData");
+            await _activityLogService.LogAsync(HttpContext, "Delete Item", $"Deleted item '{item.Name}'.", "MasterData");
             return RedirectToAction(nameof(Items));
         }
 
@@ -717,7 +717,7 @@ namespace LostAndFoundApp.Controllers
             var entity = new Item { Name = trimmed };
             _context.Items.Add(entity);
             await _context.SaveChangesAsync();
-            await _activityLogService.LogAsync(HttpContext, "Inline Create Item", $"Created item type '{trimmed}' via inline dropdown.", "MasterData");
+            await _activityLogService.LogAsync(HttpContext, "Inline Create Item", $"Created item '{trimmed}' via inline dropdown.", "MasterData");
             return Json(new { success = true, id = entity.Id, name = entity.Name });
         }
 

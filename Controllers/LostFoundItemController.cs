@@ -66,7 +66,8 @@ namespace LostAndFoundApp.Controllers
                 ClaimedBy = vm.ClaimedBy,
                 Notes = vm.Notes,
                 CreatedBy = User.Identity?.Name ?? "Unknown",
-                CreatedDateTime = DateTime.UtcNow
+                CreatedDateTime = DateTime.UtcNow,
+                CustomTrackingId = await GenerateCustomTrackingIdAsync()
             };
 
             // Handle photo upload
@@ -138,6 +139,7 @@ namespace LostAndFoundApp.Controllers
             var vm = new LostFoundItemDetailViewModel
             {
                 TrackingId = item.TrackingId,
+                CustomTrackingId = item.CustomTrackingId,
                 DateFound = item.DateFound,
                 ItemName = item.Item?.Name,
                 Description = item.Description,
@@ -180,6 +182,7 @@ namespace LostAndFoundApp.Controllers
             var vm = new LostFoundItemEditViewModel
             {
                 TrackingId = item.TrackingId,
+                CustomTrackingId = item.CustomTrackingId,
                 DateFound = item.DateFound,
                 ItemId = item.ItemId,
                 Description = item.Description,
@@ -338,6 +341,11 @@ namespace LostAndFoundApp.Controllers
                 query = query.Where(x => x.TrackingId == vm.TrackingId.Value);
                 filters.Add($"Tracking ID: {vm.TrackingId.Value}");
             }
+            if (!string.IsNullOrEmpty(vm.CustomTrackingId))
+            {
+                query = query.Where(x => x.CustomTrackingId != null && x.CustomTrackingId.Contains(vm.CustomTrackingId));
+                filters.Add($"Custom Tracking ID: {vm.CustomTrackingId}");
+            }
             if (vm.DateFoundFrom.HasValue)
             {
                 query = query.Where(x => x.DateFound >= vm.DateFoundFrom.Value);
@@ -409,6 +417,7 @@ namespace LostAndFoundApp.Controllers
                 .Select(x => new
                 {
                     x.TrackingId,
+                    x.CustomTrackingId,
                     x.DateFound,
                     ItemName = x.Item != null ? x.Item.Name : "",
                     x.Description,
@@ -426,6 +435,7 @@ namespace LostAndFoundApp.Controllers
             vm.Results = rawResults.Select(x => new SearchResultItem
             {
                 TrackingId = x.TrackingId,
+                CustomTrackingId = x.CustomTrackingId,
                 DateFound = x.DateFound,
                 ItemName = x.ItemName,
                 Description = x.Description,
@@ -519,6 +529,7 @@ namespace LostAndFoundApp.Controllers
                 .Select(x => new
                 {
                     x.TrackingId,
+                    x.CustomTrackingId,
                     x.DateFound,
                     ItemName = x.Item != null ? x.Item.Name : "",
                     x.Description,
@@ -536,6 +547,7 @@ namespace LostAndFoundApp.Controllers
             var results = rawResults.Select(x => new SearchResultItem
             {
                 TrackingId = x.TrackingId,
+                CustomTrackingId = x.CustomTrackingId,
                 DateFound = x.DateFound,
                 ItemName = x.ItemName,
                 Description = x.Description,
@@ -582,6 +594,40 @@ namespace LostAndFoundApp.Controllers
             }
         }
 
+        // GET: /LostFoundItem/PrintLabel/5
+        [HttpGet]
+        public async Task<IActionResult> PrintLabel(int id)
+        {
+            var item = await _context.LostFoundItems
+                .Include(x => x.Item)
+                .FirstOrDefaultAsync(x => x.TrackingId == id);
+
+            if (item == null) return NotFound();
+
+            // Encode: TrackingID, Date Found, Item Name
+            // Plus the direct URL to the item details
+            var callbackUrl = Url.Action("Details", "LostFoundItem", new { id = item.TrackingId }, Request.Scheme);
+            var qrText = $"ID: {item.CustomTrackingId}\nItem: {item.Item?.Name}\nDate: {item.DateFound:MM/dd/yyyy}\nURL: {callbackUrl}";
+
+            using (var qrGenerator = new QRCoder.QRCodeGenerator())
+            using (var qrCodeData = qrGenerator.CreateQrCode(qrText, QRCoder.QRCodeGenerator.ECCLevel.Q))
+            using (var qrCode = new QRCoder.PngByteQRCode(qrCodeData))
+            {
+                byte[] qrCodeImage = qrCode.GetGraphic(20);
+                ViewBag.QrCodeBase64 = Convert.ToBase64String(qrCodeImage);
+            }
+
+            var vm = new LostFoundItemDetailViewModel
+            {
+                TrackingId = item.TrackingId,
+                CustomTrackingId = item.CustomTrackingId,
+                DateFound = item.DateFound,
+                ItemName = item.Item?.Name
+            };
+
+            return View(vm);
+        }
+
         // GET: /LostFoundItem/Attachment/{fileName} — authenticated file streaming
         [HttpGet]
         public IActionResult Attachment(string id)
@@ -621,6 +667,8 @@ namespace LostAndFoundApp.Controllers
 
             if (vm.TrackingId.HasValue)
                 query = query.Where(x => x.TrackingId == vm.TrackingId.Value);
+            if (!string.IsNullOrEmpty(vm.CustomTrackingId))
+                query = query.Where(x => x.CustomTrackingId != null && x.CustomTrackingId.Contains(vm.CustomTrackingId));
             if (vm.DateFoundFrom.HasValue)
                 query = query.Where(x => x.DateFound >= vm.DateFoundFrom.Value);
             if (vm.DateFoundTo.HasValue)
@@ -790,7 +838,7 @@ namespace LostAndFoundApp.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "RequireAdminOrAbove")]
-        public async Task<IActionResult> BulkStatusUpdate([FromForm] string ids, [FromForm] int statusId)
+        public async Task<IActionResult> BulkStatusUpdate([FromForm] string ids, [FromForm] int statusId, [FromForm] DateTime? statusDate)
         {
             // Parse comma-separated IDs from the hidden input (JS joins selected values)
             var idArray = ParseIds(ids);
@@ -823,7 +871,7 @@ namespace LostAndFoundApp.Controllers
             foreach (var item in items)
             {
                 item.StatusId = statusId;
-                item.StatusDate = DateTime.UtcNow.Date; // Date-only field — use UTC date
+                item.StatusDate = statusDate ?? DateTime.UtcNow.Date;
                 item.ModifiedBy = User.Identity?.Name ?? "Unknown";
                 item.ModifiedDateTime = DateTime.UtcNow;
             }
@@ -855,14 +903,40 @@ namespace LostAndFoundApp.Controllers
         /// Parses a comma-separated string of IDs into an int array.
         /// Used by BulkDelete and BulkStatusUpdate to handle JS-generated hidden input values.
         /// </summary>
-        private static int[] ParseIds(string? ids)
+
+        private async Task<string> GenerateCustomTrackingIdAsync()
+        {
+            var today = DateTime.Today;
+            var datePart = today.ToString("yyMMdd");
+            var prefix = $"LF-{datePart}-";
+
+            // Find the highest suffix for today
+            var lastId = await _context.LostFoundItems
+                .Where(x => x.CustomTrackingId != null && x.CustomTrackingId.StartsWith(prefix))
+                .OrderByDescending(x => x.CustomTrackingId)
+                .Select(x => x.CustomTrackingId)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (lastId != null)
+            {
+                var suffixStr = lastId.Substring(prefix.Length);
+                if (int.TryParse(suffixStr, out int lastNumber))
+                {
+                    nextNumber = lastNumber + 1;
+                }
+            }
+
+            return $"{prefix}{nextNumber:D4}";
+        }
+
+        private static int[] ParseIds(string ids)
         {
             if (string.IsNullOrWhiteSpace(ids)) return Array.Empty<int>();
             return ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => int.TryParse(s.Trim(), out var id) ? id : (int?)null)
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .ToArray();
+                      .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
+                      .Where(id => id > 0)
+                      .ToArray();
         }
 
         /// <summary>

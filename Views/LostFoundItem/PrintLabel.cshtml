@@ -1,0 +1,154 @@
+@model LostFoundItemDetailViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = $"Label - {Model.CustomTrackingId}";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body {
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f2f5;
+        }
+        .label-container {
+            background: #fff;
+            width: 400px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+        .qr-code {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 25px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .info-grid {
+            text-align: left;
+            display: grid;
+            gap: 12px;
+            border-top: 2px solid #f0f2f5;
+            padding-top: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+        }
+        .tracking-id {
+            font-family: var(--font-mono);
+            color: #6366f1;
+            font-size: 22px;
+        }
+        .no-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+            font-family: var(--font-main);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        .btn:hover { background: #4f46e5; }
+        
+        @@media print {
+            body { background: #fff; padding: 0; display: block; }
+            .no-print { display: none; }
+            .label-container { 
+                box-shadow: none; 
+                border: none; 
+                width: 100%; 
+                margin: 0; 
+                padding: 0;
+            }
+            .qr-code { border: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button class="btn" onclick="window.print()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM4 8a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm3 1h2a.5.5 0 0 1 0 1H7a.5.5 0 0 1 0-1zm0 2h2a.5.5 0 0 1 0 1H7a.5.5 0 0 1 0-1z"/>
+            </svg>
+            Print Label
+        </button>
+    </div>
+
+    <div class="label-container">
+        <div class="qr-code">
+            <img src="data:image/png;base64,@ViewBag.QrCodeBase64" alt="QR Code" />
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">Tracking ID</span>
+                <span class="value tracking-id">@Model.CustomTrackingId</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Date Found</span>
+                <span class="value">@Model.DateFound.ToString("MM/dd/yyyy")</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Item Name</span>
+                <span class="value">@Model.ItemName</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Uncomment to auto-open print dialog
+            // window.print();
+        };
+    </script>
+</body>
+</html>

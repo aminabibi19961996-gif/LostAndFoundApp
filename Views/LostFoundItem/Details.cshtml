@@ -51,7 +51,7 @@
 <!-- HEADER -->
 <div class="detail-header">
     <div>
-        <h1><i class="bi bi-file-earmark-text"></i> Record #@Model.TrackingId</h1>
+        <h1><i class="bi bi-file-earmark-text"></i> Record #@Model.CustomTrackingId</h1>
         <div class="meta">
             <span class="sb @statusClass">@(Model.StatusName ?? "Unknown")</span>
             <span>— Found @Model.DaysSinceFound days ago</span>
@@ -66,12 +66,15 @@
             <a asp-action="Edit" asp-route-id="@Model.TrackingId" class="btn btn-secondary">
                 <i class="bi bi-pencil"></i> Edit
             </a>
+            <a asp-action="PrintLabel" asp-route-id="@Model.TrackingId" target="_blank" class="btn btn-primary">
+                <i class="bi bi-qr-code"></i> Print Label
+            </a>
         }
         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
         {
             <form asp-action="Delete" asp-route-id="@Model.TrackingId" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-danger" data-confirm="Are you sure you want to permanently delete Record #@Model.TrackingId? This cannot be undone.">
+                <button type="submit" class="btn btn-danger" data-confirm="Are you sure you want to permanently delete Record #@Model.CustomTrackingId? This cannot be undone.">
                     <i class="bi bi-trash3"></i> Delete
                 </button>
             </form>
@@ -87,11 +90,15 @@
             <div class="dc-body">
                 <div class="dg">
                     <div>
+                        <div class="dg-label">Tracking ID</div>
+                        <div class="dg-value" style="font-family:var(--font-mono); color:var(--accent); font-weight:700;">@Model.CustomTrackingId</div>
+                    </div>
+                    <div>
                         <div class="dg-label">Date Found</div>
                         <div class="dg-value">@Model.DateFound.ToString("dddd, MMM dd, yyyy")</div>
                     </div>
                     <div>
-                        <div class="dg-label">Item Type</div>
+                        <div class="dg-label">Item</div>
                         <div class="dg-value">@(Model.ItemName ?? "—")</div>
                     </div>
                     <div>

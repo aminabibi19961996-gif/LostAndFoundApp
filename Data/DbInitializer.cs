@@ -94,7 +94,7 @@ namespace LostAndFoundApp.Data
                 await context.SaveChangesAsync();
             }
 
-            // ─── Seed Default Item Types ───────────────────────────
+            // ─── Seed Default Items ───────────────────────────
             if (!await context.Items.AnyAsync())
             {
                 context.Items.AddRange(

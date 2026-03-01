@@ -59,7 +59,7 @@
 <!-- TIPS (inline info bar) -->
 <div style="display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:16px;flex-wrap:wrap;">
     <div style="width:36px;height:36px;background:var(--accent-subtle);color:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;"><i class="bi bi-info-circle"></i></div>
-    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;flex:1;"><strong style="color:var(--accent);">Tips:</strong> Ensure Date &amp; Location are precise · Use correct Item Type for faster matching · Clear photos increase return rates · Fields marked * are required</div>
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;flex:1;"><strong style="color:var(--accent);">Tips:</strong> Ensure Date &amp; Location are precise · Use correct Item for faster matching · Clear photos increase return rates · Fields marked * are required</div>
 </div>
 
 <!-- MAIN FORM (full width) -->
@@ -76,18 +76,14 @@
                         <span asp-validation-for="DateFound" class="text-danger small"></span>
                     </div>
                     <div class="fg-item">
-                        <label asp-for="StatusDate" class="form-label">Status Date</label>
-                        <input asp-for="StatusDate" class="form-control" type="date" />
-                    </div>
-                    <div class="fg-item">
-                        <label asp-for="ItemId" class="form-label">Item Type *</label>
+                        <label asp-for="ItemId" class="form-label">Item *</label>
                         <div class="field-with-add">
                             <select asp-for="ItemId" asp-items="Model.Items" class="form-select">
-                                <option value="">Select item type...</option>
+                                <option value="">Select item...</option>
                             </select>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
                             {
-                            <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item type" title="Add new"><i class="bi bi-plus"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item" title="Add new"><i class="bi bi-plus"></i></button>
                             }
                         </div>
                         <span asp-validation-for="ItemId" class="text-danger small"></span>
@@ -97,11 +93,19 @@
                         <div class="field-with-add">
                             <select asp-for="StatusId" asp-items="Model.Statuses" class="form-select">
                                 <option value="">Select status...</option>
-                            </select>@if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new"><i class="bi bi-plus"></i></button> }
+                            </select>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                            {
+                            <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new"><i class="bi bi-plus"></i></button>
+                            }
                         </div>
                         <span asp-validation-for="StatusId" class="text-danger small"></span>
                     </div>
+                    <div class="fg-item">
+                        <label asp-for="StatusDate" class="form-label">Status Date</label>
+                        <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
+                    </div>
+
 
                     <div class="fg-item">
                         <label asp-for="LocationFound" class="form-label">Location Found *</label>
@@ -185,3 +189,20 @@
             </form>
         </div>
     </div>
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var statusSelect = document.getElementById('StatusId');
+            var statusDateInput = document.getElementById('StatusDate');
+            if (statusSelect && statusDateInput) {
+                statusSelect.addEventListener('change', function () {
+                    var today = new Date();
+                    var dd = String(today.getDate()).padStart(2, '0');
+                    var mm = String(today.getMonth() + 1).padStart(2, '0');
+                    var yyyy = today.getFullYear();
+                    statusDateInput.value = yyyy + '-' + mm + '-' + dd;
+                });
+            }
+        });
+    </script>
+}

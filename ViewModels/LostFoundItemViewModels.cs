@@ -12,8 +12,8 @@ namespace LostAndFoundApp.ViewModels
         [NotFutureDate(ErrorMessage = "Date Found cannot be in the future.")]
         public DateTime DateFound { get; set; } = DateTime.Today;
 
-        [Required(ErrorMessage = "Item type is required.")]
-        [Display(Name = "Item Type")]
+        [Required(ErrorMessage = "Item is required.")]
+        [Display(Name = "Item")]
         public int ItemId { get; set; }
 
         [StringLength(512)]
@@ -71,6 +71,7 @@ namespace LostAndFoundApp.ViewModels
     public class LostFoundItemEditViewModel
     {
         public int TrackingId { get; set; }
+        public string? CustomTrackingId { get; set; }
 
         [Required(ErrorMessage = "Date found is required.")]
         [Display(Name = "Date Found")]
@@ -78,8 +79,8 @@ namespace LostAndFoundApp.ViewModels
         [NotFutureDate(ErrorMessage = "Date Found cannot be in the future.")]
         public DateTime DateFound { get; set; }
 
-        [Required(ErrorMessage = "Item type is required.")]
-        [Display(Name = "Item Type")]
+        [Required(ErrorMessage = "Item is required.")]
+        [Display(Name = "Item")]
         public int ItemId { get; set; }
 
         [StringLength(512)]
@@ -143,6 +144,7 @@ namespace LostAndFoundApp.ViewModels
     public class LostFoundItemDetailViewModel
     {
         public int TrackingId { get; set; }
+        public string? CustomTrackingId { get; set; }
         public DateTime DateFound { get; set; }
         public string? ItemName { get; set; }
         public string? Description { get; set; }
@@ -168,6 +170,7 @@ namespace LostAndFoundApp.ViewModels
     {
         // Filters
         public int? TrackingId { get; set; }
+        public string? CustomTrackingId { get; set; }
         public DateTime? DateFoundFrom { get; set; }
         public DateTime? DateFoundTo { get; set; }
         public int? ItemId { get; set; }
@@ -205,6 +208,7 @@ namespace LostAndFoundApp.ViewModels
     public class SearchResultItem
     {
         public int TrackingId { get; set; }
+        public string? CustomTrackingId { get; set; }
         public DateTime DateFound { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public string? Description { get; set; }
