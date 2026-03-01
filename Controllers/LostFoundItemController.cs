@@ -610,7 +610,7 @@ namespace LostAndFoundApp.Controllers
 
         // GET: /LostFoundItem/Export — Export search results to CSV
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Export(SearchViewModel? vm)
         {
             vm ??= new SearchViewModel();
@@ -809,24 +809,40 @@ namespace LostAndFoundApp.Controllers
                 return RedirectToAction(nameof(Search));
             }
 
+            // Validate status FK exists before saving — prevents DbUpdateException on invalid statusId
             var status = await _context.Statuses.FindAsync(statusId);
+            if (status == null)
+            {
+                TempData["ErrorMessage"] = "Invalid status selected.";
+                return RedirectToAction(nameof(Search));
+            }
+
             var updatedCount = items.Count;
 
             foreach (var item in items)
             {
                 item.StatusId = statusId;
-                item.StatusDate = DateTime.Today; // Date-only field — use date-only value
+                item.StatusDate = DateTime.UtcNow.Date; // Date-only field — use UTC date
                 item.ModifiedBy = User.Identity?.Name ?? "Unknown";
                 item.ModifiedDateTime = DateTime.UtcNow;
             }
 
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to bulk update status for {Count} records", updatedCount);
+                TempData["ErrorMessage"] = "An error occurred while updating records. Please try again.";
+                return RedirectToAction(nameof(Search));
+            }
 
             _logger.LogInformation("Bulk updated status to '{Status}' for {Count} records by {User}",
-                status?.Name, updatedCount, User.Identity?.Name);
+                status.Name, updatedCount, User.Identity?.Name);
             await _activityLogService.LogAsync(HttpContext, "Bulk Status Update",
-                $"Bulk updated status to '{status?.Name}' for {updatedCount} records.", "Items");
-            TempData["SuccessMessage"] = $"{updatedCount} record(s) updated to '{status?.Name}'.";
+                $"Bulk updated status to '{status.Name}' for {updatedCount} records.", "Items");
+            TempData["SuccessMessage"] = $"{updatedCount} record(s) updated to '{status.Name}'.";
             return RedirectToAction(nameof(Search));
         }
 

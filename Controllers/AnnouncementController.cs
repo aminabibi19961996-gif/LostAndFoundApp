@@ -110,7 +110,7 @@ namespace LostAndFoundApp.Controllers
                 return View(model);
             }
 
-            var validTargets = new[] { "Admin", "Supervisor", "User", "All" };
+            var validTargets = new[] { "Admin", "Supervisor", "User", "All", "AdminAndAbove", "SupervisorAndAbove" };
             if (!validTargets.Contains(model.TargetRole))
             {
                 ModelState.AddModelError("TargetRole", "Invalid target audience.");
@@ -199,7 +199,10 @@ namespace LostAndFoundApp.Controllers
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
                 .Where(a => a.ExpiresAt == null || a.ExpiresAt > now)
-                .Where(a => a.TargetRole == "All" || a.TargetRole == userRole)
+                .Where(a => a.TargetRole == "All"
+                    || a.TargetRole == userRole
+                    || (a.TargetRole == "AdminAndAbove" && (userRole == "Admin"))
+                    || (a.TargetRole == "SupervisorAndAbove" && (userRole == "Admin" || userRole == "Supervisor")))
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
@@ -248,7 +251,10 @@ namespace LostAndFoundApp.Controllers
             if (announcement == null) return NotFound();
 
             var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
-            if (announcement.TargetRole != "All" && announcement.TargetRole != userRole)
+            if (announcement.TargetRole != "All"
+                && announcement.TargetRole != userRole
+                && !(announcement.TargetRole == "AdminAndAbove" && userRole == "Admin")
+                && !(announcement.TargetRole == "SupervisorAndAbove" && (userRole == "Admin" || userRole == "Supervisor")))
                 return NotFound();
 
             var existing = await _context.AnnouncementReads
@@ -300,7 +306,10 @@ namespace LostAndFoundApp.Controllers
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
                 .Where(a => a.ExpiresAt == null || a.ExpiresAt > now)
-                .Where(a => a.TargetRole == "All" || a.TargetRole == userRole)
+                .Where(a => a.TargetRole == "All"
+                    || a.TargetRole == userRole
+                    || (a.TargetRole == "AdminAndAbove" && (userRole == "Admin"))
+                    || (a.TargetRole == "SupervisorAndAbove" && (userRole == "Admin" || userRole == "Supervisor")))
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
@@ -382,7 +391,10 @@ namespace LostAndFoundApp.Controllers
             var count = await _context.Announcements
                 .Where(a => a.IsActive)
                 .Where(a => a.ExpiresAt == null || a.ExpiresAt > now)
-                .Where(a => a.TargetRole == "All" || a.TargetRole == userRole)
+                .Where(a => a.TargetRole == "All"
+                    || a.TargetRole == userRole
+                    || (a.TargetRole == "AdminAndAbove" && (userRole == "Admin"))
+                    || (a.TargetRole == "SupervisorAndAbove" && (userRole == "Admin" || userRole == "Supervisor")))
                 .CountAsync(a => !_context.AnnouncementReads
                     .Any(r => r.AnnouncementId == a.Id && r.UserId == user.Id && r.DismissedAt != null));
 

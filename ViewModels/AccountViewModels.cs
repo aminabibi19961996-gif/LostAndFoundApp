@@ -26,7 +26,7 @@ namespace LostAndFoundApp.ViewModels
         public string CurrentPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "New password is required.")]
-        [StringLength(100, ErrorMessage = "Password must not exceed {1} characters.")]
+        [StringLength(100, ErrorMessage = "Password must be between {2} and {1} characters.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "New Password")]
         public string NewPassword { get; set; } = string.Empty;

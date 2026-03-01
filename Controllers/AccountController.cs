@@ -79,7 +79,7 @@ namespace LostAndFoundApp.Controllers
             await _activityLogService.LogAsync(HttpContext, "Username Recovery",
                 $"Username recovery requested for email '{model.Email}'.", "Auth");
 
-            TempData["SuccessMessage"] = $"Your username is: <strong>{user.UserName}</strong>. Contact an administrator to have it sent to your email.";
+            TempData["SuccessMessage"] = $"Your username is: {user.UserName}. Contact an administrator to have it sent to your email.";
             return RedirectToAction("Login");
         }
 
