@@ -167,7 +167,14 @@ namespace LostAndFoundApp.Controllers
                     .ToListAsync();
             }
 
-            return View(vm);
+            // Route to role-specific dashboard view
+            if (isSuperAdmin)
+                return View("DashboardSuperAdmin", vm);
+            if (isAdmin)
+                return View("DashboardAdmin", vm);
+            if (User.IsInRole("Supervisor"))
+                return View("DashboardSupervisor", vm);
+            return View("DashboardUser", vm);
         }
 
         [AllowAnonymous]
