@@ -1,475 +1,259 @@
 @model LostAndFoundApp.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "SuperAdmin Dashboard";
-    var maxTopItem = Model.TopItemTypes.Any() ? Model.TopItemTypes.Max(t => t.Count) : 1;
     var total = Model.TotalItems > 0 ? Model.TotalItems : 1;
+    var maxTopItem = Model.TopItemTypes.Any() ? Model.TopItemTypes.Max(t => t.Count) : 1;
 }
 
 @section Styles {
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
-/* Dashboard custom tokens */
 :root {
-  --accent-db: #7C8FFF;
-  --accent-s: rgba(124,143,255,0.10);
-  --accent-b: rgba(124,143,255,0.22);
-  --accent-g: linear-gradient(135deg,#7C8FFF,#A78BFA);
+  --accent-db:#7C8FFF;--accent-s:rgba(124,143,255,0.10);--accent-b:rgba(124,143,255,0.22);--accent-g:linear-gradient(135deg,#7C8FFF,#A78BFA);
+  --found-c:#4ADE80;--found-bg:rgba(74,222,128,0.08);--found-b:rgba(74,222,128,0.2);
+  --claim-c:#60A5FA;--claim-bg:rgba(96,165,250,0.08);--claim-b:rgba(96,165,250,0.2);
+  --store-c:#FCD34D;--store-bg:rgba(252,211,77,0.08);--store-b:rgba(252,211,77,0.2);
+  --xfer-c:#C4B5FD;--xfer-bg:rgba(196,181,253,0.08);--xfer-b:rgba(196,181,253,0.2);
+  --disp-c:#71717A;--disp-bg:rgba(113,113,122,0.07);--disp-b:rgba(113,113,122,0.16);
+  --warn-db:#FCD34D;--danger-db:#F87171;--green-db:#4ADE80;
+  --t1:#F5F5F5;--t2:#A3A3A3;--t3:#5C5C5C;--t4:#2E2E2E;
+  --mono:'JetBrains Mono',monospace;--display:'Syne',sans-serif;--body-db:'Inter',sans-serif;
+}
+.dash-page{flex:1;overflow-y:auto;overflow-x:hidden;padding:24px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:none;min-height:0}
+.dash-page::-webkit-scrollbar{width:4px}.dash-page::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+.pg-head{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:12px}
+.pg-title{font-family:var(--display);font-size:26px;font-weight:800;color:var(--t1);letter-spacing:-.025em}
+.pg-date{font-size:13.5px;color:var(--t3);margin-top:3px;font-weight:500}
 
-  --found-c:  #4ADE80; --found-bg:  rgba(74,222,128,0.08);  --found-b:  rgba(74,222,128,0.2);
-  --claim-c:  #60A5FA; --claim-bg:  rgba(96,165,250,0.08);  --claim-b:  rgba(96,165,250,0.2);
-  --store-c:  #FCD34D; --store-bg:  rgba(252,211,77,0.08);  --store-b:  rgba(252,211,77,0.2);
-  --xfer-c:   #C4B5FD; --xfer-bg:   rgba(196,181,253,0.08); --xfer-b:   rgba(196,181,253,0.2);
-  --disp-c:   #71717A; --disp-bg:   rgba(113,113,122,0.07); --disp-b:   rgba(113,113,122,0.16);
-  --warn-db:  #FCD34D;
-  --danger-db:#F87171;
-  --green-db: #4ADE80;
+/* System health strip */
+.health-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.h-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;transition:border-color .14s}
+.h-card.danger{border-color:rgba(248,113,113,0.3)}.h-card.danger::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--danger-db)}
+.h-card.warn{border-color:rgba(252,211,77,0.3)}.h-card.warn::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--warn-db)}
+.h-card.ok{border-color:rgba(74,222,128,0.3)}.h-card.ok::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green-db)}
+.h-card.info{border-color:rgba(124,143,255,0.3)}.h-card.info::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-db)}
+.h-icon{width:44px;height:44px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.danger .h-icon{background:rgba(248,113,113,0.1);color:var(--danger-db)}
+.warn .h-icon{background:rgba(252,211,77,0.1);color:var(--warn-db)}
+.ok .h-icon{background:rgba(74,222,128,0.1);color:var(--green-db)}
+.info .h-icon{background:rgba(124,143,255,0.1);color:var(--accent-db)}
+.h-num{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1}
+.danger .h-num{color:var(--danger-db)}.warn .h-num{color:var(--warn-db)}.ok .h-num{color:var(--green-db)}.info .h-num{color:var(--accent-db)}
+.h-lbl{font-size:12px;color:var(--t2);margin-top:3px;font-weight:600}
+.h-ctx{font-size:11px;color:var(--t3);margin-top:2px;font-weight:500}
+.h-ctx .up{color:var(--green-db)}.h-ctx .down{color:var(--danger-db)}
+.h-status{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;margin-top:3px}
+.h-status .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.h-status.healthy .dot{background:var(--green-db)}.h-status.healthy{color:var(--green-db)}
+.h-status.error .dot{background:var(--danger-db)}.h-status.error{color:var(--danger-db)}
+.h-status.disabled .dot{background:var(--t3)}.h-status.disabled{color:var(--t3)}
 
-  --t1: #F5F5F5;
-  --t2: #A3A3A3;
-  --t3: #5C5C5C;
-  --t4: #2E2E2E;
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;transition:border-color .14s}
+.kpi:hover{border-color:rgba(255,255,255,0.16)}
+.kpi.accent{border-color:rgba(124,143,255,0.25)}.kpi.accent::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;background:radial-gradient(circle,rgba(124,143,255,0.12) 0%,transparent 70%)}
+.kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:6px}
+.kpi-num{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1;color:var(--t1)}
+.kpi-ctx{font-size:12px;color:var(--t3);margin-top:5px;font-weight:500}
+.kpi-ctx strong{font-weight:700}.kpi-ctx .up{color:var(--green-db)}.kpi-ctx .down{color:var(--danger-db)}
+.kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
 
-  --mono: 'JetBrains Mono', monospace;
-  --display: 'Syne', sans-serif;
-  --body-db: 'Inter', sans-serif;
-}
+/* Main grid */
+.main-grid{display:grid;grid-template-columns:1fr 300px;gap:14px;flex:1;min-height:0}
 
-/* ── DASHBOARD PAGE ── */
-.dash-page {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding: 24px;
-  display: flex; flex-direction: column; gap: 20px;
-  width: 100%; max-width: none;
-  min-height: 0;
-}
-.dash-page::-webkit-scrollbar { width: 4px; }
-.dash-page::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+/* Table */
+.dtc{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.dtc-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg-elevated);flex-shrink:0}
+.dtc-title{font-family:var(--display);font-size:15px;font-weight:700;color:var(--t1);display:flex;align-items:center;gap:8px}
+.dtc-badge{padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;font-family:var(--body-db);background:var(--bg-hover);color:var(--t3)}
+.dtc-link{font-size:13.5px;color:var(--accent-db);text-decoration:none;font-weight:600;opacity:.8}.dtc-link:hover{opacity:1}
+.dtc-body{flex:1;overflow-y:auto;min-height:0}.dtc-body::-webkit-scrollbar{width:4px}.dtc-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.dtable{width:100%;border-collapse:collapse}
+.dtable thead th{padding:10px 14px;text-align:left;font-size:11.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--bg-elevated);white-space:nowrap}
+.dtable thead th:first-child{padding-left:18px}
+.dtable tbody td{padding:12px 14px;font-size:14.5px;font-weight:500;border-bottom:1px solid var(--border);color:var(--t2);vertical-align:middle}
+.dtable tbody td:first-child{padding-left:18px}.dtable tbody tr:last-child td{border-bottom:none}
+.dtable tbody tr:hover td{background:var(--bg-elevated);color:var(--t1)}.dtable tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--accent-db)}
+.d-tid{font-family:var(--mono);font-size:13px;color:var(--t1);font-weight:600}
+.d-item-name{color:var(--t1);font-weight:600}.d-loc-text{font-size:13px;color:var(--t3);font-weight:500}
+.d-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12.5px;font-weight:700;border:1px solid transparent;white-space:nowrap}
+.d-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.db-found{background:var(--found-bg);color:var(--found-c);border-color:var(--found-b)}.db-claimed{background:var(--claim-bg);color:var(--claim-c);border-color:var(--claim-b)}.db-stored{background:var(--store-bg);color:var(--store-c);border-color:var(--store-b)}.db-xfer{background:var(--xfer-bg);color:var(--xfer-c);border-color:var(--xfer-b)}.db-disposed{background:var(--disp-bg);color:var(--disp-c);border-color:var(--disp-b)}
+.days-num{font-family:var(--mono);font-size:14px;font-weight:600}.days-warn{color:var(--danger-db);font-weight:800;font-family:var(--mono);font-size:14px}
+.d-row-actions{display:flex;align-items:center;gap:2px}
+.d-ra{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:transparent;border:none;color:var(--t4);cursor:pointer;font-size:14px;text-decoration:none;transition:background .1s,color .1s}
+.d-ra:hover{background:var(--bg-hover);color:var(--accent-db)}
+.dtc-foot{display:flex;align-items:center;justify-content:space-between;padding:9px 18px;border-top:1px solid var(--border);background:var(--bg-elevated);flex-shrink:0}
+.dtc-foot-info{font-size:13px;color:var(--t4);font-weight:500}
 
-/* ── PAGE HEADER ── */
-.pg-head {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
-}
-.pg-title {
-  font-family: var(--display);
-  font-size: 26px; font-weight: 800;
-  color: var(--t1); letter-spacing: -.025em;
-}
-.pg-date { font-size: 13.5px; color: var(--t3); margin-top: 3px; font-weight: 500; }
+/* Sidebar */
+.sidebar{display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.s-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;flex-shrink:0}
+.s-panel-head{padding:11px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);background:var(--bg-elevated)}
+.s-row{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);transition:background .1s}
+.s-row:last-child{border-bottom:none}.s-row:hover{background:var(--bg-elevated)}
+.s-rank{font-size:12px;color:var(--t4);font-family:var(--mono);width:16px;text-align:right;flex-shrink:0;font-weight:600}
+.s-name{flex:1;font-size:14px;color:var(--t2);font-weight:500}
+.s-bar{width:50px;height:4px;background:var(--bg-hover);border-radius:2px;overflow:hidden;flex-shrink:0}
+.s-fill{height:100%;background:linear-gradient(90deg,#7C8FFF,#A78BFA);border-radius:2px}
+.s-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t1);min-width:24px;text-align:right;flex-shrink:0}
+.s-val.ok{color:var(--green-db)}.s-val.warn{color:var(--warn-db)}.s-val.danger{color:var(--danger-db)}
 
-/* ── ROW 1: METRICS STRIP ── */
-.metrics-strip {
-  display: grid;
-  grid-template-columns: 1.5fr repeat(5, 1fr);
-  gap: 12px;
-  width: 100%;
-}
-.metric {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 18px 20px;
-  position: relative; overflow: hidden;
-  transition: border-color .14s, background .14s;
-}
-.metric:hover { border-color: var(--border-h, rgba(255,255,255,0.16)); background: var(--bg-elevated); }
-.metric.total { border-color: rgba(124,143,255,0.25); }
-.metric.total::before {
-  content: '';
-  position: absolute; top: -30px; right: -30px;
-  width: 100px; height: 100px;
-  background: radial-gradient(circle, rgba(124,143,255,0.15) 0%, transparent 70%);
-}
-.metric-label {
-  font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .09em;
-  color: var(--t3); margin-bottom: 8px;
-}
-.metric-num {
-  font-family: var(--mono);
-  font-size: 48px; font-weight: 700;
-  line-height: 1; letter-spacing: -.04em;
-  color: var(--t1);
-}
-.metric.total .metric-num { font-size: 56px; }
-.metric-sub { font-size: 13px; color: var(--t3); margin-top: 6px; font-weight: 500; }
-.metric-sub strong { color: var(--green-db); font-weight: 700; }
-.metric-bar {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-}
-.metric.found-m    .metric-bar { background: var(--found-c); }
-.metric.claimed-m  .metric-bar { background: var(--claim-c); }
-.metric.stored-m   .metric-bar { background: var(--store-c); }
-.metric.xfer-m     .metric-bar { background: var(--xfer-c); }
-.metric.disposed-m .metric-bar { background: var(--disp-c); }
-
-.metric.found-m    .metric-num { color: var(--found-c); }
-.metric.claimed-m  .metric-num { color: var(--claim-c); }
-.metric.stored-m   .metric-num { color: var(--store-c); }
-.metric.xfer-m     .metric-num { color: var(--xfer-c); }
-.metric.disposed-m .metric-num { color: var(--disp-c); }
-
-.metric-pct {
-  font-family: var(--mono); font-size: 13px;
-  color: var(--t4); margin-top: 2px; font-weight: 500;
-}
-
-/* ── ROW 2: ALERTS + MINI STATS ── */
-.row2 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr) 200px;
-  gap: 12px;
-}
-.alert-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
-  display: flex; align-items: center; gap: 14px;
-  transition: border-color .14s;
-}
-.alert-card.warn   { border-color: rgba(252,211,77,0.25); }
-.alert-card.danger { border-color: rgba(248,113,113,0.25); }
-.alert-card.ok     { border-color: rgba(74,222,128,0.25); }
-.alert-icon {
-  width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-}
-.warn   .alert-icon { background: rgba(252,211,77,0.1);  color: var(--warn-db); }
-.danger .alert-icon { background: rgba(248,113,113,0.1); color: var(--danger-db); }
-.ok     .alert-icon { background: rgba(74,222,128,0.1);  color: var(--green-db); }
-.alert-num {
-  font-family: var(--mono); font-size: 36px; font-weight: 700; line-height: 1;
-}
-.warn   .alert-num { color: var(--warn-db); }
-.danger .alert-num { color: var(--danger-db); }
-.ok     .alert-num { color: var(--green-db); }
-.alert-lbl { font-size: 14px; color: var(--t2); margin-top: 3px; font-weight: 600; }
-
-/* Mini activity panel */
-.mini-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px; overflow: hidden;
-}
-.mini-head {
-  padding: 10px 14px;
-  font-size: 11.5px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .09em;
-  color: var(--t3); border-bottom: 1px solid var(--border);
-  background: var(--bg-elevated);
-}
-.mini-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 14px; border-bottom: 1px solid var(--border);
-}
-.mini-row:last-child { border-bottom: none; }
-.mini-label { font-size: 14px; color: var(--t2); font-weight: 500; }
-.mini-val { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--t1); }
-.mini-val.ok { color: var(--green-db); }
-.mini-val.warn { color: var(--warn-db); }
-.mini-val.danger { color: var(--danger-db); }
-
-/* ── ROW 3: TABLE + SIDEBAR ── */
-.row3 {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 12px;
-  flex: 1; min-height: 0;
-  width: 100%;
-}
-
-/* Table card */
-.dtc {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden; display: flex; flex-direction: column; min-height: 0;
-}
-.dtc-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 18px; border-bottom: 1px solid var(--border);
-  background: var(--bg-elevated); flex-shrink: 0;
-}
-.dtc-title {
-  font-family: var(--display); font-size: 15px; font-weight: 700;
-  color: var(--t1); display: flex; align-items: center; gap: 8px;
-}
-.dtc-badge {
-  padding: 2px 8px; border-radius: 20px;
-  font-size: 12px; font-weight: 700; font-family: var(--body-db);
-  background: var(--bg-hover); color: var(--t3);
-}
-.dtc-link { font-size: 13.5px; color: var(--accent-db); text-decoration: none; font-weight: 600; opacity: .8; }
-.dtc-link:hover { opacity: 1; }
-.dtc-body { flex: 1; overflow-y: auto; min-height: 0; }
-.dtc-body::-webkit-scrollbar { width: 4px; }
-.dtc-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-
-.dtable { width: 100%; border-collapse: collapse; }
-.dtable thead th {
-  padding: 10px 14px; text-align: left;
-  font-size: 11.5px; font-weight: 700; color: var(--t3);
-  text-transform: uppercase; letter-spacing: .08em;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-elevated); white-space: nowrap;
-}
-.dtable thead th:first-child { padding-left: 18px; }
-.dtable tbody td {
-  padding: 12px 14px; font-size: 14.5px; font-weight: 500;
-  border-bottom: 1px solid var(--border); color: var(--t2);
-  vertical-align: middle;
-}
-.dtable tbody td:first-child { padding-left: 18px; }
-.dtable tbody tr:last-child td { border-bottom: none; }
-.dtable tbody tr:hover td { background: var(--bg-elevated); color: var(--t1); }
-.dtable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent-db); }
-
-.d-cb { accent-color: var(--accent-db); width: 14px; height: 14px; cursor: pointer; }
-.d-tid { font-family: var(--mono); font-size: 13px; color: var(--t1); font-weight: 600; }
-.d-item-name { color: var(--t1); font-weight: 600; }
-.d-loc-text { font-size: 13px; color: var(--t3); font-weight: 500; }
-
-.d-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 10px; border-radius: 20px;
-  font-size: 12.5px; font-weight: 700; border: 1px solid transparent; white-space: nowrap;
-}
-.d-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.db-found    { background: var(--found-bg); color: var(--found-c); border-color: var(--found-b); }
-.db-claimed  { background: var(--claim-bg); color: var(--claim-c); border-color: var(--claim-b); }
-.db-stored   { background: var(--store-bg); color: var(--store-c); border-color: var(--store-b); }
-.db-xfer     { background: var(--xfer-bg);  color: var(--xfer-c);  border-color: var(--xfer-b); }
-.db-disposed { background: var(--disp-bg);  color: var(--disp-c);  border-color: var(--disp-b); }
-
-.days-num { font-family: var(--mono); font-size: 14px; font-weight: 600; }
-.days-warn { color: var(--danger-db); font-weight: 800; font-family: var(--mono); font-size: 14px; }
-
-.d-row-actions { display: flex; align-items: center; gap: 2px; }
-.d-ra {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 6px;
-  background: transparent; border: none; color: var(--t4);
-  cursor: pointer; font-size: 14px; text-decoration: none;
-  transition: background .1s, color .1s;
-}
-.d-ra:hover { background: var(--bg-hover); color: var(--accent-db); }
-
-.dtc-foot {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 18px; border-top: 1px solid var(--border);
-  background: var(--bg-elevated); flex-shrink: 0;
-}
-.dtc-foot-info { font-size: 13px; color: var(--t4); font-weight: 500; }
-
-/* Sidebar panels */
-.d-sbar { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; min-height: 0; }
-.d-sbar::-webkit-scrollbar { width: 4px; }
-.d-sbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-
-.d-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px; overflow: hidden; flex-shrink: 0;
-}
-.d-panel-head {
-  padding: 11px 16px; border-bottom: 1px solid var(--border);
-  font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .09em;
-  color: var(--t3); background: var(--bg-elevated);
-}
-.d-ti-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 14px; border-bottom: 1px solid var(--border);
-  transition: background .1s;
-}
-.d-ti-row:last-child { border-bottom: none; }
-.d-ti-row:hover { background: var(--bg-elevated); }
-.d-ti-rank { font-size: 12px; color: var(--t4); font-family: var(--mono); width: 16px; text-align: right; flex-shrink: 0; font-weight: 600; }
-.d-ti-name { flex: 1; font-size: 14.5px; color: var(--t2); font-weight: 500; }
-.d-ti-bar  { width: 50px; height: 4px; background: var(--bg-hover); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
-.d-ti-fill { height: 100%; background: linear-gradient(90deg, #7C8FFF, #A78BFA); border-radius: 2px; }
-.d-ti-ct   { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--t1); width: 24px; text-align: right; flex-shrink: 0; }
-
-/* Animation */
-@@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.dash-page > * { animation: fadeUp .3s ease both; }
-.dash-page > *:nth-child(1) { animation-delay: .04s; }
-.dash-page > *:nth-child(2) { animation-delay: .08s; }
-.dash-page > *:nth-child(3) { animation-delay: .12s; }
-.dash-page > *:nth-child(4) { animation-delay: .16s; }
-
-@@media (max-width: 1200px) {
-    .metrics-strip { grid-template-columns: repeat(3, 1fr); }
-    .row3 { grid-template-columns: 1fr; }
-}
-@@media (max-width: 768px) {
-    .metrics-strip { grid-template-columns: repeat(2, 1fr); }
-    .row2 { grid-template-columns: 1fr 1fr; }
-}
+@@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.dash-page>*{animation:fadeUp .3s ease both}.dash-page>*:nth-child(1){animation-delay:.04s}.dash-page>*:nth-child(2){animation-delay:.08s}.dash-page>*:nth-child(3){animation-delay:.12s}.dash-page>*:nth-child(4){animation-delay:.16s}.dash-page>*:nth-child(5){animation-delay:.20s}
+@@media(max-width:1400px){.kpi-row{grid-template-columns:repeat(3,1fr)}.health-strip{grid-template-columns:repeat(3,1fr)}}
+@@media(max-width:1200px){.health-strip{grid-template-columns:repeat(2,1fr)}.main-grid{grid-template-columns:1fr}}
+@@media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr)}.health-strip{grid-template-columns:1fr}}
 </style>
 }
 
-<!-- DASHBOARD PAGE -->
 <div class="dash-page">
 
-  <!-- PAGE HEADER -->
+  <!-- HEADER -->
   <div class="pg-head">
     <div>
-      <div class="pg-title">Dashboard</div>
+      <div class="pg-title">System Dashboard</div>
       <div class="pg-date">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</div>
     </div>
-  </div>
-
-  <!-- ROW 1: METRICS STRIP -->
-  <div class="metrics-strip">
-    <div class="metric total">
-      <div class="metric-label">Total Items</div>
-      <div class="metric-num">@Model.TotalItems</div>
-      <div class="metric-sub"><strong>+@Model.ItemsThisWeek</strong> added this week</div>
-      <div class="metric-bar" style="background:var(--accent-db)"></div>
-    </div>
-    <div class="metric found-m">
-      <div class="metric-label">Found</div>
-      <div class="metric-num">@Model.FoundCount</div>
-      <div class="metric-pct">@(Model.FoundCount * 100 / total)%</div>
-      <div class="metric-bar"></div>
-    </div>
-    <div class="metric claimed-m">
-      <div class="metric-label">Claimed</div>
-      <div class="metric-num">@Model.ClaimedCount</div>
-      <div class="metric-pct">@(Model.ClaimedCount * 100 / total)%</div>
-      <div class="metric-bar"></div>
-    </div>
-    <div class="metric stored-m">
-      <div class="metric-label">Stored</div>
-      <div class="metric-num">@Model.StoredCount</div>
-      <div class="metric-pct">@(Model.StoredCount * 100 / total)%</div>
-      <div class="metric-bar"></div>
-    </div>
-    <div class="metric xfer-m">
-      <div class="metric-label">Transferred</div>
-      <div class="metric-num">@Model.TransferredCount</div>
-      <div class="metric-pct">@(Model.TransferredCount * 100 / total)%</div>
-      <div class="metric-bar"></div>
-    </div>
-    <div class="metric disposed-m">
-      <div class="metric-label">Disposed</div>
-      <div class="metric-num">@Model.DisposedCount</div>
-      <div class="metric-pct">@(Model.DisposedCount * 100 / total)%</div>
-      <div class="metric-bar"></div>
+    <div style="display:flex;gap:8px;">
+      <a class="btn btn-primary btn-sm" asp-controller="LostFoundItem" asp-action="Create"><i class="bi bi-plus"></i> New Record</a>
+      <a class="btn btn-secondary btn-sm" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> Users</a>
+      <a class="btn btn-secondary btn-sm" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Audit Log</a>
     </div>
   </div>
 
-  <!-- ROW 2: ALERTS -->
-  <div class="row2">
-    <div class="alert-card warn">
-      <div class="alert-icon"><i class="bi bi-hourglass-split"></i></div>
+  <!-- ZONE 1: SYSTEM HEALTH — What's the state of the system -->
+  <div class="health-strip">
+    <!-- AD Sync Status -->
+    <div class="h-card @(Model.AdSyncEnabled ? (Model.LastAdSyncSuccess ? "ok" : "danger") : "warn")">
+      <div class="h-icon"><i class="bi bi-arrow-repeat"></i></div>
       <div>
-        <div class="alert-num">@Model.ItemsAwaitingAction</div>
-        <div class="alert-lbl">Awaiting Action</div>
+        @if (!Model.AdSyncEnabled)
+        {
+          <div class="h-status disabled"><span class="dot"></span> Disabled</div>
+          <div class="h-lbl">AD Sync</div>
+        }
+        else if (Model.LastAdSyncTime.HasValue)
+        {
+          <div class="h-status @(Model.LastAdSyncSuccess ? "healthy" : "error")"><span class="dot"></span> @(Model.LastAdSyncSuccess ? "Healthy" : "Failed")</div>
+          <div class="h-lbl">AD Sync</div>
+          <div class="h-ctx">Last: @Model.LastAdSyncTime.Value.ToString("MM/dd HH:mm")</div>
+        }
+        else
+        {
+          <div class="h-status disabled"><span class="dot"></span> No Sync Yet</div>
+          <div class="h-lbl">AD Sync</div>
+        }
       </div>
     </div>
-    <div class="alert-card danger">
-      <div class="alert-icon"><i class="bi bi-exclamation-triangle"></i></div>
+    <!-- Failed Logins -->
+    <div class="h-card @(Model.RecentFailedLogins > 5 ? "danger" : Model.RecentFailedLogins > 0 ? "warn" : "ok")">
+      <div class="h-icon"><i class="bi bi-shield-exclamation"></i></div>
       <div>
-        <div class="alert-num">@Model.UnclaimedOver30Days</div>
-        <div class="alert-lbl">Unclaimed 30+ Days</div>
+        <div class="h-num">@Model.RecentFailedLogins</div>
+        <div class="h-lbl">Failed Logins (24h)</div>
+        <div class="h-ctx">Security monitoring</div>
       </div>
     </div>
-    <div class="alert-card ok">
-      <div class="alert-icon"><i class="bi bi-graph-up-arrow"></i></div>
+    <!-- Overdue Items -->
+    <div class="h-card @(Model.UnclaimedOver30Days > 0 ? "danger" : "ok")">
+      <div class="h-icon"><i class="bi bi-exclamation-triangle"></i></div>
       <div>
-        <div class="alert-num">@Model.ItemsThisWeek</div>
-        <div class="alert-lbl">New This Week</div>
+        <div class="h-num">@Model.UnclaimedOver30Days</div>
+        <div class="h-lbl">Overdue (30+ days)</div>
+        <div class="h-ctx">@(total > 0 ? Math.Round((double)Model.UnclaimedOver30Days / total * 100, 1) : 0)% of total</div>
       </div>
     </div>
-    <div class="mini-panel">
-      <div class="mini-head">Activity</div>
-      <div class="mini-row"><span class="mini-label">This Month</span><span class="mini-val">@Model.ItemsThisMonth</span></div>
-      <div class="mini-row"><span class="mini-label">Total Users</span><span class="mini-val ok">@Model.TotalUsers</span></div>
-      <div class="mini-row"><span class="mini-label">Pending</span><span class="mini-val warn">@Model.ItemsAwaitingAction</span></div>
+
+    <!-- Audit Activity -->
+    <div class="h-card info">
+      <div class="h-icon"><i class="bi bi-journal-text"></i></div>
+      <div>
+        <div class="h-num">@Model.ActivityLogs24h</div>
+        <div class="h-lbl">Audit Events (24h)</div>
+        <div class="h-ctx">@Model.TotalActivityLogs total logs</div>
+      </div>
     </div>
   </div>
 
-  <!-- ROW 3: TABLE + SIDEBAR -->
-  <div class="row3">
+  <!-- ZONE 2: FULL KPIs with Trends -->
+  <div class="kpi-row">
+    <div class="kpi accent">
+      <div class="kpi-label">Total Items</div>
+      <div class="kpi-num">@Model.TotalItems</div>
+      <div class="kpi-ctx"><strong class="@(Model.WeekOverWeekChangePercent >= 0 ? "up" : "down")">@(Model.WeekOverWeekChangePercent >= 0 ? "+" : "")@Model.WeekOverWeekChangePercent%</strong> this week (@Model.ItemsThisWeek new)</div>
+      <div class="kpi-bar" style="background:var(--accent-db)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Claim Rate</div>
+      <div class="kpi-num" style="color:var(--claim-c)">@Model.ClaimRatePercent%</div>
+      <div class="kpi-ctx">@Model.ClaimedCount of @Model.TotalItems claimed</div>
+      <div class="kpi-bar" style="background:var(--claim-c)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg Claim Time</div>
+      <div class="kpi-num">@Model.AvgDaysToClaim<span style="font-size:16px;color:var(--t3)">d</span></div>
+      <div class="kpi-ctx">Operational efficiency</div>
+      <div class="kpi-bar" style="background:var(--accent-db)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg Storage</div>
+      <div class="kpi-num">@Model.AvgStorageDuration<span style="font-size:16px;color:var(--t3)">d</span></div>
+      <div class="kpi-ctx">@Model.StoredCount items in storage</div>
+      <div class="kpi-bar" style="background:var(--store-c)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Disposal Rate</div>
+      <div class="kpi-num" style="color:var(--disp-c)">@Model.DisposalRatePercent%</div>
+      <div class="kpi-ctx">Waste analysis</div>
+      <div class="kpi-bar" style="background:var(--disp-c)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Active Users</div>
+      <div class="kpi-num" style="color:var(--green-db)">@Model.ActiveUsers</div>
+      <div class="kpi-ctx">of @Model.TotalUsers total · @Model.AdUsers AD</div>
+      <div class="kpi-bar" style="background:var(--green-db)"></div>
+    </div>
+  </div>
 
+  <!-- ZONE 3: TABLE + SIDEBAR -->
+  <div class="main-grid">
     <div class="dtc">
       <div class="dtc-head">
-        <span class="dtc-title">Recent Records <span class="dtc-badge">@Model.TotalItems total</span></span>
+        <span class="dtc-title"><i class="bi bi-clock-history" style="color:var(--accent-db)"></i> Recent Records <span class="dtc-badge">@Model.TotalItems total</span></span>
         <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all →</a>
       </div>
-
       @if (!Model.RecentRecords.Any())
       {
         <div style="padding:56px 24px;text-align:center;">
           <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:16px;color:var(--t4);"></i>
           <div style="font-size:1rem;font-weight:600;color:var(--t2);margin-bottom:6px;">No records yet</div>
-          <div style="font-size:0.875rem;color:var(--t3);margin-bottom:20px;">Create your first lost &amp; found record to get started.</div>
-          <a class="btn btn-primary" asp-controller="LostFoundItem" asp-action="Create">
-            <i class="bi bi-plus"></i> New Record
-          </a>
+          <a class="btn btn-primary" asp-controller="LostFoundItem" asp-action="Create"><i class="bi bi-plus"></i> New Record</a>
         </div>
       }
       else
       {
         <div class="dtc-body">
           <table class="dtable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date Found</th>
-                <th>Item</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Days</th>
-                <th>Claimed By</th>
-                <th></th>
-              </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>Date</th><th>Item</th><th>Location</th><th>Status</th><th>Days</th><th>By</th><th></th></tr></thead>
             <tbody>
               @foreach (var record in Model.RecentRecords)
               {
-                var statusClass = (record.StatusName?.ToLower()) switch {
-                    "found" => "db-found",
-                    "claimed" => "db-claimed",
-                    "stored" => "db-stored",
-                    "transferred" => "db-xfer",
-                    "disposed" => "db-disposed",
-                    _ => "db-found"
-                };
+                var statusClass = (record.StatusName?.ToLower()) switch { "found" => "db-found", "claimed" => "db-claimed", "stored" => "db-stored", "transferred" => "db-xfer", "disposed" => "db-disposed", _ => "db-found" };
                 <tr>
                   <td><span class="d-tid">#@record.TrackingId</span></td>
-                  <td>@record.DateFound.ToString("MM/dd/yyyy")</td>
+                  <td>@record.DateFound.ToString("MM/dd")</td>
                   <td><span class="d-item-name">@record.ItemName</span></td>
                   <td><span class="d-loc-text">@record.LocationFound</span></td>
                   <td><span class="d-badge @statusClass">@(record.StatusName ?? "Unknown")</span></td>
-                  <td>
-                    @if (record.DaysSinceFound > 30)
-                    {
-                      <span class="days-warn">@record.DaysSinceFound</span>
-                    }
-                    else
-                    {
-                      <span class="days-num">@record.DaysSinceFound</span>
-                    }
-                  </td>
-                  <td>@(string.IsNullOrEmpty(record.ClaimedBy) ? "—" : record.ClaimedBy)</td>
+                  <td>@if(record.DaysSinceFound > 30){<span class="days-warn">@record.DaysSinceFound</span>}else{<span class="days-num">@record.DaysSinceFound</span>}</td>
+                  <td><span class="d-loc-text">@(record.CreatedBy ?? "—")</span></td>
                   <td>
                     <div class="d-row-actions">
                       <a class="d-ra" asp-controller="LostFoundItem" asp-action="Details" asp-route-id="@record.TrackingId" title="View"><i class="bi bi-eye"></i></a>
-                      @{
-                          var canEditRecord = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor") || record.CreatedBy == User.Identity?.Name;
-                      }
-                      @if (canEditRecord)
-                      {
-                          <a class="d-ra" asp-controller="LostFoundItem" asp-action="Edit" asp-route-id="@record.TrackingId" title="Edit"><i class="bi bi-pencil"></i></a>
-                      }
+                      <a class="d-ra" asp-controller="LostFoundItem" asp-action="Edit" asp-route-id="@record.TrackingId" title="Edit"><i class="bi bi-pencil"></i></a>
                     </div>
                   </td>
                 </tr>
@@ -477,62 +261,60 @@
             </tbody>
           </table>
         </div>
-
         <div class="dtc-foot">
-          <span class="dtc-foot-info">Showing @Model.RecentRecords.Count of @Model.TotalItems records</span>
+          <span class="dtc-foot-info">Showing @Model.RecentRecords.Count of @Model.TotalItems</span>
           <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all →</a>
         </div>
       }
     </div>
 
     <!-- SIDEBAR -->
-    <div class="d-sbar">
-
+    <div class="sidebar">
       @if (Model.TopItemTypes.Any())
       {
-        <div class="d-panel">
-          <div class="d-panel-head">Top Categories</div>
+        <div class="s-panel">
+          <div class="s-panel-head">Top Categories</div>
           @{ var rank = 0; }
           @foreach (var item in Model.TopItemTypes)
           {
             rank++;
             var pct = maxTopItem > 0 ? (item.Count * 100 / maxTopItem) : 0;
-            <div class="d-ti-row">
-              <span class="d-ti-rank">@rank</span>
-              <span class="d-ti-name">@item.ItemName</span>
-              <div class="d-ti-bar"><div class="d-ti-fill" style="width:@(pct)%"></div></div>
-              <span class="d-ti-ct">@item.Count</span>
+            <div class="s-row">
+              <span class="s-rank">@rank</span>
+              <span class="s-name">@item.ItemName</span>
+              <div class="s-bar"><div class="s-fill" style="width:@(pct)%"></div></div>
+              <span class="s-val">@item.Count</span>
             </div>
           }
         </div>
       }
 
-      <div class="d-panel">
-        <div class="d-panel-head">System Overview</div>
-        <div class="d-ti-row"><span class="d-ti-name">Total Users</span><span class="d-ti-ct">@Model.TotalUsers</span></div>
-        <div class="d-ti-row"><span class="d-ti-name" style="color:var(--found-c)">Active Users</span><span class="d-ti-ct" style="color:var(--found-c)">@Model.ActiveUsers</span></div>
-        <div class="d-ti-row"><span class="d-ti-name">AD Users</span><span class="d-ti-ct">@Model.AdUsers</span></div>
-        <div class="d-ti-row"><span class="d-ti-name">Local Users</span><span class="d-ti-ct">@Model.LocalUsers</span></div>
-        <div class="d-ti-row"><span class="d-ti-name">AD Groups</span><span class="d-ti-ct">@Model.AdGroupCount</span></div>
+      <div class="s-panel">
+        <div class="s-panel-head">System Overview</div>
+        <div class="s-row"><span class="s-name">Total Users</span><span class="s-val">@Model.TotalUsers</span></div>
+        <div class="s-row"><span class="s-name">Active</span><span class="s-val ok">@Model.ActiveUsers</span></div>
+        <div class="s-row"><span class="s-name">Inactive</span><span class="s-val @(Model.InactiveUsers > 0 ? "warn" : "")">@Model.InactiveUsers</span></div>
+        <div class="s-row"><span class="s-name">AD Users</span><span class="s-val">@Model.AdUsers</span></div>
+        <div class="s-row"><span class="s-name">Local Users</span><span class="s-val">@Model.LocalUsers</span></div>
+        <div class="s-row"><span class="s-name">AD Groups</span><span class="s-val">@Model.AdGroupCount</span></div>
       </div>
 
-      <div class="d-panel">
-        <div class="d-panel-head">Roles</div>
-        <div class="d-ti-row"><span class="d-ti-name" style="color:#A5B4FC">SuperAdmin</span><span class="d-ti-ct" style="color:#A5B4FC">@Model.SuperAdminCount</span></div>
-        <div class="d-ti-row"><span class="d-ti-name" style="color:var(--found-c)">Admin</span><span class="d-ti-ct" style="color:var(--found-c)">@Model.AdminCount</span></div>
-        <div class="d-ti-row"><span class="d-ti-name" style="color:var(--xfer-c)">Supervisor</span><span class="d-ti-ct" style="color:var(--xfer-c)">@Model.SupervisorCount</span></div>
-        <div class="d-ti-row"><span class="d-ti-name" style="color:var(--store-c)">User</span><span class="d-ti-ct" style="color:var(--store-c)">@Model.UserRoleCount</span></div>
+      <div class="s-panel">
+        <div class="s-panel-head">Roles</div>
+        <div class="s-row"><span class="s-name" style="color:#A5B4FC">SuperAdmin</span><span class="s-val" style="color:#A5B4FC">@Model.SuperAdminCount</span></div>
+        <div class="s-row"><span class="s-name" style="color:var(--found-c)">Admin</span><span class="s-val" style="color:var(--found-c)">@Model.AdminCount</span></div>
+        <div class="s-row"><span class="s-name" style="color:var(--xfer-c)">Supervisor</span><span class="s-val" style="color:var(--xfer-c)">@Model.SupervisorCount</span></div>
+        <div class="s-row"><span class="s-name" style="color:var(--store-c)">User</span><span class="s-val" style="color:var(--store-c)">@Model.UserRoleCount</span></div>
       </div>
 
-      <div class="d-panel">
-        <div class="d-panel-head">Activity</div>
-        <div class="d-ti-row"><span class="d-ti-name">This Week</span><span class="d-ti-ct">@Model.ItemsThisWeek</span></div>
-        <div class="d-ti-row"><span class="d-ti-name">This Month</span><span class="d-ti-ct">@Model.ItemsThisMonth</span></div>
-        <div class="d-ti-row"><span class="d-ti-name" style="color:var(--warn-db)">Awaiting Action</span><span class="d-ti-ct" style="color:var(--warn-db)">@Model.ItemsAwaitingAction</span></div>
+      <div class="s-panel">
+        <div class="s-panel-head">Activity</div>
+        <div class="s-row"><span class="s-name">This Week</span><span class="s-val">@Model.ItemsThisWeek</span></div>
+        <div class="s-row"><span class="s-name">Last Week</span><span class="s-val">@Model.ItemsLastWeek</span></div>
+        <div class="s-row"><span class="s-name">This Month</span><span class="s-val">@Model.ItemsThisMonth</span></div>
+        <div class="s-row"><span class="s-name" style="color:var(--warn-db)">Awaiting Action</span><span class="s-val warn">@Model.ItemsAwaitingAction</span></div>
       </div>
-
     </div>
-
   </div>
 
 </div>

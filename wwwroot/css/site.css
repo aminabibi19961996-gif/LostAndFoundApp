@@ -103,6 +103,11 @@
     font-weight: bold !important;
 }
 
+html,
+body {
+    font-weight: bold !important;
+}
+
 html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;

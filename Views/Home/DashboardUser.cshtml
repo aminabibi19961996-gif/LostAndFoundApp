@@ -25,23 +25,38 @@
 .pg-sub{font-size:14px;color:var(--t3);margin-top:3px;font-weight:500}
 .pg-date{font-size:13.5px;color:var(--t3);margin-top:3px;font-weight:500}
 
-/* Welcome card */
-.welcome-card{background:linear-gradient(135deg,rgba(124,143,255,0.08),rgba(167,139,250,0.06));border:1px solid rgba(124,143,255,0.2);border-radius:16px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.welcome-left h2{font-family:var(--display);font-size:22px;font-weight:800;color:var(--t1);margin:0 0 6px}
-.welcome-left p{font-size:14px;color:var(--t3);margin:0;font-weight:500;line-height:1.5}
-.welcome-actions{display:flex;gap:10px;flex-shrink:0}
+/* Quick action strip */
+.action-strip{display:flex;gap:10px;flex-wrap:wrap}
+.action-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;transition:all .14s ease;border:1px solid transparent}
+.action-btn.primary{background:linear-gradient(135deg,#7C8FFF,#A78BFA);color:#fff;box-shadow:0 4px 16px rgba(124,143,255,0.3)}
+.action-btn.primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,143,255,0.45);color:#fff}
+.action-btn.secondary{background:var(--bg-card);border-color:var(--border);color:var(--t1)}
+.action-btn.secondary:hover{border-color:rgba(255,255,255,0.2);background:var(--bg-elevated);color:var(--t1)}
+.action-btn i{font-size:18px}
 
-/* Quick stats */
-.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .14s,background .14s;text-align:center}
-.stat-card:hover{border-color:rgba(255,255,255,0.16);background:var(--bg-elevated)}
-.stat-card.total{border-color:rgba(124,143,255,0.25);grid-column:span 1}
-.stat-card.total::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;background:radial-gradient(circle,rgba(124,143,255,0.15) 0%,transparent 70%)}
-.stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:8px}
-.stat-num{font-family:var(--mono);font-size:40px;font-weight:700;line-height:1;letter-spacing:-.04em;color:var(--t1)}
-.stat-card.total .stat-num{font-size:48px}
-.stat-pct{font-family:var(--mono);font-size:12px;color:var(--t4);margin-top:4px;font-weight:500}
-.stat-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
+/* Alert bar for user */
+.user-alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.u-alert{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;transition:border-color .14s}
+.u-alert.warn{border-color:rgba(252,211,77,0.25)}.u-alert.danger{border-color:rgba(248,113,113,0.25)}.u-alert.ok{border-color:rgba(74,222,128,0.25)}.u-alert.info{border-color:rgba(124,143,255,0.25)}
+.u-alert-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.warn .u-alert-icon{background:rgba(252,211,77,0.1);color:var(--warn-db)}
+.danger .u-alert-icon{background:rgba(248,113,113,0.1);color:var(--danger-db)}
+.ok .u-alert-icon{background:rgba(74,222,128,0.1);color:var(--green-db)}
+.info .u-alert-icon{background:rgba(124,143,255,0.1);color:var(--accent-db)}
+.u-alert-num{font-family:var(--mono);font-size:24px;font-weight:700;line-height:1}
+.warn .u-alert-num{color:var(--warn-db)}.danger .u-alert-num{color:var(--danger-db)}.ok .u-alert-num{color:var(--green-db)}.info .u-alert-num{color:var(--accent-db)}
+.u-alert-lbl{font-size:12px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+
+/* My KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .14s,background .14s}
+.kpi-card:hover{border-color:rgba(255,255,255,0.16);background:var(--bg-elevated)}
+.kpi-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:8px}
+.kpi-num{font-family:var(--mono);font-size:36px;font-weight:700;line-height:1;letter-spacing:-.04em;color:var(--t1)}
+.kpi-context{font-size:12px;color:var(--t3);margin-top:6px;font-weight:500}
+.kpi-context strong{font-weight:700}
+.kpi-context .up{color:var(--green-db)}.kpi-context .down{color:var(--danger-db)}.kpi-context .neutral{color:var(--t3)}
+.kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
 
 /* Table */
 .dtc{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0;flex:1}
@@ -69,64 +84,90 @@
 .dtc-foot-info{font-size:13px;color:var(--t4);font-weight:500}
 
 @@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.dash-page>*{animation:fadeUp .3s ease both}.dash-page>*:nth-child(1){animation-delay:.04s}.dash-page>*:nth-child(2){animation-delay:.08s}.dash-page>*:nth-child(3){animation-delay:.12s}.dash-page>*:nth-child(4){animation-delay:.16s}
-@@media(max-width:1200px){.stats-row{grid-template-columns:repeat(3,1fr)}}
-@@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}.welcome-card{flex-direction:column;text-align:center}.welcome-actions{justify-content:center}}
+.dash-page>*{animation:fadeUp .3s ease both}.dash-page>*:nth-child(1){animation-delay:.04s}.dash-page>*:nth-child(2){animation-delay:.08s}.dash-page>*:nth-child(3){animation-delay:.12s}.dash-page>*:nth-child(4){animation-delay:.16s}.dash-page>*:nth-child(5){animation-delay:.20s}
+@@media(max-width:1200px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+@@media(max-width:768px){.kpi-row{grid-template-columns:1fr}.action-strip{flex-direction:column}.user-alerts{grid-template-columns:1fr}}
 </style>
 }
 
 <div class="dash-page">
 
-  <!-- WELCOME CARD -->
-  <div class="welcome-card">
-    <div class="welcome-left">
-      <h2>Welcome, @Model.UserDisplayName!</h2>
-      <p>Here's your overview. Create records, search items, and track statuses.</p>
-      <div class="pg-date" style="margin-top:6px;">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</div>
+  <!-- ZONE 0: QUICK ACTIONS (Speed is king for Users) -->
+  <div class="pg-head">
+    <div>
+      <div class="pg-title">Welcome, @Model.UserDisplayName!</div>
+      <div class="pg-date">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</div>
     </div>
-    <div class="welcome-actions">
-      <a class="btn btn-primary" asp-controller="LostFoundItem" asp-action="Create"><i class="bi bi-plus"></i> New Record</a>
-      <a class="btn btn-secondary" asp-controller="LostFoundItem" asp-action="Search"><i class="bi bi-search"></i> Search</a>
-    </div>
-  </div>
-
-  <!-- STATS ROW -->
-  <div class="stats-row">
-    <div class="stat-card total">
-      <div class="stat-label">Total Items</div>
-      <div class="stat-num">@Model.TotalItems</div>
-      <div class="stat-bar" style="background:var(--accent-db)"></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Found</div>
-      <div class="stat-num" style="color:var(--found-c)">@Model.FoundCount</div>
-      <div class="stat-pct">@(Model.FoundCount * 100 / total)%</div>
-      <div class="stat-bar" style="background:var(--found-c)"></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Claimed</div>
-      <div class="stat-num" style="color:var(--claim-c)">@Model.ClaimedCount</div>
-      <div class="stat-pct">@(Model.ClaimedCount * 100 / total)%</div>
-      <div class="stat-bar" style="background:var(--claim-c)"></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Stored</div>
-      <div class="stat-num" style="color:var(--store-c)">@Model.StoredCount</div>
-      <div class="stat-pct">@(Model.StoredCount * 100 / total)%</div>
-      <div class="stat-bar" style="background:var(--store-c)"></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Disposed</div>
-      <div class="stat-num" style="color:var(--disp-c)">@Model.DisposedCount</div>
-      <div class="stat-pct">@(Model.DisposedCount * 100 / total)%</div>
-      <div class="stat-bar" style="background:var(--disp-c)"></div>
+    <div class="action-strip">
+      <a class="action-btn primary" asp-controller="LostFoundItem" asp-action="Create"><i class="bi bi-plus-lg"></i> New Record</a>
+      <a class="action-btn secondary" asp-controller="LostFoundItem" asp-action="Search"><i class="bi bi-search"></i> Search</a>
     </div>
   </div>
 
-  <!-- RECENT RECORDS (full width) -->
+  <!-- ZONE 1: PERSONAL ALERTS — What needs MY attention NOW -->
+  <div class="user-alerts">
+    <div class="u-alert @(Model.MyItemsAwaitingAction > 0 ? "warn" : "ok")">
+      <div class="u-alert-icon"><i class="bi bi-hourglass-split"></i></div>
+      <div>
+        <div class="u-alert-num">@Model.MyItemsAwaitingAction</div>
+        <div class="u-alert-lbl">My Items Pending</div>
+      </div>
+    </div>
+    <div class="u-alert info">
+      <div class="u-alert-icon"><i class="bi bi-box-seam"></i></div>
+      <div>
+        <div class="u-alert-num">@Model.MyItemsCount</div>
+        <div class="u-alert-lbl">My Total Records</div>
+      </div>
+    </div>
+    <div class="u-alert @(Model.MyItemsThisWeek > 0 ? "ok" : "info")">
+      <div class="u-alert-icon"><i class="bi bi-lightning"></i></div>
+      <div>
+        <div class="u-alert-num">@Model.MyItemsThisWeek</div>
+        <div class="u-alert-lbl">Created This Week</div>
+      </div>
+    </div>
+    <div class="u-alert @(Model.ClaimRatePercent >= 50 ? "ok" : "warn")">
+      <div class="u-alert-icon"><i class="bi bi-check-circle"></i></div>
+      <div>
+        <div class="u-alert-num">@Model.ClaimRatePercent%</div>
+        <div class="u-alert-lbl">Claim Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONE 2: MY KPIs — How am I performing -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Items</div>
+      <div class="kpi-num">@Model.TotalItems</div>
+      <div class="kpi-context"><strong class="@(Model.WeekOverWeekChangePercent >= 0 ? "up" : "down")">@(Model.WeekOverWeekChangePercent >= 0 ? "+" : "")@Model.WeekOverWeekChangePercent%</strong> vs last week</div>
+      <div class="kpi-bar" style="background:var(--accent-db)"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Found</div>
+      <div class="kpi-num" style="color:var(--found-c)">@Model.FoundCount</div>
+      <div class="kpi-context">@(Model.FoundCount * 100 / total)% of total</div>
+      <div class="kpi-bar" style="background:var(--found-c)"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Claimed</div>
+      <div class="kpi-num" style="color:var(--claim-c)">@Model.ClaimedCount</div>
+      <div class="kpi-context">Avg <strong>@Model.AvgDaysToClaim</strong> days to claim</div>
+      <div class="kpi-bar" style="background:var(--claim-c)"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Stored</div>
+      <div class="kpi-num" style="color:var(--store-c)">@Model.StoredCount</div>
+      <div class="kpi-context">Avg <strong>@Model.AvgStorageDuration</strong> days stored</div>
+      <div class="kpi-bar" style="background:var(--store-c)"></div>
+    </div>
+  </div>
+
+  <!-- ZONE 3: MY RECENT RECORDS — actionable table (only my items) -->
   <div class="dtc">
     <div class="dtc-head">
-      <span class="dtc-title"><i class="bi bi-clock-history" style="color:var(--accent-db)"></i> Recent Records <span class="dtc-badge">@Model.TotalItems total</span></span>
+      <span class="dtc-title"><i class="bi bi-person-lines-fill" style="color:var(--accent-db)"></i> My Records <span class="dtc-badge">@Model.MyItemsCount total</span></span>
       <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all →</a>
     </div>
     @if (!Model.RecentRecords.Any())
@@ -134,8 +175,8 @@
       <div style="padding:64px 24px;text-align:center;">
         <i class="bi bi-inbox" style="font-size:3rem;display:block;margin-bottom:16px;color:var(--t4);"></i>
         <div style="font-size:1.1rem;font-weight:700;color:var(--t1);margin-bottom:6px;">No records yet</div>
-        <div style="font-size:0.875rem;color:var(--t3);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">Start by creating your first lost &amp; found record. Track items, manage statuses, and search with ease.</div>
-        <a class="btn btn-primary" asp-controller="LostFoundItem" asp-action="Create" style="padding:10px 24px;font-size:15px;">
+        <div style="font-size:0.875rem;color:var(--t3);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto;">Start by creating your first lost &amp; found record.</div>
+        <a class="action-btn primary" asp-controller="LostFoundItem" asp-action="Create" style="display:inline-flex">
           <i class="bi bi-plus-lg"></i> Create First Record
         </a>
       </div>
@@ -159,7 +200,6 @@
             @foreach (var record in Model.RecentRecords)
             {
               var statusClass = (record.StatusName?.ToLower()) switch { "found" => "db-found", "claimed" => "db-claimed", "stored" => "db-stored", "transferred" => "db-xfer", "disposed" => "db-disposed", _ => "db-found" };
-              var isOwn = record.CreatedBy == User.Identity?.Name;
               <tr>
                 <td><span class="d-tid">#@record.TrackingId</span></td>
                 <td>@record.DateFound.ToString("MM/dd/yyyy")</td>
@@ -170,10 +210,7 @@
                 <td>
                   <div class="d-row-actions">
                     <a class="d-ra" asp-controller="LostFoundItem" asp-action="Details" asp-route-id="@record.TrackingId" title="View"><i class="bi bi-eye"></i></a>
-                    @if (isOwn)
-                    {
-                      <a class="d-ra" asp-controller="LostFoundItem" asp-action="Edit" asp-route-id="@record.TrackingId" title="Edit"><i class="bi bi-pencil"></i></a>
-                    }
+                    <a class="d-ra" asp-controller="LostFoundItem" asp-action="Edit" asp-route-id="@record.TrackingId" title="Edit"><i class="bi bi-pencil"></i></a>
                   </div>
                 </td>
               </tr>
@@ -182,7 +219,7 @@
         </table>
       </div>
       <div class="dtc-foot">
-        <span class="dtc-foot-info">Showing @Model.RecentRecords.Count of @Model.TotalItems records</span>
+        <span class="dtc-foot-info">Showing @Model.RecentRecords.Count most recent</span>
         <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all →</a>
       </div>
     }
