@@ -5,15 +5,15 @@
 
 @section Styles {
 <style>
-    .form-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .form-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
-    .form-header h1 i { font-size: 20px; color: var(--accent); }
-    .form-header .subtitle { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .page-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .page-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
+    .page-header h1 i { font-size: 20px; color: var(--accent); }
+    .page-header .subtitle { font-size: 14px; color: var(--text-muted); font-weight: 500; }
 
-    .form-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .form-card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
-    .form-card-header i { color: var(--accent); font-size: 16px; }
-    .form-card-body { padding: 22px 20px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    .card-head { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+    .card-head i { color: var(--accent); font-size: 16px; }
+    .card-body { padding: 22px 20px; }
     .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .form-grid .span-2 { grid-column: span 2; }
     .form-grid .span-3 { grid-column: span 3; }
@@ -23,175 +23,266 @@
     .fg-item .form-control, .fg-item .form-select { font-size: 14px; padding: 9px 12px; }
     .fg-item .form-text { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 
-    .tip-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; height: fit-content; position: sticky; top: 80px; }
-    .tip-icon { width: 42px; height: 42px; background: var(--accent-subtle); color: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 18px; }
-    .tip-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
-    .tip-item { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
-    .tip-item strong { color: var(--accent); font-weight: 600; }
-    .tip-footer { font-size: 12.5px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 12px; margin-top: 16px; }
-
-    .form-footer { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
     .field-with-add { display: flex; gap: 4px; }
     .field-with-add select { flex: 1; }
+
+    .section-divider { grid-column: span 4; border-top: 1px solid var(--border); margin: 4px 0; }
+
+    .photos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .photo-slot { border: 2px dashed var(--border); border-radius: 10px; padding: 16px 12px; text-align: center; transition: border-color .2s, background .2s; position: relative; }
+    .photo-slot:hover { border-color: var(--accent); background: var(--accent-subtle); }
+    .photo-slot .slot-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: 8px; }
+    .photo-slot .slot-icon { font-size: 24px; color: var(--text-dim); margin-bottom: 6px; }
+    .photo-slot input[type="file"] { font-size: 12px; }
+    .photo-slot .preview-img { max-width: 100%; max-height: 120px; border-radius: 6px; margin-bottom: 8px; display: none; }
 
     @@media (max-width: 992px) {
         .form-grid { grid-template-columns: repeat(2, 1fr); }
         .form-grid .span-2 { grid-column: span 2; }
         .form-grid .span-3 { grid-column: span 2; }
         .form-grid .span-4 { grid-column: span 2; }
-        .form-layout { grid-template-columns: 1fr !important; }
+        .section-divider { grid-column: span 2; }
+        .photos-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @@media (max-width: 600px) {
         .form-grid { grid-template-columns: 1fr; }
         .form-grid .span-2, .form-grid .span-3 { grid-column: span 1; }
+        .section-divider { grid-column: span 1; }
+        .photos-grid { grid-template-columns: 1fr 1fr; }
     }
 </style>
 }
 
 <!-- HEADER -->
-<div class="form-header">
+<div class="page-header">
     <div>
         <h1><i class="bi bi-plus-circle"></i> New Lost &amp; Found Record</h1>
         <div class="subtitle">Enter details of the found item</div>
     </div>
 </div>
 
-<!-- TIPS (inline info bar) -->
+<!-- TIPS -->
 <div style="display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:16px;flex-wrap:wrap;">
     <div style="width:36px;height:36px;background:var(--accent-subtle);color:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;"><i class="bi bi-info-circle"></i></div>
-    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;flex:1;"><strong style="color:var(--accent);">Tips:</strong> Ensure Date &amp; Location are precise · Use correct Item for faster matching · Clear photos increase return rates · Fields marked * are required</div>
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;flex:1;"><strong style="color:var(--accent);">Tips:</strong> Fields marked * are required · Tracking ID, Created By, and timestamps are auto-generated on submit · Clear photos increase return rates</div>
 </div>
 
-<!-- MAIN FORM (full width) -->
-<div class="form-card">
-        <div class="form-card-header"><i class="bi bi-clipboard-data"></i> Item Information</div>
-        <div class="form-card-body">
-            <form asp-action="Create" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="margin-bottom:14px;"></div>
-                <div class="form-grid">
-                    <div class="fg-item">
-                        <label asp-for="DateFound" class="form-label">Date Found *</label>
-                        <input asp-for="DateFound" class="form-control" type="date" />
-                        <span asp-validation-for="DateFound" class="text-danger small"></span>
-                    </div>
-                    <div class="fg-item">
-                        <label asp-for="ItemId" class="form-label">Item *</label>
-                        <div class="field-with-add">
-                            <select asp-for="ItemId" asp-items="Model.Items" class="form-select">
-                                <option value="">Select item...</option>
-                            </select>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            {
-                            <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item" title="Add new"><i class="bi bi-plus"></i></button>
-                            }
-                        </div>
-                        <span asp-validation-for="ItemId" class="text-danger small"></span>
-                    </div>
-                    <div class="fg-item">
-                        <label asp-for="StatusId" class="form-label">Status *</label>
-                        <div class="field-with-add">
-                            <select asp-for="StatusId" asp-items="Model.Statuses" class="form-select">
-                                <option value="">Select status...</option>
-                            </select>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            {
-                            <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new"><i class="bi bi-plus"></i></button>
-                            }
-                        </div>
-                        <span asp-validation-for="StatusId" class="text-danger small"></span>
-                    </div>
-                    <div class="fg-item">
-                        <label asp-for="StatusDate" class="form-label">Status Date</label>
-                        <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
-                    </div>
+<!-- MAIN FORM -->
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors" style="margin-bottom:14px;"></div>
 
+    @* ══════════════════════════════════════════════════════════════════════════
+       SECTION 1: ITEM DETAILS
+       ══════════════════════════════════════════════════════════════════════════ *@
+    <div class="card">
+        <div class="card-head"><i class="bi bi-clipboard-data"></i> Item Details</div>
+        <div class="card-body">
+            <div class="form-grid">
 
-                    <div class="fg-item">
-                        <label asp-for="LocationFound" class="form-label">Location Found *</label>
-                        <input asp-for="LocationFound" class="form-control" placeholder="Where was the item found?" />
-                        <span asp-validation-for="LocationFound" class="text-danger small"></span>
+                @* ── Row 1: Tracking ID · Date Found · Item ── *@
+                <div class="fg-item">
+                    <label class="form-label">Tracking ID</label>
+                    <div style="font-size:15px;color:var(--accent);font-family:var(--font-mono);font-weight:700;padding:9px 0;">@Model.PreviewTrackingId</div>
+                    <div class="form-text">System generated</div>
+                </div>
+                <div class="fg-item">
+                    <label asp-for="DateFound" class="form-label">Date Found *</label>
+                    <input asp-for="DateFound" class="form-control" type="date" />
+                    <span asp-validation-for="DateFound" class="text-danger small"></span>
+                </div>
+                <div class="fg-item span-2">
+                    <label asp-for="ItemId" class="form-label">Item *</label>
+                    <div class="field-with-add">
+                        <select asp-for="ItemId" asp-items="Model.Items" class="form-select">
+                            <option value="">Select item...</option>
+                        </select>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                        {
+                        <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item" title="Add new"><i class="bi bi-plus"></i></button>
+                        }
                     </div>
+                    <span asp-validation-for="ItemId" class="text-danger small"></span>
+                </div>
 
-                    <div class="fg-item">
-                        <label asp-for="RouteId" class="form-label">Route #</label>
-                        <div class="field-with-add">
-                            <select asp-for="RouteId" asp-items="Model.Routes" class="form-select"><option value="">Select route...</option></select>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new"><i class="bi bi-plus"></i></button> }
-                        </div>
+                @* ── Row 2: Found By · Location Found · Route # · Vehicle # ── *@
+                <div class="fg-item">
+                    <label asp-for="FoundById" class="form-label">Found By *</label>
+                    <div class="field-with-add">
+                        <select asp-for="FoundById" asp-items="Model.FoundByNames" class="form-select"><option value="">Select person...</option></select>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                        {
+                            <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new"><i class="bi bi-plus"></i></button>
+                        }
                     </div>
-                    <div class="fg-item">
-                        <label asp-for="VehicleId" class="form-label">Vehicle #</label>
-                        <div class="field-with-add">
-                            <select asp-for="VehicleId" asp-items="Model.Vehicles" class="form-select"><option value="">Select vehicle...</option></select>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new"><i class="bi bi-plus"></i></button> }
-                        </div>
+                </div>
+                <div class="fg-item">
+                    <label asp-for="LocationFound" class="form-label">Location Found *</label>
+                    <input asp-for="LocationFound" class="form-control" placeholder="Where was the item found?" />
+                    <span asp-validation-for="LocationFound" class="text-danger small"></span>
+                </div>
+                <div class="fg-item">
+                    <label asp-for="RouteId" class="form-label">Route # *</label>
+                    <div class="field-with-add">
+                        <select asp-for="RouteId" asp-items="Model.Routes" class="form-select"><option value="">Select route...</option></select>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                        { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="RouteId" data-endpoint="@Url.Action("AddRouteAjax", "MasterData")" data-label="route" title="Add new"><i class="bi bi-plus"></i></button> }
                     </div>
-                    <div class="fg-item">
-                        <label asp-for="StorageLocationId" class="form-label">Storage Location</label>
-                        <div class="field-with-add">
-                            <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="form-select"><option value="">Select location...</option></select>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new"><i class="bi bi-plus"></i></button> }
-                        </div>
-                    </div>
-
-                    <div class="fg-item">
-                        <label asp-for="FoundById" class="form-label">Found By</label>
-                        <div class="field-with-add">
-                            <select asp-for="FoundById" asp-items="Model.FoundByNames" class="form-select"><option value="">Select person...</option></select>
-                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
-                            {
-                                <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="FoundById" data-endpoint="@Url.Action("AddFoundByNameAjax", "MasterData")" data-label="found by name" title="Add new"><i class="bi bi-plus"></i></button>
-                            }
-                        </div>
-                    </div>
-                    <div class="fg-item">
-                        <label asp-for="ClaimedBy" class="form-label">Claimed By</label>
-                        <input asp-for="ClaimedBy" class="form-control" placeholder="Name of claimant" />
-                    </div>
-                    <div class="fg-item" style="grid-column:span 1;"></div>
-
-                    <div class="fg-item span-2">
-                        <label asp-for="Description" class="form-label">Description</label>
-                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Detailed description of the item..."></textarea>
-                    </div>
-
-                    <div class="fg-item span-2">
-                        <label asp-for="Notes" class="form-label">Notes</label>
-                        <textarea asp-for="Notes" class="form-control" rows="4" placeholder="Additional notes..."></textarea>
-                    </div>
-
-                    <div class="fg-item">
-                        <label asp-for="PhotoFile" class="form-label">Photo</label>
-                        <input asp-for="PhotoFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,.gif" />
-                        <span asp-validation-for="PhotoFile" class="text-danger small"></span>
-                        <div class="form-text">JPG, PNG, or GIF. Max 10MB.</div>
-                    </div>
-                    <div class="fg-item">
-                        <label asp-for="AttachmentFile" class="form-label">Attachment</label>
-                        <input asp-for="AttachmentFile" class="form-control" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" />
-                        <span asp-validation-for="AttachmentFile" class="text-danger small"></span>
-                        <div class="form-text">PDF, DOC, XLS, TXT, or images. Max 10MB.</div>
+                </div>
+                <div class="fg-item">
+                    <label asp-for="VehicleId" class="form-label">Vehicle # *</label>
+                    <div class="field-with-add">
+                        <select asp-for="VehicleId" asp-items="Model.Vehicles" class="form-select"><option value="">Select vehicle...</option></select>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                        { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="VehicleId" data-endpoint="@Url.Action("AddVehicleAjax", "MasterData")" data-label="vehicle" title="Add new"><i class="bi bi-plus"></i></button> }
                     </div>
                 </div>
 
-                <div class="form-footer" style="margin: 20px -20px -22px;border-radius:0 0 12px 12px;">
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Create Record
-                    </button>
+                @* ── Row 3: Item Description (full width) ── *@
+                <div class="fg-item span-4">
+                    <label asp-for="Description" class="form-label">Item Description *</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Detailed description of the item..."></textarea>
+                    <span class="text-muted small" style="font-size:11px;">Max 500 characters</span>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
+
+    @* ══════════════════════════════════════════════════════════════════════════
+       SECTION 2: STATUS & AUDIT
+       ══════════════════════════════════════════════════════════════════════════ *@
+    <div class="card">
+        <div class="card-head"><i class="bi bi-shield-check"></i> Status &amp; Audit Trail</div>
+        <div class="card-body">
+            <div class="form-grid">
+
+                @* ── Row 1: Status · Status Date · Days Since Found ── *@
+                <div class="fg-item">
+                    <label asp-for="StatusId" class="form-label">Status *</label>
+                    <div class="field-with-add">
+                        <select asp-for="StatusId" asp-items="Model.Statuses" class="form-select">
+                            <option value="">Select status...</option>
+                        </select>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                        {
+                        <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StatusId" data-endpoint="@Url.Action("AddStatusAjax", "MasterData")" data-label="status" title="Add new"><i class="bi bi-plus"></i></button>
+                        }
+                    </div>
+                    <div class="form-text">Defaults to "Found"</div>
+                    <span asp-validation-for="StatusId" class="text-danger small"></span>
+                </div>
+                <div class="fg-item">
+                    <label asp-for="StatusDate" class="form-label">Status Date *</label>
+                    <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
+                    <div class="form-text">Defaults to current date</div>
+                </div>
+                <div class="fg-item span-2">
+                    <label class="form-label">Days Since Found</label>
+                    <div id="daysSinceFoundBadge" style="padding:9px 0;">
+                        <span style="padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;background:rgba(74,222,128,0.1);color:var(--green);">0 day(s)</span>
+                    </div>
+                    <div class="form-text">Auto calculated</div>
+                </div>
+
+                @* ── Row 2: Created By · Created Date & Time ── *@
+                <div class="fg-item span-2">
+                    <label class="form-label">Created By *</label>
+                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;">@Model.CreatedByPreview</div>
+                    <div class="form-text">Auto-populated from current user</div>
+                </div>
+                <div class="fg-item span-2">
+                    <label class="form-label">Created Date &amp; Time *</label>
+                    <div id="liveTimestamp" style="font-size:14px;color:var(--text-secondary);padding:9px 0;"></div>
+                    <div class="form-text">Auto-populated on submit</div>
+                </div>
+
+                @* ── Row 3: Modified By info ── *@
+                <div class="fg-item span-4" style="background:var(--bg-elevated);border-radius:8px;padding:10px 14px;margin-top:-4px;">
+                    <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-info-circle"></i>
+                        <span><strong>What happens if another user edits?</strong> — The "Modified By" and "Modified Date/Time" fields will be auto-updated with the editing user's name and timestamp.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ══════════════════════════════════════════════════════════════════════════
+       SECTION 3: ADDITIONAL DETAILS
+       ══════════════════════════════════════════════════════════════════════════ *@
+    <div class="card">
+        <div class="card-head"><i class="bi bi-card-list"></i> Additional Details</div>
+        <div class="card-body">
+            <div class="form-grid">
+
+                @* ── Row 1: Storage Location · Claimed By ── *@
+                <div class="fg-item span-2">
+                    <label asp-for="StorageLocationId" class="form-label">Storage Location *</label>
+                    <div class="field-with-add">
+                        <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="form-select"><option value="">Select location...</option></select>
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
+                        { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="StorageLocationId" data-endpoint="@Url.Action("AddStorageLocationAjax", "MasterData")" data-label="storage location" title="Add new"><i class="bi bi-plus"></i></button> }
+                    </div>
+                </div>
+                <div class="fg-item span-2">
+                    <label asp-for="ClaimedBy" class="form-label">Claimed By *</label>
+                    <input asp-for="ClaimedBy" class="form-control" placeholder="Name of claimant" />
+                </div>
+
+                @* ── Row 2: Notes (full width) ── *@
+                <div class="fg-item span-4">
+                    <label asp-for="Notes" class="form-label">Notes *</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
+                    <span class="text-muted small" style="font-size:11px;">Max 1000 characters</span>
+                </div>
+
+                @* ── Row 3: Photos (4 slots) ── *@
+                <div class="section-divider"></div>
+                <div class="span-4">
+                    <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Photos * <span style="font-weight:500;text-transform:none;letter-spacing:0;font-size:11px;color:var(--text-dim);">— Upload up to 4 images (JPG, PNG, GIF · Max 10MB each)</span></label>
+                    <div class="photos-grid">
+                        @{
+                            var photoNames = new[] { "PhotoFile", "PhotoFile2", "PhotoFile3", "PhotoFile4" };
+                            var photoLabels = new[] { "Photo 1", "Photo 2", "Photo 3", "Photo 4" };
+                        }
+                        @for (int i = 0; i < 4; i++)
+                        {
+                            <div class="photo-slot">
+                                <div class="slot-label">@photoLabels[i]</div>
+                                <i class="bi bi-image slot-icon"></i>
+                                <img class="preview-img" id="preview_@photoNames[i]" alt="Preview" />
+                                <input type="file" name="@photoNames[i]" accept=".jpg,.jpeg,.png,.gif" class="form-control" style="font-size:12px;" data-photo-preview="preview_@photoNames[i]" />
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @* ── Row 4: Attachment ── *@
+                <div class="fg-item span-4" style="margin-top:8px;">
+                    <label asp-for="AttachmentFile" class="form-label">Attachment (File Upload) *</label>
+                    <input asp-for="AttachmentFile" class="form-control" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" />
+                    <span asp-validation-for="AttachmentFile" class="text-danger small"></span>
+                    <div class="form-text">PDF, DOC, XLS, TXT, or images. Max 10MB.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> Create Record
+            </button>
+        </div>
+    </div>
+</form>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Auto-fill StatusDate when Status changes
             var statusSelect = document.getElementById('StatusId');
             var statusDateInput = document.getElementById('StatusDate');
             if (statusSelect && statusDateInput) {
@@ -203,6 +294,59 @@
                     statusDateInput.value = yyyy + '-' + mm + '-' + dd;
                 });
             }
+
+            // Live timestamp clock
+            var tsEl = document.getElementById('liveTimestamp');
+            function updateTimestamp() {
+                var now = new Date();
+                var h = now.getHours(), ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                tsEl.textContent = String(now.getMonth()+1).padStart(2,'0') + '/' +
+                    String(now.getDate()).padStart(2,'0') + '/' + now.getFullYear() + ' ' +
+                    String(h).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' +
+                    String(now.getSeconds()).padStart(2,'0') + ' ' + ampm;
+            }
+            updateTimestamp();
+            setInterval(updateTimestamp, 1000);
+
+            // Days Since Found — updates when DateFound field changes
+            var dateFoundInput = document.getElementById('DateFound');
+            var daysBadge = document.getElementById('daysSinceFoundBadge');
+            function updateDays() {
+                if (!dateFoundInput.value) return;
+                var found = new Date(dateFoundInput.value + 'T00:00:00');
+                var today = new Date(); today.setHours(0,0,0,0);
+                var diff = Math.floor((today - found) / 86400000);
+                if (diff < 0) diff = 0;
+                var color = diff > 30 ? 'var(--red)' : 'var(--green)';
+                var bg = diff > 30 ? 'rgba(248,113,113,0.1)' : 'rgba(74,222,128,0.1)';
+                daysBadge.innerHTML = '<span style="padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;background:' + bg + ';color:' + color + ';">' + diff + ' day(s)</span>';
+            }
+            updateDays();
+            dateFoundInput.addEventListener('change', updateDays);
+
+            // Photo preview
+            document.querySelectorAll('[data-photo-preview]').forEach(function (input) {
+                input.addEventListener('change', function () {
+                    var previewId = this.getAttribute('data-photo-preview');
+                    var preview = document.getElementById(previewId);
+                    var slot = this.closest('.photo-slot');
+                    var icon = slot.querySelector('.slot-icon');
+                    if (this.files && this.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            preview.src = e.target.result;
+                            preview.style.display = 'block';
+                            if (icon) icon.style.display = 'none';
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        preview.style.display = 'none';
+                        preview.src = '';
+                        if (icon) icon.style.display = '';
+                    }
+                });
+            });
         });
     </script>
 }

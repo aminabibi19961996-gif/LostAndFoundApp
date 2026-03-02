@@ -17,7 +17,7 @@
 @if (User.Identity?.IsAuthenticated == true)
 {
     var userInitials = string.Join("", (User.Identity.Name ?? "U").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
-    var userRole = User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Supervisor") ? "Supervisor" : "User";
+    var userRole = User.IsInRole("SuperAdmin") ? "Admin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Supervisor") ? "Supervisor" : "User";
 
     <!-- NAV -->
     <nav>
@@ -83,7 +83,7 @@
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> User Management</a>
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3"></i> AD Groups &amp; Sync</a>
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdUsers"><i class="bi bi-person-badge"></i> AD Users</a>
-                        <a class="dropdown-item" asp-controller="Announcement" asp-action="Messages"><i class="bi bi-megaphone"></i> Announcements</a>
+                        <a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone"></i> Announcements</a>
                         <a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Activity Logs</a>
                     </div>
                 </div>
@@ -113,26 +113,26 @@
             <i class="bi bi-list" style="font-size:20px"></i>
         </button>
 
-        <div class="nav-actions" style="gap:12px;">
-            <div class="nav-user-info" style="font-size:13px;color:var(--text-secondary);padding-right:14px;border-right:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-                <strong style="color:var(--text-primary);font-weight:600;">@User.Identity.Name</strong>
-                <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700;background:var(--accent-subtle);color:var(--accent);">@userRole</span>
+        <div class="nav-actions" style="gap:14px;">
+            <div class="nav-user-info" style="font-size:15px;color:var(--text-secondary);padding-right:16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+                <strong style="color:#FFFFFF;font-weight:700;font-size:15px;letter-spacing:0.01em;">@User.Identity.Name</strong>
+                <span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:800;background:var(--accent-subtle);color:var(--accent);letter-spacing:0.02em;">@userRole</span>
             </div>
-            <a class="btn btn-primary btn-sm" asp-controller="LostFoundItem" asp-action="Create" style="padding:7px 14px;">
-                <i class="bi bi-plus"></i> <span>New Record</span>
+            <a class="btn btn-primary btn-sm" asp-controller="LostFoundItem" asp-action="Create" style="padding:9px 18px;font-size:14px;font-weight:700;">
+                <i class="bi bi-plus" style="font-size:16px;"></i> <span>New Record</span>
             </a>
-            <div style="display:flex;align-items:center;gap:4px;">
+            <div style="display:flex;align-items:center;gap:6px;">
                 <a class="btn btn-ghost btn-icon" asp-controller="Account" asp-action="Profile" title="My Profile">
-                    <i class="bi bi-person" style="font-size:16px"></i>
+                    <i class="bi bi-person" style="font-size:19px;color:#E0E0E0;"></i>
                 </a>
                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn btn-ghost btn-icon" title="Logout">
-                        <i class="bi bi-box-arrow-right" style="font-size:16px"></i>
+                        <i class="bi bi-box-arrow-right" style="font-size:19px;color:#E0E0E0;"></i>
                     </button>
                 </form>
             </div>
-            <div class="avatar" title="@User.Identity.Name">@userInitials</div>
+            <div class="avatar" title="@User.Identity.Name" style="width:36px;height:36px;font-size:14px;font-weight:800;">@userInitials</div>
         </div>
     </nav>
 }
@@ -168,11 +168,12 @@
                 <button type="button" class="modal-close" id="closeAnnouncementModal">&times;</button>
             </div>
             <div class="modal-body" id="announcementModalBody"></div>
-            <div class="modal-footer">
-                <span class="text-muted" style="font-size:12px; margin-right:auto;" id="announcementCounter"></span>
-                <div class="d-flex gap-2">
+            <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+                <span class="text-muted" style="font-size:12px;" id="announcementCounter"></span>
+                <div style="display:flex;gap:8px;align-items:center;">
                     <button type="button" class="btn btn-secondary btn-sm" id="prevAnnouncement" style="display:none;">Previous</button>
-                    <button type="button" class="btn btn-primary btn-sm" id="nextAnnouncement">Next</button>
+                    <button type="button" class="btn btn-sm" id="markReadAnnouncement" style="background:rgba(34,197,94,0.12);color:#22C55E;border:1px solid rgba(34,197,94,0.25);font-weight:700;"><i class="bi bi-check-circle" style="margin-right:4px;"></i>Mark as Read</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="nextAnnouncement" style="display:none;">Next</button>
                 </div>
             </div>
         </div>

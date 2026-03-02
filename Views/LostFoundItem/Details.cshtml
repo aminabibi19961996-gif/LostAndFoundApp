@@ -13,11 +13,11 @@
 
 @section Styles {
 <style>
-    .detail-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-    .detail-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
-    .detail-header h1 i { font-size: 20px; color: var(--accent); }
-    .detail-header .meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 14px; color: var(--text-muted); }
-    .detail-actions { display: flex; gap: 8px; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .page-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
+    .page-header h1 i { font-size: 20px; color: var(--accent); }
+    .page-header .meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 14px; color: var(--text-muted); }
+    .page-actions { display: flex; gap: 8px; }
 
     .sb { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12.5px; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
     .sb::before { content:''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
@@ -28,28 +28,30 @@
     .sb-disposed    { background: var(--status-disposed-bg);    color: var(--status-disposed-text);    border-color: var(--status-disposed-border); }
     .sb-unknown     { background: var(--bg-hover); color: var(--text-muted); }
 
-    .dc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-    .dc-head { padding: 14px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); display: flex; align-items: center; gap: 8px; }
-    .dc-head i { color: var(--accent); font-size: 16px; }
-    .dc-body { padding: 20px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    .card-head { padding: 14px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); background: var(--bg-elevated); display: flex; align-items: center; gap: 8px; }
+    .card-head i { color: var(--accent); font-size: 16px; }
+    .card-body { padding: 20px; }
 
-    .dg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-    .dg .span-2 { grid-column: span 2; }
-    .dg .span-3 { grid-column: span 3; }
-    .dg-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 5px; }
-    .dg-value { font-size: 15px; font-weight: 500; color: var(--text-primary); }
-    .dg-empty { color: var(--text-dim); }
+    .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .detail-grid .span-2 { grid-column: span 2; }
+    .detail-grid .span-3 { grid-column: span 3; }
+    .detail-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 5px; }
+    .detail-value { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+    .detail-empty { color: var(--text-dim); }
+    .detail-divider { grid-column: span 3; border-top: 1px solid var(--border); margin: 2px 0; }
 
     .detail-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
     @@media (max-width: 992px) {
         .detail-layout { grid-template-columns: 1fr; }
-        .dg { grid-template-columns: repeat(2, 1fr); }
+        .detail-grid { grid-template-columns: repeat(2, 1fr); }
+        .detail-divider { grid-column: span 2; }
     }
 </style>
 }
 
 <!-- HEADER -->
-<div class="detail-header">
+<div class="page-header">
     <div>
         <h1><i class="bi bi-file-earmark-text"></i> Record #@Model.CustomTrackingId</h1>
         <div class="meta">
@@ -57,9 +59,10 @@
             <span>— Found @Model.DaysSinceFound days ago</span>
         </div>
     </div>
-    <div class="detail-actions">
+    <div class="page-actions">
         @{
-            var canEdit = User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("Supervisor") || Model.CreatedBy == User.Identity?.Name;
+            // All authenticated users can edit any record — no ownership restriction
+            var canEdit = true;
         }
         @if (canEdit)
         {
@@ -85,67 +88,84 @@
 <div class="detail-layout">
     <!-- MAIN DETAILS -->
     <div>
-        <div class="dc">
-            <div class="dc-head"><i class="bi bi-clipboard-data"></i> Item Details</div>
-            <div class="dc-body">
-                <div class="dg">
+        <div class="card">
+            <div class="card-head"><i class="bi bi-clipboard-data"></i> Item Details</div>
+            <div class="card-body">
+                <div class="detail-grid">
+                    @* ── SECTION 1: WHEN ── *@
                     <div>
-                        <div class="dg-label">Tracking ID</div>
-                        <div class="dg-value" style="font-family:var(--font-mono); color:var(--accent); font-weight:700;">@Model.CustomTrackingId</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Date Found</div>
-                        <div class="dg-value">@Model.DateFound.ToString("dddd, MMM dd, yyyy")</div>
+                        <div class="detail-label">Tracking ID</div>
+                        <div class="detail-value" style="font-family:var(--font-mono); color:var(--accent); font-weight:700;">@Model.CustomTrackingId</div>
                     </div>
                     <div>
-                        <div class="dg-label">Item</div>
-                        <div class="dg-value">@(Model.ItemName ?? "—")</div>
+                        <div class="detail-label">Date Found</div>
+                        <div class="detail-value">@Model.DateFound.ToString("dddd, MMM dd, yyyy")</div>
                     </div>
+
+                    @* ── SECTION 2: WHAT ── *@
                     <div>
-                        <div class="dg-label">Status</div>
-                        <div class="dg-value"><span class="sb @statusClass">@(Model.StatusName ?? "—")</span></div>
+                        <div class="detail-label">Item</div>
+                        <div class="detail-value">@(Model.ItemName ?? "—")</div>
                     </div>
-                    <div class="span-2">
-                        <div class="dg-label">Location Found</div>
-                        <div class="dg-value">@Model.LocationFound</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Status Date</div>
-                        <div class="dg-value @(Model.StatusDate == null ? "dg-empty" : "")">@(Model.StatusDate?.ToString("MM/dd/yyyy") ?? "—")</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Route</div>
-                        <div class="dg-value @(Model.RouteName == null ? "dg-empty" : "")">@(Model.RouteName ?? "—")</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Vehicle</div>
-                        <div class="dg-value @(Model.VehicleName == null ? "dg-empty" : "")">@(Model.VehicleName ?? "—")</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Storage Location</div>
-                        <div class="dg-value @(Model.StorageLocationName == null ? "dg-empty" : "")">@(Model.StorageLocationName ?? "—")</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Found By</div>
-                        <div class="dg-value @(Model.FoundByName == null ? "dg-empty" : "")">@(Model.FoundByName ?? "—")</div>
-                    </div>
-                    <div>
-                        <div class="dg-label">Claimed By</div>
-                        <div class="dg-value @(Model.ClaimedBy == null ? "dg-empty" : "")">@(Model.ClaimedBy ?? "—")</div>
-                    </div>
-                    <div></div>
                     @if (!string.IsNullOrEmpty(Model.Description))
                     {
                         <div class="span-3">
-                            <div class="dg-label">Description</div>
-                            <div class="dg-value" style="line-height:1.6;">@Model.Description</div>
+                            <div class="detail-label">Description</div>
+                            <div class="detail-value" style="line-height:1.6;">@Model.Description</div>
                         </div>
                     }
+
+                    @* ── SECTION 3: WHERE ── *@
+                    <div class="detail-divider"></div>
+                    <div class="span-2">
+                        <div class="detail-label">Location Found</div>
+                        <div class="detail-value">@Model.LocationFound</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Route</div>
+                        <div class="detail-value @(Model.RouteName == null ? "detail-empty" : "")">@(Model.RouteName ?? "—")</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Vehicle</div>
+                        <div class="detail-value @(Model.VehicleName == null ? "detail-empty" : "")">@(Model.VehicleName ?? "—")</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Storage Location</div>
+                        <div class="detail-value @(Model.StorageLocationName == null ? "detail-empty" : "")">@(Model.StorageLocationName ?? "—")</div>
+                    </div>
+                    <div></div>
+
+                    @* ── SECTION 4: WHO ── *@
+                    <div class="detail-divider"></div>
+                    <div>
+                        <div class="detail-label">Found By</div>
+                        <div class="detail-value @(Model.FoundByName == null ? "detail-empty" : "")">@(Model.FoundByName ?? "—")</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Claimed By</div>
+                        <div class="detail-value @(Model.ClaimedBy == null ? "detail-empty" : "")">@(Model.ClaimedBy ?? "—")</div>
+                    </div>
+                    <div></div>
+
+                    @* ── SECTION 5: STATUS ── *@
+                    <div class="detail-divider"></div>
+                    <div>
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value"><span class="sb @statusClass">@(Model.StatusName ?? "—")</span></div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Status Date</div>
+                        <div class="detail-value @(Model.StatusDate == null ? "detail-empty" : "")">@(Model.StatusDate?.ToString("MM/dd/yyyy") ?? "—")</div>
+                    </div>
+                    <div></div>
+
+                    @* ── SECTION 6: NOTES ── *@
                     @if (!string.IsNullOrEmpty(Model.Notes))
                     {
+                        <div class="detail-divider"></div>
                         <div class="span-3">
-                            <div class="dg-label">Notes</div>
-                            <div class="dg-value" style="line-height:1.6;">@Model.Notes</div>
+                            <div class="detail-label">Notes</div>
+                            <div class="detail-value" style="line-height:1.6;">@Model.Notes</div>
                         </div>
                     }
                 </div>
@@ -159,21 +179,39 @@
 
     <!-- SIDEBAR -->
     <div>
-        @if (!string.IsNullOrEmpty(Model.PhotoPath))
+        @{
+            var allPhotos = new[] {
+                new { Path = Model.PhotoPath, Label = "Photo 1" },
+                new { Path = Model.PhotoPath2, Label = "Photo 2" },
+                new { Path = Model.PhotoPath3, Label = "Photo 3" },
+                new { Path = Model.PhotoPath4, Label = "Photo 4" }
+            };
+            var hasAnyPhoto = allPhotos.Any(p => !string.IsNullOrEmpty(p.Path));
+        }
+        @if (hasAnyPhoto)
         {
-            <div class="dc">
-                <div class="dc-head"><i class="bi bi-image"></i> Photo</div>
-                <div class="dc-body" style="text-align:center;">
-                    <img src="@Url.Action("Photo", "LostFoundItem", new { id = Model.PhotoPath })" alt="Item photo" style="max-width:100%;max-height:300px;border-radius:6px;" />
+            <div class="card">
+                <div class="card-head"><i class="bi bi-images"></i> Photos</div>
+                <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    @foreach (var photo in allPhotos)
+                    {
+                        if (!string.IsNullOrEmpty(photo.Path))
+                        {
+                            <div style="text-align:center;">
+                                <img src="@Url.Action("Photo", "LostFoundItem", new { id = photo.Path })" alt="@photo.Label" style="max-width:100%;max-height:200px;border-radius:6px;" />
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;font-weight:600;">@photo.Label</div>
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         }
 
         @if (!string.IsNullOrEmpty(Model.AttachmentPath))
         {
-            <div class="dc">
-                <div class="dc-head"><i class="bi bi-paperclip"></i> Attachment</div>
-                <div class="dc-body">
+            <div class="card">
+                <div class="card-head"><i class="bi bi-paperclip"></i> Attachment</div>
+                <div class="card-body">
                     <a asp-action="Attachment" asp-route-id="@Model.AttachmentPath" class="btn btn-primary w-100">
                         <i class="bi bi-download"></i> Download Attachment
                     </a>
@@ -181,17 +219,17 @@
             </div>
         }
 
-        <div class="dc">
-            <div class="dc-head"><i class="bi bi-clock-history"></i> Audit Trail</div>
-            <div class="dc-body">
+        <div class="card">
+            <div class="card-head"><i class="bi bi-clock-history"></i> Audit Trail</div>
+            <div class="card-body">
                 <div style="margin-bottom:10px;">
-                    <div class="dg-label">Created By</div>
+                    <div class="detail-label">Created By</div>
                     <div style="font-size:13px;color:var(--text-secondary);">@(Model.CreatedBy ?? "—") on @Model.CreatedDateTime.ToString("MM/dd/yyyy HH:mm")</div>
                 </div>
                 @if (!string.IsNullOrEmpty(Model.ModifiedBy))
                 {
                     <div>
-                        <div class="dg-label">Last Modified</div>
+                        <div class="detail-label">Last Modified</div>
                         <div style="font-size:13px;color:var(--text-secondary);">@Model.ModifiedBy on @Model.ModifiedDateTime?.ToString("MM/dd/yyyy HH:mm")</div>
                     </div>
                 }

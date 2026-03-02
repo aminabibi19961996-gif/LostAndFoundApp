@@ -53,8 +53,17 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Notes")]
         public string? Notes { get; set; }
 
-        [Display(Name = "Photo")]
+        [Display(Name = "Photo 1")]
         public IFormFile? PhotoFile { get; set; }
+
+        [Display(Name = "Photo 2")]
+        public IFormFile? PhotoFile2 { get; set; }
+
+        [Display(Name = "Photo 3")]
+        public IFormFile? PhotoFile3 { get; set; }
+
+        [Display(Name = "Photo 4")]
+        public IFormFile? PhotoFile4 { get; set; }
 
         [Display(Name = "Attachment")]
         public IFormFile? AttachmentFile { get; set; }
@@ -66,6 +75,10 @@ namespace LostAndFoundApp.ViewModels
         public SelectList? StorageLocations { get; set; }
         public SelectList? Statuses { get; set; }
         public SelectList? FoundByNames { get; set; }
+
+        // System preview (read-only, shown on form)
+        public string? PreviewTrackingId { get; set; }
+        public string? CreatedByPreview { get; set; }
     }
 
     public class LostFoundItemEditViewModel
@@ -120,17 +133,32 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Notes")]
         public string? Notes { get; set; }
 
-        [Display(Name = "Photo")]
+        [Display(Name = "Photo 1")]
         public IFormFile? PhotoFile { get; set; }
+
+        [Display(Name = "Photo 2")]
+        public IFormFile? PhotoFile2 { get; set; }
+
+        [Display(Name = "Photo 3")]
+        public IFormFile? PhotoFile3 { get; set; }
+
+        [Display(Name = "Photo 4")]
+        public IFormFile? PhotoFile4 { get; set; }
 
         [Display(Name = "Attachment")]
         public IFormFile? AttachmentFile { get; set; }
 
         // Read-only display
         public string? ExistingPhotoPath { get; set; }
+        public string? ExistingPhotoPath2 { get; set; }
+        public string? ExistingPhotoPath3 { get; set; }
+        public string? ExistingPhotoPath4 { get; set; }
         public string? ExistingAttachmentPath { get; set; }
         public string? CreatedBy { get; set; }
         public DateTime CreatedDateTime { get; set; }
+        public string? ModifiedBy { get; set; }
+        public DateTime? ModifiedDateTime { get; set; }
+        public int DaysSinceFound { get; set; }
 
         // Dropdown data
         public SelectList? Items { get; set; }
@@ -152,6 +180,9 @@ namespace LostAndFoundApp.ViewModels
         public string? RouteName { get; set; }
         public string? VehicleName { get; set; }
         public string? PhotoPath { get; set; }
+        public string? PhotoPath2 { get; set; }
+        public string? PhotoPath3 { get; set; }
+        public string? PhotoPath4 { get; set; }
         public string? StorageLocationName { get; set; }
         public string? StatusName { get; set; }
         public DateTime? StatusDate { get; set; }

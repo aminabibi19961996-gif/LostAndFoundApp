@@ -47,11 +47,42 @@
     <div class="fc-body">
         <form method="get" asp-action="Index">
             <div class="fg">
-                <div><label class="form-label">Search</label><input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Action, details, user..." /></div>
-                <div><label class="form-label">Category</label><select name="category" class="form-select"><option value="">All</option><option value="Auth" selected="@(Model.CategoryFilter == "Auth" ? "selected" : null)">Auth</option><option value="Items" selected="@(Model.CategoryFilter == "Items" ? "selected" : null)">Items</option><option value="MasterData" selected="@(Model.CategoryFilter == "MasterData" ? "selected" : null)">MasterData</option><option value="UserManagement" selected="@(Model.CategoryFilter == "UserManagement" ? "selected" : null)">UserManagement</option><option value="Announcement" selected="@(Model.CategoryFilter == "Announcement" ? "selected" : null)">Announcement</option><option value="ADSync" selected="@(Model.CategoryFilter == "ADSync" ? "selected" : null)">ADSync</option><option value="System" selected="@(Model.CategoryFilter == "System" ? "selected" : null)">System</option></select></div>
-                <div><label class="form-label">Date From</label><input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" /></div>
-                <div><label class="form-label">Date To</label><input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" /></div>
-                <div class="fg-actions"><button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button><a asp-action="Index" class="btn btn-ghost"><i class="bi bi-x-circle"></i></a></div>
+                <!-- Search -->
+                <div>
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Action, details, user..." />
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All</option>
+                        <option value="Auth" selected="@(Model.CategoryFilter == "Auth" ? "selected" : null)">Auth</option>
+                        <option value="Items" selected="@(Model.CategoryFilter == "Items" ? "selected" : null)">Items</option>
+                        <option value="MasterData" selected="@(Model.CategoryFilter == "MasterData" ? "selected" : null)">MasterData</option>
+                        <option value="UserManagement" selected="@(Model.CategoryFilter == "UserManagement" ? "selected" : null)">UserManagement</option>
+                        <option value="Announcement" selected="@(Model.CategoryFilter == "Announcement" ? "selected" : null)">Announcement</option>
+                        <option value="ADSync" selected="@(Model.CategoryFilter == "ADSync" ? "selected" : null)">ADSync</option>
+                        <option value="System" selected="@(Model.CategoryFilter == "System" ? "selected" : null)">System</option>
+                    </select>
+                </div>
+
+                <!-- Date Range -->
+                <div>
+                    <label class="form-label">Date From</label>
+                    <input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" />
+                </div>
+                <div>
+                    <label class="form-label">Date To</label>
+                    <input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" />
+                </div>
+
+                <!-- Actions -->
+                <div class="fg-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+                    <a asp-action="Index" class="btn btn-ghost"><i class="bi bi-x-circle"></i></a>
+                </div>
             </div>
         </form>
     </div>
@@ -95,6 +126,10 @@
     }
     else
     {
-        <div style="padding:48px 24px;text-align:center;"><i class="bi bi-journal-text" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i><div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No activity logs found</div><div style="font-size:13px;color:var(--text-muted);">Activity will be logged as you use the application.</div></div>
+        <div style="padding:48px 24px;text-align:center;">
+            <i class="bi bi-journal-text" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i>
+            <div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No activity logs found</div>
+            <div style="font-size:13px;color:var(--text-muted);">Activity will be logged as you use the application.</div>
+        </div>
     }
 </div>

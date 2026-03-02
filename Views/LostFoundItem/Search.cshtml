@@ -188,6 +188,7 @@
     <div class="fc-body">
         <form method="get" asp-action="Search">
             <div class="fg">
+                @* ── ID ── *@
                 <div>
                     <label class="form-label">Internal ID</label>
                     <input type="number" name="TrackingId" value="@Model.TrackingId" class="form-control" placeholder="#" />
@@ -196,6 +197,8 @@
                     <label class="form-label">Tracking ID</label>
                     <input type="text" name="CustomTrackingId" value="@Model.CustomTrackingId" class="form-control" placeholder="LF-YYMMDD-XXXX" />
                 </div>
+
+                @* ── WHEN ── *@
                 <div>
                     <label class="form-label">Date From</label>
                     <input type="date" name="DateFoundFrom" value="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")" class="form-control" />
@@ -204,6 +207,8 @@
                     <label class="form-label">Date To</label>
                     <input type="date" name="DateFoundTo" value="@Model.DateFoundTo?.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
+
+                @* ── WHAT ── *@
                 <div>
                     <label class="form-label">Item</label>
                     <select name="ItemId" class="form-select">
@@ -217,19 +222,8 @@
                         }
                     </select>
                 </div>
-                <div>
-                    <label class="form-label">Status</label>
-                    <select name="StatusId" class="form-select">
-                        <option value="">All</option>
-                        @if (Model.Statuses != null)
-                        {
-                            @foreach (var status in Model.Statuses)
-                            {
-                                <option value="@status.Value" selected="@(status.Value == Model.StatusId?.ToString() ? "selected" : null)">@status.Text</option>
-                            }
-                        }
-                    </select>
-                </div>
+
+                @* ── WHERE ── *@
                 <div>
                     <label class="form-label">Route</label>
                     <select name="RouteId" class="form-select">
@@ -269,6 +263,8 @@
                         }
                     </select>
                 </div>
+
+                @* ── WHO ── *@
                 <div>
                     <label class="form-label">Found By</label>
                     <select name="FoundById" class="form-select">
@@ -278,6 +274,21 @@
                             @foreach (var person in Model.FoundByNames)
                             {
                                 <option value="@person.Value" selected="@(person.Value == Model.FoundById?.ToString() ? "selected" : null)">@person.Text</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                @* ── STATUS ── *@
+                <div>
+                    <label class="form-label">Status</label>
+                    <select name="StatusId" class="form-select">
+                        <option value="">All</option>
+                        @if (Model.Statuses != null)
+                        {
+                            @foreach (var status in Model.Statuses)
+                            {
+                                <option value="@status.Value" selected="@(status.Value == Model.StatusId?.ToString() ? "selected" : null)">@status.Text</option>
                             }
                         }
                     </select>
@@ -369,7 +380,8 @@
                                 <div style="display:flex;gap:3px;">
                                     <a class="ra" asp-action="Details" asp-route-id="@item.TrackingId" title="View"><i class="bi bi-eye"></i></a>
                                     @{
-                                        var canEditItem = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor") || item.CreatedBy == User.Identity?.Name;
+                                        // All authenticated users can edit any record — no ownership restriction
+                                        var canEditItem = true;
                                     }
                                     @if (canEditItem)
                                     {

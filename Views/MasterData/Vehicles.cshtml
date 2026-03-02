@@ -1,11 +1,74 @@
 @model PaginatedList<Vehicle>
-@{ ViewData["Title"] = "Vehicles"; }
-<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;"><div><h1 style="font-family:var(--font-display);font-size:1.625rem;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px;"><i class="bi bi-bus-front" style="color:var(--accent)"></i> Vehicles</h1><div style="font-size:14px;color:var(--text-muted);font-weight:500;">@Model.TotalCount vehicle(s)</div></div><a asp-action="CreateVehicle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Vehicle</a></div>
+@{
+    ViewData["Title"] = "Vehicles";
+}
+
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+        <h1 style="font-family:var(--font-display);font-size:1.625rem;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-bus-front" style="color:var(--accent)"></i> Vehicles
+        </h1>
+        <div style="font-size:14px;color:var(--text-muted);font-weight:500;">@Model.TotalCount vehicle(s)</div>
+    </div>
+    <a asp-action="CreateVehicle" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Vehicle</a>
+</div>
+
+<!-- TABLE -->
 <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
     @if (Model.Items.Any())
     {
-        <div style="overflow-x:auto;"><table class="table-modern" style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">Name</th><th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">Status</th><th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);width:100px;"></th></tr></thead><tbody>@foreach (var item in Model.Items){<tr><td style="padding:11px 16px;font-size:14.5px;font-weight:600;color:var(--text-primary);">@item.Name</td><td style="padding:11px 16px;"><span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">@(item.IsActive ? "Active" : "Inactive")</span></td><td style="padding:11px 16px;"><div style="display:flex;gap:3px;"><a asp-action="EditVehicle" asp-route-id="@item.Id" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:transparent;border:none;color:var(--text-dim);font-size:13px;text-decoration:none;" title="Edit"><i class="bi bi-pencil"></i></a><form asp-action="ToggleVehicleActive" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:transparent;border:none;cursor:pointer;font-size:13px;"><i class="bi @(item.IsActive ? "bi-toggle-on" : "bi-toggle-off")" style="color:@(item.IsActive ? "var(--green)" : "var(--text-muted)")"></i></button></form><form asp-action="DeleteVehicle" asp-route-id="@item.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:transparent;border:none;cursor:pointer;font-size:13px;color:var(--red);" data-confirm="Delete this vehicle?"><i class="bi bi-trash3"></i></button></form></div></td></tr>}</tbody></table></div>
-        <div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-elevated);"><partial name="_Pagination" model="Model" /></div>
+        <div style="overflow-x:auto;">
+            <table class="table-modern" style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">Name</th>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">Status</th>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);width:100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td style="padding:11px 16px;font-size:14.5px;font-weight:600;color:var(--text-primary);">@item.Name</td>
+                            <td style="padding:11px 16px;">
+                                <span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">@(item.IsActive ? "Active" : "Inactive")</span>
+                            </td>
+                            <td style="padding:11px 16px;">
+                                <div style="display:flex;gap:3px;">
+                                    <a asp-action="EditVehicle" asp-route-id="@item.Id" class="ra" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="ToggleVehicleActive" asp-route-id="@item.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="ra" title="@(item.IsActive ? "Deactivate" : "Activate")">
+                                            <i class="bi @(item.IsActive ? "bi-toggle-on" : "bi-toggle-off")" style="color:@(item.IsActive ? "var(--green)" : "var(--text-muted)")"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-action="DeleteVehicle" asp-route-id="@item.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="ra" title="Delete" data-confirm="Delete this vehicle?" style="color:var(--red);">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-elevated);">
+            <partial name="_Pagination" model="Model" />
+        </div>
     }
-    else { <div style="padding:48px 24px;text-align:center;"><i class="bi bi-bus-front" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i><div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No vehicles</div><div style="font-size:13px;color:var(--text-muted);">Add your first vehicle.</div></div> }
+    else
+    {
+        <div style="padding:48px 24px;text-align:center;">
+            <i class="bi bi-bus-front" style="font-size:2.5rem;color:var(--text-dim);display:block;margin-bottom:12px;"></i>
+            <div style="font-weight:700;color:var(--text-secondary);margin-bottom:4px;">No vehicles</div>
+            <div style="font-size:13px;color:var(--text-muted);">Add your first vehicle.</div>
+        </div>
+    }
 </div>

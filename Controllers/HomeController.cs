@@ -209,6 +209,23 @@ namespace LostAndFoundApp.Controllers
             if (isSupervisorOrAbove)
             {
                 var allUsers = await _userManager.Users.ToListAsync();
+
+                // SuperAdmin invisibility: exclude SuperAdmin users from counts for non-SuperAdmin roles
+                if (!isSuperAdmin)
+                {
+                    var superAdminRoleId = await _context.Roles
+                        .Where(r => r.Name == "SuperAdmin")
+                        .Select(r => r.Id)
+                        .FirstOrDefaultAsync();
+                    var superAdminUserIds = superAdminRoleId != null
+                        ? await _context.UserRoles
+                            .Where(ur => ur.RoleId == superAdminRoleId)
+                            .Select(ur => ur.UserId)
+                            .ToListAsync()
+                        : new List<string>();
+                    allUsers = allUsers.Where(u => !superAdminUserIds.Contains(u.Id)).ToList();
+                }
+
                 vm.TotalUsers = allUsers.Count;
                 vm.ActiveUsers = allUsers.Count(u => u.IsActive);
                 vm.InactiveUsers = allUsers.Count(u => !u.IsActive);
@@ -223,7 +240,8 @@ namespace LostAndFoundApp.Controllers
                     .Select(g => new { Role = g.Key, Count = g.Count() })
                     .ToListAsync();
 
-                vm.SuperAdminCount = roleCounts.FirstOrDefault(r => r.Role == "SuperAdmin")?.Count ?? 0;
+                // Only SuperAdmin sees SuperAdmin count
+                vm.SuperAdminCount = isSuperAdmin ? (roleCounts.FirstOrDefault(r => r.Role == "SuperAdmin")?.Count ?? 0) : 0;
                 vm.AdminCount = roleCounts.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0;
                 vm.SupervisorCount = roleCounts.FirstOrDefault(r => r.Role == "Supervisor")?.Count ?? 0;
                 vm.UserRoleCount = roleCounts.FirstOrDefault(r => r.Role == "User")?.Count ?? 0;

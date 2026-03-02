@@ -39,7 +39,7 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         // GET: /Announcement
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Index(int page = 1)
         {
             var pageSize = 25;
@@ -88,7 +88,7 @@ namespace LostAndFoundApp.Controllers
 
         // GET: /Announcement/Create
         [HttpGet]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public IActionResult Create()
         {
             return View(new CreateAnnouncementViewModel());
@@ -97,7 +97,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /Announcement/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Create(CreateAnnouncementViewModel model)
         {
             if (!ModelState.IsValid)
@@ -142,7 +142,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /Announcement/ToggleActive/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> ToggleActive(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
@@ -161,7 +161,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /Announcement/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireSuperAdmin")]
+        [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Delete(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
@@ -190,8 +190,8 @@ namespace LostAndFoundApp.Controllers
 
             var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
 
-            // SuperAdmin manages announcements from Index, not Messages
-            if (userRole == "SuperAdmin")
+            // SuperAdmin and Admin manage announcements from Index, not Messages
+            if (userRole == "SuperAdmin" || userRole == "Admin")
                 return RedirectToAction(nameof(Index));
 
             var now = DateTime.UtcNow;
@@ -280,8 +280,93 @@ namespace LostAndFoundApp.Controllers
 
             await _activityLogService.LogAsync(HttpContext, "Dismiss Announcement",
                 $"User dismissed announcement '{announcement.Title}'.", "Announcement");
-            TempData["SuccessMessage"] = "Announcement dismissed.";
+            TempData["SuccessMessage"] = "Announcement marked as read.";
             return RedirectToAction(nameof(Messages));
+        }
+
+        // POST: /Announcement/DismissAll — marks all unread announcements as read
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DismissAll()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
+            var now = DateTime.UtcNow;
+
+            var announcements = await _context.Announcements
+                .Where(a => a.IsActive)
+                .Where(a => a.ExpiresAt == null || a.ExpiresAt > now)
+                .Where(a => a.TargetRole == "All"
+                    || a.TargetRole == userRole
+                    || (a.TargetRole == "AdminAndAbove" && (userRole == "Admin"))
+                    || (a.TargetRole == "SupervisorAndAbove" && (userRole == "Admin" || userRole == "Supervisor")))
+                .ToListAsync();
+
+            var announcementIds = announcements.Select(a => a.Id).ToList();
+            var existingReads = await _context.AnnouncementReads
+                .Where(r => r.UserId == user.Id && announcementIds.Contains(r.AnnouncementId))
+                .ToListAsync();
+
+            foreach (var a in announcements)
+            {
+                var existing = existingReads.FirstOrDefault(r => r.AnnouncementId == a.Id);
+                if (existing != null)
+                {
+                    if (existing.DismissedAt == null)
+                        existing.DismissedAt = now;
+                }
+                else
+                {
+                    _context.AnnouncementReads.Add(new AnnouncementRead
+                    {
+                        AnnouncementId = a.Id,
+                        UserId = user.Id,
+                        PopupShownCount = 1,
+                        FirstReadAt = now,
+                        DismissedAt = now
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"All {announcements.Count} announcements marked as read.";
+            return RedirectToAction(nameof(Messages));
+        }
+
+        // POST: /Announcement/DismissAjax/5 — AJAX endpoint for popup "Mark as Read"
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DismissAjax(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Json(new { success = false });
+
+            var announcement = await _context.Announcements.FindAsync(id);
+            if (announcement == null) return Json(new { success = false });
+
+            var existing = await _context.AnnouncementReads
+                .FirstOrDefaultAsync(r => r.AnnouncementId == id && r.UserId == user.Id);
+
+            if (existing != null)
+            {
+                existing.DismissedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _context.AnnouncementReads.Add(new AnnouncementRead
+                {
+                    AnnouncementId = id,
+                    UserId = user.Id,
+                    PopupShownCount = 1,
+                    FirstReadAt = DateTime.UtcNow,
+                    DismissedAt = DateTime.UtcNow
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
         }
 
         // =====================================================================

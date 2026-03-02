@@ -53,8 +53,20 @@ namespace LostAndFoundApp.Models
         public virtual Vehicle? Vehicle { get; set; }
 
         [StringLength(500)]
-        [Display(Name = "Photo")]
+        [Display(Name = "Photo 1")]
         public string? PhotoPath { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Photo 2")]
+        public string? PhotoPath2 { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Photo 3")]
+        public string? PhotoPath3 { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Photo 4")]
+        public string? PhotoPath4 { get; set; }
 
         [Display(Name = "Storage Location")]
         public int? StorageLocationId { get; set; }

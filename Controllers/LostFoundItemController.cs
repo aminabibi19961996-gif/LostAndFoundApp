@@ -29,10 +29,19 @@ namespace LostAndFoundApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            // Default status to "Found" since that's the most common starting status
+            var foundStatus = await _context.Statuses
+                .Where(s => s.Name == "Found" && s.IsActive)
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync();
+
             var vm = new LostFoundItemCreateViewModel
             {
                 DateFound = DateTime.Today,
-                StatusDate = DateTime.Today
+                StatusDate = DateTime.Today,
+                StatusId = foundStatus,
+                PreviewTrackingId = await GenerateCustomTrackingIdAsync(),
+                CreatedByPreview = User.Identity?.Name ?? "Unknown"
             };
             await PopulateDropdowns(vm);
             return View(vm);
@@ -41,8 +50,8 @@ namespace LostAndFoundApp.Controllers
         // POST: /LostFoundItem/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestFormLimits(MultipartBodyLengthLimit = 10_485_760)] // 10MB — matches FileUpload:MaxFileSizeBytes
-        [RequestSizeLimit(10_485_760)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 52_428_800)] // 50MB — supports 4 photos + attachment
+        [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> Create(LostFoundItemCreateViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -70,18 +79,32 @@ namespace LostAndFoundApp.Controllers
                 CustomTrackingId = await GenerateCustomTrackingIdAsync()
             };
 
-            // Handle photo upload
-            if (vm.PhotoFile != null && vm.PhotoFile.Length > 0)
+            // Handle photo uploads (up to 4)
+            var photoFiles = new[] { vm.PhotoFile, vm.PhotoFile2, vm.PhotoFile3, vm.PhotoFile4 };
+            var photoFieldNames = new[] { "PhotoFile", "PhotoFile2", "PhotoFile3", "PhotoFile4" };
+            var savedPhotoPaths = new string?[4];
+
+            for (int i = 0; i < photoFiles.Length; i++)
             {
-                var photoName = await _fileService.SavePhotoAsync(vm.PhotoFile);
-                if (photoName == null)
+                if (photoFiles[i] != null && photoFiles[i]!.Length > 0)
                 {
-                    ModelState.AddModelError("PhotoFile", "Invalid photo file. Allowed types: jpg, jpeg, png, gif. Max size: 10MB.");
-                    await PopulateDropdowns(vm);
-                    return View(vm);
+                    var photoName = await _fileService.SavePhotoAsync(photoFiles[i]!);
+                    if (photoName == null)
+                    {
+                        // Clean up any previously saved photos in this batch
+                        for (int j = 0; j < i; j++)
+                            _fileService.DeletePhoto(savedPhotoPaths[j]);
+                        ModelState.AddModelError(photoFieldNames[i], "Invalid photo file. Allowed types: jpg, jpeg, png, gif. Max size: 10MB.");
+                        await PopulateDropdowns(vm);
+                        return View(vm);
+                    }
+                    savedPhotoPaths[i] = photoName;
                 }
-                item.PhotoPath = photoName;
             }
+            item.PhotoPath = savedPhotoPaths[0];
+            item.PhotoPath2 = savedPhotoPaths[1];
+            item.PhotoPath3 = savedPhotoPaths[2];
+            item.PhotoPath4 = savedPhotoPaths[3];
 
             // Handle attachment upload
             if (vm.AttachmentFile != null && vm.AttachmentFile.Length > 0)
@@ -89,7 +112,7 @@ namespace LostAndFoundApp.Controllers
                 var attachmentName = await _fileService.SaveAttachmentAsync(vm.AttachmentFile);
                 if (attachmentName == null)
                 {
-                    _fileService.DeletePhoto(item.PhotoPath);
+                    foreach (var p in savedPhotoPaths) _fileService.DeletePhoto(p);
                     ModelState.AddModelError("AttachmentFile", "Invalid attachment file. Allowed types: pdf, doc, docx, xls, xlsx, txt, jpg, jpeg, png. Max size: 10MB.");
                     await PopulateDropdowns(vm);
                     return View(vm);
@@ -107,6 +130,9 @@ namespace LostAndFoundApp.Controllers
                 _logger.LogError(ex, "Failed to save new LostFoundItem");
                 // Clean up orphaned files that were saved to disk before the DB failure
                 _fileService.DeletePhoto(item.PhotoPath);
+                _fileService.DeletePhoto(item.PhotoPath2);
+                _fileService.DeletePhoto(item.PhotoPath3);
+                _fileService.DeletePhoto(item.PhotoPath4);
                 _fileService.DeleteAttachment(item.AttachmentPath);
                 ModelState.AddModelError(string.Empty, "An error occurred while saving the record. Please try again.");
                 await PopulateDropdowns(vm);
@@ -136,12 +162,7 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // FIX: IDOR Protection - Users can only view their own records unless Supervisor+
-            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
-            if (!isSupervisorOrAbove && item.CreatedBy != User.Identity?.Name)
-            {
-                return Forbid();
-            }
+            // All authenticated users can view any record — no ownership restriction
 
             var vm = new LostFoundItemDetailViewModel
             {
@@ -154,6 +175,9 @@ namespace LostAndFoundApp.Controllers
                 RouteName = item.Route?.Name,
                 VehicleName = item.Vehicle?.Name,
                 PhotoPath = item.PhotoPath,
+                PhotoPath2 = item.PhotoPath2,
+                PhotoPath3 = item.PhotoPath3,
+                PhotoPath4 = item.PhotoPath4,
                 StorageLocationName = item.StorageLocation?.Name,
                 StatusName = item.Status?.Name,
                 StatusDate = item.StatusDate,
@@ -179,12 +203,7 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // Permission matrix: User can only edit their own records, Supervisor+ can edit any
-            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
-            if (!isSupervisorOrAbove && item.CreatedBy != User.Identity?.Name)
-            {
-                return Forbid();
-            }
+            // All authenticated users can edit any record — no ownership restriction
 
             var vm = new LostFoundItemEditViewModel
             {
@@ -203,9 +222,15 @@ namespace LostAndFoundApp.Controllers
                 ClaimedBy = item.ClaimedBy,
                 Notes = item.Notes,
                 ExistingPhotoPath = item.PhotoPath,
+                ExistingPhotoPath2 = item.PhotoPath2,
+                ExistingPhotoPath3 = item.PhotoPath3,
+                ExistingPhotoPath4 = item.PhotoPath4,
                 ExistingAttachmentPath = item.AttachmentPath,
                 CreatedBy = item.CreatedBy,
-                CreatedDateTime = item.CreatedDateTime
+                CreatedDateTime = item.CreatedDateTime,
+                ModifiedBy = item.ModifiedBy,
+                ModifiedDateTime = item.ModifiedDateTime,
+                DaysSinceFound = item.DaysSinceFound
             };
 
             await PopulateDropdowns(vm);
@@ -215,8 +240,8 @@ namespace LostAndFoundApp.Controllers
         // POST: /LostFoundItem/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestFormLimits(MultipartBodyLengthLimit = 10_485_760)] // 10MB — matches FileUpload:MaxFileSizeBytes
-        [RequestSizeLimit(10_485_760)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 52_428_800)] // 50MB — supports 4 photos + attachment
+        [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> Edit(LostFoundItemEditViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -229,12 +254,7 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // Permission matrix: User can only edit their own records, Supervisor+ can edit any
-            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
-            if (!isSupervisorOrAbove && item.CreatedBy != User.Identity?.Name)
-            {
-                return Forbid();
-            }
+            // All authenticated users can edit any record — no ownership restriction
 
             // P0 FIX: Audit field tampering prevention - never trust client-sent values
             // Hidden inputs (CreatedBy, CreatedDateTime) can be manipulated; always preserve DB values
@@ -259,11 +279,22 @@ namespace LostAndFoundApp.Controllers
             item.ModifiedBy = User.Identity?.Name ?? "Unknown";
             item.ModifiedDateTime = DateTime.UtcNow;
 
-            // Handle photo removal checkbox
-            if (Request.Form["RemovePhoto"] == "true" && !string.IsNullOrEmpty(item.PhotoPath))
+            // Handle photo removals (checkboxes)
+            var removePhotoKeys = new[] { "RemovePhoto", "RemovePhoto2", "RemovePhoto3", "RemovePhoto4" };
+            var itemPhotoPaths = new[] { item.PhotoPath, item.PhotoPath2, item.PhotoPath3, item.PhotoPath4 };
+            for (int i = 0; i < removePhotoKeys.Length; i++)
             {
-                _fileService.DeletePhoto(item.PhotoPath);
-                item.PhotoPath = null;
+                if (Request.Form[removePhotoKeys[i]] == "true" && !string.IsNullOrEmpty(itemPhotoPaths[i]))
+                {
+                    _fileService.DeletePhoto(itemPhotoPaths[i]);
+                    switch (i)
+                    {
+                        case 0: item.PhotoPath = null; break;
+                        case 1: item.PhotoPath2 = null; break;
+                        case 2: item.PhotoPath3 = null; break;
+                        case 3: item.PhotoPath4 = null; break;
+                    }
+                }
             }
 
             // Handle attachment removal checkbox
@@ -273,21 +304,37 @@ namespace LostAndFoundApp.Controllers
                 item.AttachmentPath = null;
             }
 
-            // Handle photo replacement
-            if (vm.PhotoFile != null && vm.PhotoFile.Length > 0)
+            // Handle photo replacements (up to 4)
+            var editPhotoFiles = new IFormFile?[] { vm.PhotoFile, vm.PhotoFile2, vm.PhotoFile3, vm.PhotoFile4 };
+            var editPhotoFieldNames = new[] { "PhotoFile", "PhotoFile2", "PhotoFile3", "PhotoFile4" };
+            var currentPaths = new[] { item.PhotoPath, item.PhotoPath2, item.PhotoPath3, item.PhotoPath4 };
+
+            for (int i = 0; i < editPhotoFiles.Length; i++)
             {
-                var photoName = await _fileService.SavePhotoAsync(vm.PhotoFile);
-                if (photoName == null)
+                if (editPhotoFiles[i] != null && editPhotoFiles[i]!.Length > 0)
                 {
-                    ModelState.AddModelError("PhotoFile", "Invalid photo file. Allowed types: jpg, jpeg, png, gif. Max size: 10MB.");
-                    vm.ExistingPhotoPath = item.PhotoPath;
-                    vm.ExistingAttachmentPath = item.AttachmentPath;
-                    await PopulateDropdowns(vm);
-                    return View(vm);
+                    var photoName = await _fileService.SavePhotoAsync(editPhotoFiles[i]!);
+                    if (photoName == null)
+                    {
+                        ModelState.AddModelError(editPhotoFieldNames[i], "Invalid photo file. Allowed types: jpg, jpeg, png, gif. Max size: 10MB.");
+                        vm.ExistingPhotoPath = item.PhotoPath;
+                        vm.ExistingPhotoPath2 = item.PhotoPath2;
+                        vm.ExistingPhotoPath3 = item.PhotoPath3;
+                        vm.ExistingPhotoPath4 = item.PhotoPath4;
+                        vm.ExistingAttachmentPath = item.AttachmentPath;
+                        await PopulateDropdowns(vm);
+                        return View(vm);
+                    }
+                    // Delete old photo
+                    _fileService.DeletePhoto(currentPaths[i]);
+                    switch (i)
+                    {
+                        case 0: item.PhotoPath = photoName; break;
+                        case 1: item.PhotoPath2 = photoName; break;
+                        case 2: item.PhotoPath3 = photoName; break;
+                        case 3: item.PhotoPath4 = photoName; break;
+                    }
                 }
-                // Delete old photo
-                _fileService.DeletePhoto(item.PhotoPath);
-                item.PhotoPath = photoName;
             }
 
             // Handle attachment replacement
@@ -298,6 +345,9 @@ namespace LostAndFoundApp.Controllers
                 {
                     ModelState.AddModelError("AttachmentFile", "Invalid attachment file.");
                     vm.ExistingPhotoPath = item.PhotoPath;
+                    vm.ExistingPhotoPath2 = item.PhotoPath2;
+                    vm.ExistingPhotoPath3 = item.PhotoPath3;
+                    vm.ExistingPhotoPath4 = item.PhotoPath4;
                     vm.ExistingAttachmentPath = item.AttachmentPath;
                     await PopulateDropdowns(vm);
                     return View(vm);
@@ -316,6 +366,9 @@ namespace LostAndFoundApp.Controllers
                 _logger.LogError(ex, "Failed to update LostFoundItem {TrackingId}", vm.TrackingId);
                 ModelState.AddModelError(string.Empty, "An error occurred while saving changes. Please try again.");
                 vm.ExistingPhotoPath = item.PhotoPath;
+                vm.ExistingPhotoPath2 = item.PhotoPath2;
+                vm.ExistingPhotoPath3 = item.PhotoPath3;
+                vm.ExistingPhotoPath4 = item.PhotoPath4;
                 vm.ExistingAttachmentPath = item.AttachmentPath;
                 await PopulateDropdowns(vm);
                 return View(vm);
@@ -336,18 +389,8 @@ namespace LostAndFoundApp.Controllers
 
             await PopulateSearchDropdowns(vm);
 
-            // FIX: IDOR Protection - Users can only search their own records unless Supervisor+
-            var currentUserName = User.Identity?.Name ?? "";
-            var isSupervisorOrAbove = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
-
-            // Build query
+            // All authenticated users can see all records — no role-based filtering
             var query = _context.LostFoundItems.AsQueryable();
-
-            // Apply role-based filtering - User role can only see their own records
-            if (!isSupervisorOrAbove)
-            {
-                query = query.Where(x => x.CreatedBy == currentUserName);
-            }
 
             // Build filter summary for print
             var filters = new List<string>();
@@ -767,6 +810,9 @@ namespace LostAndFoundApp.Controllers
 
             // Capture file paths before removing entity so we can clean up after successful DB delete
             var photoPath = item.PhotoPath;
+            var photoPath2 = item.PhotoPath2;
+            var photoPath3 = item.PhotoPath3;
+            var photoPath4 = item.PhotoPath4;
             var attachmentPath = item.AttachmentPath;
 
             _context.LostFoundItems.Remove(item);
@@ -784,6 +830,9 @@ namespace LostAndFoundApp.Controllers
 
             // Clean up associated files AFTER successful DB commit to prevent orphaned records
             _fileService.DeletePhoto(photoPath);
+            _fileService.DeletePhoto(photoPath2);
+            _fileService.DeletePhoto(photoPath3);
+            _fileService.DeletePhoto(photoPath4);
             _fileService.DeleteAttachment(attachmentPath);
 
             _logger.LogInformation("LostFoundItem {TrackingId} deleted by {User}", id, User.Identity?.Name);

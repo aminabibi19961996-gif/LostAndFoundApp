@@ -74,11 +74,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 var counter = document.getElementById('announcementCounter');
                 var prevBtn = document.getElementById('prevAnnouncement');
                 var nextBtn = document.getElementById('nextAnnouncement');
+                var markReadBtn = document.getElementById('markReadAnnouncement');
                 var closeBtn = document.getElementById('closeAnnouncementModal');
                 var backdrop = document.getElementById('modalBackdrop');
                 if (!modal) return;
 
                 var current = 0;
+
                 function showAnnouncement(idx) {
                     var a = announcements[idx];
                     body.innerHTML = '';
@@ -93,16 +95,70 @@ document.addEventListener('DOMContentLoaded', function () {
                     body.appendChild(h4);
                     body.appendChild(p);
                     body.appendChild(footer);
-                    counter.textContent = (idx + 1) + ' of ' + announcements.length;
-                    prevBtn.style.display = idx > 0 ? '' : 'none';
-                    nextBtn.textContent = idx < announcements.length - 1 ? 'Next' : 'Got it';
+
+                    // Update counter
+                    if (announcements.length > 1) {
+                        counter.textContent = (idx + 1) + ' of ' + announcements.length;
+                        counter.style.display = '';
+                    } else {
+                        counter.style.display = 'none';
+                    }
+
+                    // Show/hide nav buttons — only when multiple announcements
+                    prevBtn.style.display = (announcements.length > 1 && idx > 0) ? '' : 'none';
+                    nextBtn.style.display = (announcements.length > 1 && idx < announcements.length - 1) ? '' : 'none';
+                }
+
+                function markCurrentAsRead() {
+                    var a = announcements[current];
+                    if (!a || !token) return;
+
+                    // Disable button while processing
+                    markReadBtn.disabled = true;
+                    markReadBtn.innerHTML = '<i class="bi bi-hourglass-split" style="margin-right:4px;"></i>Marking...';
+
+                    fetch('/Announcement/DismissAjax/' + a.id, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }
+                    }).then(function (r) { return r.json(); })
+                        .then(function () {
+                            // Remove current announcement from list
+                            announcements.splice(current, 1);
+
+                            // Update badge count
+                            var badges = document.querySelectorAll('#unreadBadge, #navUnreadBadge');
+                            badges.forEach(function (b) {
+                                var c = parseInt(b.textContent || '0') - 1;
+                                if (c <= 0) { b.style.display = 'none'; }
+                                else { b.textContent = c; }
+                            });
+
+                            // If no more announcements, close modal
+                            if (announcements.length === 0) {
+                                modal.style.display = 'none';
+                                document.body.style.overflow = '';
+                                return;
+                            }
+
+                            // Adjust index if needed
+                            if (current >= announcements.length) current = announcements.length - 1;
+
+                            // Reset button and show next
+                            markReadBtn.disabled = false;
+                            markReadBtn.innerHTML = '<i class="bi bi-check-circle" style="margin-right:4px;"></i>Mark as Read';
+                            showAnnouncement(current);
+                        }).catch(function () {
+                            markReadBtn.disabled = false;
+                            markReadBtn.innerHTML = '<i class="bi bi-check-circle" style="margin-right:4px;"></i>Mark as Read';
+                        });
                 }
 
                 function closeModal() {
                     modal.style.display = 'none';
                     document.body.style.overflow = '';
+                    // Mark remaining as "popup shown" (bumps counter, doesn't dismiss)
                     var ids = announcements.map(function (a) { return a.id; });
-                    if (token) {
+                    if (ids.length > 0 && token) {
                         fetch('/Announcement/MarkPopupShown', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
@@ -116,8 +172,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 nextBtn.addEventListener('click', function () {
                     if (current < announcements.length - 1) { current++; showAnnouncement(current); }
-                    else { closeModal(); }
                 });
+                markReadBtn.addEventListener('click', markCurrentAsRead);
                 closeBtn.addEventListener('click', closeModal);
                 backdrop.addEventListener('click', closeModal);
 

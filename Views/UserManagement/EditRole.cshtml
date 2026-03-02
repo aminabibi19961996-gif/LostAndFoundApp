@@ -4,21 +4,53 @@
 }
 
 <div style="max-width:480px;margin:0 auto;">
-    <div style="margin-bottom:20px;"><h1 style="font-family:var(--font-display);font-size:1.625rem;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px;"><i class="bi bi-pencil-square" style="color:var(--accent)"></i> Edit User Role</h1></div>
+    <!-- HEADER -->
+    <div style="margin-bottom:20px;">
+        <h1 style="font-family:var(--font-display);font-size:1.625rem;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-pencil-square" style="color:var(--accent)"></i> Edit User Role
+        </h1>
+    </div>
+
+    <!-- FORM CARD -->
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <!-- Info banner -->
         <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:var(--accent-subtle);color:var(--accent);font-size:14.5px;font-weight:500;display:flex;align-items:center;gap:8px;">
             <i class="bi bi-info-circle"></i>
             Changing role for <strong style="margin-left:4px;">@Model.UserName</strong>
-            @if (!string.IsNullOrEmpty(Model.DisplayName)) { <span style="opacity:.7">(@Model.DisplayName)</span> }
+            @if (!string.IsNullOrEmpty(Model.DisplayName))
+            {
+                <span style="opacity:.7">(@Model.DisplayName)</span>
+            }
         </div>
+
         <div style="padding:22px 20px;">
             <form asp-action="EditRole" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="UserId" />
                 <input type="hidden" asp-for="UserName" />
                 <input type="hidden" asp-for="DisplayName" />
-                <div style="margin-bottom:14px;"><label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Current Role</label><input value="@Model.CurrentRole" class="form-control" disabled /></div>
-                <div style="margin-bottom:14px;"><label asp-for="NewRole" class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">New Role</label><select asp-for="NewRole" class="form-select"><option value="User">User</option><option value="Supervisor">Supervisor</option><option value="Admin">Admin</option>@if (User.IsInRole("SuperAdmin")) { <option value="SuperAdmin">Super Admin</option> }</select></div>
+
+                <!-- Current Role (readonly) -->
+                <div style="margin-bottom:14px;">
+                    <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Current Role</label>
+                    <input value="@Model.CurrentRole" class="form-control" disabled />
+                </div>
+
+                <!-- New Role -->
+                <div style="margin-bottom:14px;">
+                    <label asp-for="NewRole" class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">New Role</label>
+                    <select asp-for="NewRole" class="form-select">
+                        <option value="User">User</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Admin">Admin</option>
+                        @if (User.IsInRole("SuperAdmin"))
+                        {
+                            <option value="SuperAdmin">Super Admin</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- FOOTER -->
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-elevated);margin:4px -18px -20px;border-radius:0 0 12px 12px;">
                     <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Cancel</a>
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Role</button>
