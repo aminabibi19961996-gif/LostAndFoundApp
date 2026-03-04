@@ -224,6 +224,12 @@ namespace LostAndFoundApp.ViewModels
         // Filter summary for print
         public string FilterSummary { get; set; } = string.Empty;
 
+        // Overdue filter
+        public bool ShowOverdueOnly { get; set; }
+        // Thresholds sourced from OverdueSettings (passed from controller)
+        public int ShortOverdueDays { get; set; } = 7;
+        public int LongOverdueDays { get; set; } = 30;
+
         // Results
         public List<SearchResultItem> Results { get; set; } = new();
 
@@ -249,6 +255,7 @@ namespace LostAndFoundApp.ViewModels
         public string StorageLocationName { get; set; } = string.Empty;
         public string StatusName { get; set; } = string.Empty;
         public int DaysSinceFound { get; set; }
+        public int DaysInSystem { get; set; }
         public string FoundByName { get; set; } = string.Empty;
         public string? ClaimedBy { get; set; }
         public string? CreatedBy { get; set; }

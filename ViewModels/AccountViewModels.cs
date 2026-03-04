@@ -69,4 +69,15 @@ namespace LostAndFoundApp.ViewModels
         public bool RequireUppercase { get; set; } = true;
         public bool RequireNonAlphanumeric { get; set; } = true;
     }
+
+    public class OverdueSettingsViewModel
+    {
+        [Range(1, 365, ErrorMessage = "Short overdue threshold must be between 1 and 365 days.")]
+        [Display(Name = "Short Overdue Threshold (days)")]
+        public int ShortOverdueDays { get; set; } = 7;
+
+        [Range(1, 3650, ErrorMessage = "Long overdue threshold must be between 1 and 3650 days.")]
+        [Display(Name = "Long Overdue Threshold (days)")]
+        public int LongOverdueDays { get; set; } = 30;
+    }
 }

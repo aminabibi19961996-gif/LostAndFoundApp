@@ -100,24 +100,42 @@ builder.Services.ConfigureApplicationCookie(options =>
 // 4 roles: SuperAdmin, Admin, Supervisor, User
 //
 // Permission Matrix:
-//   Feature                          SuperAdmin  Admin  Supervisor  User
-//   ─────────────────────────────────────────────────────────────────────
-//   Dashboard (Full Analytics)         ✓          ✓       ✓        Basic
-//   Create Lost & Found Records        ✓          ✓       ✓          ✓
-//   Edit Any Record                    ✓          ✓       ✓     Own Only
-//   Delete Records                     ✓          ✓       ✗          ✗
-//   Manage Master Data                 ✓          ✓       ✓          ✗
-//   Inline AJAX Master Data            ✓          ✓       ✓          ✗
-//   View All Activity Logs             ✓          ✓       ✗          ✗
-//   View Own Activity Logs             ✓          ✓       ✓          ✗
-//   Export Logs (CSV)                  ✓          ✓       ✗          ✗
-//   Clear All Logs                     ✓          ✗       ✗          ✗
-//   View User List                     ✓          ✓  ReadOnly       ✗
-//   Create/Edit/Delete Users           ✓          ✓       ✗          ✗
-//   Change User Roles                  ✓          ✓       ✗          ✗
-//   Activate/Deactivate Users          ✓          ✓       ✗          ✗
-//   Manage AD Groups                   ✓          ✓       ✗          ✗
-//   Trigger AD Sync                    ✓          ✓       ✗          ✗
+//   Feature                            SuperAdmin  Admin  Supervisor     User
+//   ─────────────────────────────────────────────────────────────────────────
+//   Dashboard (Full Analytics)           ✓          ✓       Partial     Basic
+//   Dashboard (System Health)            ✓          ✗          ✗          ✗
+//   Dashboard (Team Overview)            ✓          ✓          ✓          ✗
+//   Dashboard (Admin Analytics)          ✓          ✓          ✗          ✗
+//   Create Lost & Found Records          ✓          ✓          ✓          ✓
+//   Edit Any Record                      ✓          ✓          ✓     Own Only*
+//   Delete Records (non-protected)       ✓          ✓          ✗          ✗
+//   [NOTE] Claimed/Disposed records      ✗          ✗          ✗          ✗
+//          are PERMANENTLY PROTECTED     (no role can delete these — audit guard)
+//   Export Records CSV                   ✓          ✓          ✓          ✗
+//   Print Search (full results)          ✓          ✓          ✓          ✗
+//   Bulk Delete / Bulk Status Update     ✓          ✓          ✗          ✗
+//   Manage Master Data (full CRUD)       ✓          ✓          ✓          ✗
+//   Inline AJAX Master Data              ✓          ✓          ✓          ✗
+//   View All Activity Logs               ✓          ✓          ✗          ✗
+//   View User+Supervisor Logs            ✓          ✓          ✓          ✗
+//   Export Logs (CSV)                    ✓          ✓          ✗          ✗
+//   Clear All Logs                       ✓          ✗          ✗          ✗
+//   View User List                       ✓          ✓     ReadOnly        ✗
+//   Create/Edit/Delete Users             ✓          ✓          ✗          ✗
+//   Change User Roles                    ✓          ✓          ✗          ✗
+//   Activate/Deactivate Users            ✓          ✓          ✗          ✗
+//   Manage AD Groups / AD Users          ✓          ✓          ✗          ✗
+//   Trigger AD Sync                      ✓          ✓          ✗          ✗
+//   Configure Password Policy            ✓          ✗          ✗          ✗
+//   Manage Announcements (Create/Delete) ✓          ✓          ✓          ✗
+//   Receive Announcement Popups          ✗**        ✓          ✓          ✓
+//   Personal Announcement Inbox          ✗**        ✗**        ✗**        ✓
+//
+// * User role (Own Only edit): enforced in LostFoundItemController.Edit().
+//   Supervisor, Admin, and SuperAdmin can edit any record.
+// ** SuperAdmin/Admin/Supervisor manage announcements via /Announcement/Index
+//    rather than the personal inbox. SuperAdmin never receives popups by design
+//    (they are the operators, not the target audience).
 //
 builder.Services.AddAuthorization(options =>
 {

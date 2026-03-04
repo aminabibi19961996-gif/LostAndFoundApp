@@ -204,6 +204,18 @@ namespace LostAndFoundApp.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("Seeded default password policy.");
             }
+
+            // ─── Seed Default Overdue Thresholds ──────────────────
+            if (!await context.OverdueSettings.AnyAsync())
+            {
+                context.OverdueSettings.Add(new OverdueSettings
+                {
+                    ShortOverdueDays = 7,
+                    LongOverdueDays = 30
+                });
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded default overdue thresholds (7 days / 30 days).");
+            }
         }
 
         /// <summary>

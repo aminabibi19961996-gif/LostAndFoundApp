@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — Lost &amp; Found</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
@@ -21,11 +25,8 @@
 
     <!-- NAV -->
     <nav>
-        <a class="nav-brand" asp-controller="Home" asp-action="Index">
-            <div style="width:76px;height:76px;background:#7C8FFF;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
-                <img src="/images/logo.png" alt="Lost &amp; Found Logo" style="width:100%;height:100%;object-fit:cover;" />
-            </div>
-            Lost &amp; Found
+        <a class="nav-brand" asp-controller="Home" asp-action="Index" style="display:flex;align-items:center;height:80px;line-height:1;padding:0;">
+            <img src="/images/logo.png" alt="Lost &amp; Found Logo" style="height:72px;width:auto;display:block;object-fit:contain;mix-blend-mode:lighten;" />
         </a>
 
         <div class="nav-links">
@@ -67,6 +68,7 @@
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3"></i> AD Groups &amp; Sync</a>
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdUsers"><i class="bi bi-person-badge"></i> AD Users</a>
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="PasswordPolicy"><i class="bi bi-key"></i> Password Policy</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="OverdueSettings"><i class="bi bi-clock-history"></i> Overdue Settings</a>
                         <a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone"></i> Announcements</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Activity Logs</a>
@@ -83,6 +85,7 @@
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="Index"><i class="bi bi-people"></i> User Management</a>
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdGroups"><i class="bi bi-diagram-3"></i> AD Groups &amp; Sync</a>
                         <a class="dropdown-item" asp-controller="UserManagement" asp-action="AdUsers"><i class="bi bi-person-badge"></i> AD Users</a>
+                        <a class="dropdown-item" asp-controller="UserManagement" asp-action="OverdueSettings"><i class="bi bi-clock-history"></i> Overdue Settings</a>
                         <a class="dropdown-item" asp-controller="Announcement" asp-action="Index"><i class="bi bi-megaphone"></i> Announcements</a>
                         <a class="dropdown-item" asp-controller="Logs" asp-action="Index"><i class="bi bi-journal-text"></i> Activity Logs</a>
                     </div>

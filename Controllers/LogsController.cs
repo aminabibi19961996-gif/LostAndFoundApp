@@ -10,7 +10,7 @@ namespace LostAndFoundApp.Controllers
     /// <summary>
     /// Activity Logs management.
     /// SuperAdmin and Admin can view all logs and export CSV.
-    /// Supervisor can view own logs only.
+    /// Supervisor can view logs from any User or Supervisor account (read-only, no export).
     /// User role has no log access.
     /// Only SuperAdmin can clear all logs.
     /// </summary>
@@ -37,8 +37,8 @@ namespace LostAndFoundApp.Controllers
             var query = _context.ActivityLogs.AsQueryable();
 
             // Permission matrix:
-            // - SuperAdmin, Admin: can view all logs
-            // - Supervisor: can view own logs only
+            // - SuperAdmin, Admin: can view all logs + export CSV
+            // - Supervisor: can view logs from User and Supervisor accounts (read-only, no export)
             // - User: cannot view logs at all
             var canViewAllLogs = User.IsInRole("SuperAdmin") || User.IsInRole("Admin");
             var isSupervisor = User.IsInRole("Supervisor");
@@ -46,15 +46,33 @@ namespace LostAndFoundApp.Controllers
             // User role: cannot view logs at all
             if (!canViewAllLogs && !isSupervisor)
             {
-                // Redirect to access denied or return empty
                 return RedirectToAction("Index", "Home");
             }
 
-            // Supervisor: filter to own logs only
+            // Supervisor: restrict to logs from User and Supervisor role accounts only.
+            // Resolves the allowed usernames via Identity tables (no extra injection needed).
+            // Admin and SuperAdmin log entries remain hidden from Supervisors.
             if (isSupervisor && !canViewAllLogs)
             {
-                var currentUser = User.Identity?.Name ?? "";
-                query = query.Where(l => l.PerformedBy == currentUser);
+                // Fetch role IDs for User and Supervisor
+                var allowedRoleIds = await _context.Roles
+                    .Where(r => r.Name == "User" || r.Name == "Supervisor")
+                    .Select(r => r.Id)
+                    .ToListAsync();
+
+                // Fetch user IDs assigned to those roles
+                var allowedUserIds = await _context.UserRoles
+                    .Where(ur => allowedRoleIds.Contains(ur.RoleId))
+                    .Select(ur => ur.UserId)
+                    .ToListAsync();
+
+                // Resolve to usernames (PerformedBy stores UserName, not Id)
+                var allowedUserNames = await _context.Users
+                    .Where(u => allowedUserIds.Contains(u.Id))
+                    .Select(u => u.UserName)
+                    .ToListAsync();
+
+                query = query.Where(l => allowedUserNames.Contains(l.PerformedBy));
             }
 
             // Apply filters

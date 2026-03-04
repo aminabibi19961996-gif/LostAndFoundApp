@@ -57,7 +57,9 @@
     .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
     .rc-footer-info { font-size: 13.5px; color: var(--text-dim); font-weight: 500; }
 
-    .days-warn { color: var(--red); font-weight: 700; }
+    .days-warn  { color: var(--amber); font-weight: 700; }
+    .days-crit  { color: var(--red);   font-weight: 700; }
+    .overdue-active { display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#EF4444;font-size:12.5px;font-weight:700; }
 </style>
 }
 
@@ -66,6 +68,14 @@
     <div class="search-header-left">
         <h1><i class="bi bi-search"></i> Search Records</h1>
         <span class="count">@Model.TotalRecords record(s) found</span>
+        @if (Model.ShowOverdueOnly)
+        {
+            <span class="overdue-active">
+                <i class="bi bi-clock-history"></i>
+                Overdue filter active (@Model.ShortOverdueDays+ days)
+                <a asp-action="Search" style="color:inherit;opacity:.7;margin-left:2px;" title="Clear overdue filter"><i class="bi bi-x-lg"></i></a>
+            </span>
+        }
     </div>
     @if (Model.Results.Any())
     {
@@ -187,6 +197,20 @@
 <div class="fc">
     <div class="fc-body">
         <form method="get" asp-action="Search">
+            @* ── Overdue Quick Filter ── *@
+            @if (!Model.ShowOverdueOnly)
+            {
+                <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                    <a asp-action="Search" asp-route-ShowOverdueOnly="true" class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.3);font-weight:700;">
+                        <i class="bi bi-clock-history me-1"></i> Show Overdue Items (@Model.ShortOverdueDays+ days)
+                    </a>
+                    <span style="font-size:12px;color:var(--text-dim);">Lists all unresolved items older than @Model.ShortOverdueDays days</span>
+                </div>
+            }
+            @if (Model.ShowOverdueOnly)
+            {
+                <input type="hidden" name="ShowOverdueOnly" value="true" />
+            }
             <div class="fg">
                 @* ── ID ── *@
                 <div>
@@ -366,9 +390,15 @@
                             <td style="font-size:12.5px;">@item.LocationFound</td>
                             <td><span class="sb @statusClass">@(item.StatusName ?? "Unknown")</span></td>
                             <td>
-                                @if (item.DaysSinceFound > 30)
+                                @{
+                                    var d = item.DaysInSystem;
+                                    var dClass = d >= Model.LongOverdueDays ? "days-crit"
+                                               : d >= Model.ShortOverdueDays ? "days-warn"
+                                               : "";
+                                }
+                                @if (!string.IsNullOrEmpty(dClass))
                                 {
-                                    <span class="days-warn">@item.DaysSinceFound</span>
+                                    <span class="@dClass">@item.DaysSinceFound</span>
                                 }
                                 else
                                 {

@@ -42,6 +42,9 @@ namespace LostAndFoundApp.Data
         // Password policy settings (single-row configuration table)
         public DbSet<PasswordPolicySetting> PasswordPolicySettings { get; set; }
 
+        // Overdue thresholds (single-row configuration table — replaces hardcoded 7/30 day constants)
+        public DbSet<OverdueSettings> OverdueSettings { get; set; }
+
         // AD sync history log
         public DbSet<AdSyncLog> AdSyncLogs { get; set; }
 
@@ -228,6 +231,13 @@ namespace LostAndFoundApp.Data
                 entity.Property(e => e.RequireLowercase).HasDefaultValue(true);
                 entity.Property(e => e.RequireUppercase).HasDefaultValue(true);
                 entity.Property(e => e.RequireNonAlphanumeric).HasDefaultValue(true);
+            });
+
+            builder.Entity<OverdueSettings>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ShortOverdueDays).HasDefaultValue(7);
+                entity.Property(e => e.LongOverdueDays).HasDefaultValue(30);
             });
 
             builder.Entity<AdSyncLog>(entity =>

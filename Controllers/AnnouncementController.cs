@@ -39,7 +39,7 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         // GET: /Announcement
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Index(int page = 1)
         {
             var pageSize = 25;
@@ -142,7 +142,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /Announcement/ToggleActive/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> ToggleActive(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
@@ -161,7 +161,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /Announcement/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Delete(int id)
         {
             var announcement = await _context.Announcements.FindAsync(id);
@@ -190,8 +190,8 @@ namespace LostAndFoundApp.Controllers
 
             var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
 
-            // SuperAdmin and Admin manage announcements from Index, not Messages
-            if (userRole == "SuperAdmin" || userRole == "Admin")
+            // SuperAdmin, Admin, and Supervisor manage announcements from Index, not Messages
+            if (userRole == "SuperAdmin" || userRole == "Admin" || userRole == "Supervisor")
                 return RedirectToAction(nameof(Index));
 
             var now = DateTime.UtcNow;

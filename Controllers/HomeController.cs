@@ -131,18 +131,26 @@ namespace LostAndFoundApp.Controllers
             // CRITICAL ALERTS
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-            var thirtyDaysAgo = now.AddDays(-30);
-            var sevenDaysAgo  = now.AddDays(-7);
+            // Load configurable thresholds from DB (SuperAdmin/Admin can change via Overdue Settings)
+            var overdueSettings = await _context.OverdueSettings.FirstOrDefaultAsync();
+            int shortDays = overdueSettings?.ShortOverdueDays ?? 7;
+            int longDays  = overdueSettings?.LongOverdueDays  ?? 30;
+
+            vm.ShortOverdueDays = shortDays;
+            vm.LongOverdueDays  = longDays;
+
+            var longOverdueAgo  = now.AddDays(-longDays);
+            var shortOverdueAgo = now.AddDays(-shortDays);
 
             vm.UnclaimedOver30Days = await _context.LostFoundItems
-                .CountAsync(x => x.CreatedDateTime <= thirtyDaysAgo
+                .CountAsync(x => x.CreatedDateTime <= longOverdueAgo
                     && x.Status != null && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
                     && x.Status.Name != "Transferred");
 
-            // Overdue: in the system (CreatedDateTime) > 7 days and not resolved
+            // Overdue: in the system for > ShortOverdueDays and not resolved
             vm.ItemsOverdue7Days = await _context.LostFoundItems
-                .CountAsync(x => x.CreatedDateTime <= sevenDaysAgo
+                .CountAsync(x => x.CreatedDateTime <= shortOverdueAgo
                     && x.Status != null
                     && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"

@@ -890,6 +890,48 @@ namespace LostAndFoundApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: /UserManagement/OverdueSettings
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> OverdueSettings()
+        {
+            var settings = await _context.OverdueSettings.FirstOrDefaultAsync();
+            var vm = new OverdueSettingsViewModel
+            {
+                ShortOverdueDays = settings?.ShortOverdueDays ?? 7,
+                LongOverdueDays  = settings?.LongOverdueDays  ?? 30
+            };
+            return View(vm);
+        }
+
+        // POST: /UserManagement/OverdueSettings
+        [HttpPost]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OverdueSettings(OverdueSettingsViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var settings = await _context.OverdueSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Models.OverdueSettings();
+                _context.OverdueSettings.Add(settings);
+            }
+
+            settings.ShortOverdueDays = model.ShortOverdueDays;
+            settings.LongOverdueDays  = model.LongOverdueDays;
+
+            await _context.SaveChangesAsync();
+
+            await _activityLogService.LogAsync(HttpContext, "Update Overdue Settings",
+                $"Overdue thresholds updated: Short={model.ShortOverdueDays} days, Long={model.LongOverdueDays} days.", "UserManagement");
+
+            TempData["SuccessMessage"] = $"Overdue thresholds updated: {model.ShortOverdueDays} days (short) / {model.LongOverdueDays} days (long). Dashboards and Search will reflect new values immediately.";
+            return RedirectToAction(nameof(OverdueSettings));
+        }
+
         // =====================================================================
         // AD GROUP SEARCH — live search against Active Directory
         // =====================================================================

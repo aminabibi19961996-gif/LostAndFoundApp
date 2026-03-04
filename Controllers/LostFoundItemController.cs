@@ -214,7 +214,16 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // All authenticated users can edit any record — no ownership restriction
+            // Ownership restriction: User role can only edit records they created.
+            // Supervisor, Admin, and SuperAdmin can edit any record.
+            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin") && !User.IsInRole("Supervisor"))
+            {
+                if (item.CreatedBy != User.Identity?.Name)
+                {
+                    TempData["ErrorMessage"] = "You can only edit records that you created.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+            }
 
             var vm = new LostFoundItemEditViewModel
             {
@@ -265,7 +274,16 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // All authenticated users can edit any record — no ownership restriction
+            // Ownership restriction: User role can only edit records they created.
+            // Supervisor, Admin, and SuperAdmin can edit any record.
+            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin") && !User.IsInRole("Supervisor"))
+            {
+                if (item.CreatedBy != User.Identity?.Name)
+                {
+                    TempData["ErrorMessage"] = "You can only edit records that you created.";
+                    return RedirectToAction(nameof(Details), new { id = vm.TrackingId });
+                }
+            }
 
             // Snapshot before-state for diff logging BEFORE any fields are mutated
             var beforeSnapshot = new LostFoundItem
@@ -425,6 +443,11 @@ namespace LostAndFoundApp.Controllers
         {
             vm ??= new SearchViewModel();
 
+            // Load overdue thresholds from DB
+            var overdueSettings = await _context.OverdueSettings.FirstOrDefaultAsync();
+            vm.ShortOverdueDays = overdueSettings?.ShortOverdueDays ?? 7;
+            vm.LongOverdueDays  = overdueSettings?.LongOverdueDays  ?? 30;
+
             await PopulateSearchDropdowns(vm);
 
             // All authenticated users can see all records — no role-based filtering
@@ -432,6 +455,21 @@ namespace LostAndFoundApp.Controllers
 
             // Build filter summary for print
             var filters = new List<string>();
+
+            // ── Overdue-only shortcut filter ──────────────────────────────────────
+            // If ShowOverdueOnly is set, restrict to items that have been in the
+            // system for ≥ ShortOverdueDays and are still unresolved.
+            if (vm.ShowOverdueOnly)
+            {
+                var overdueAgo = DateTime.UtcNow.AddDays(-vm.ShortOverdueDays);
+                query = query.Where(x =>
+                    x.CreatedDateTime <= overdueAgo
+                    && x.Status != null
+                    && x.Status.Name != "Claimed"
+                    && x.Status.Name != "Disposed"
+                    && x.Status.Name != "Transferred");
+                filters.Add($"Overdue ({vm.ShortOverdueDays}+ days, unresolved)");
+            }
 
             // Apply filters — empty/null filters are ignored
             if (vm.TrackingId.HasValue)
@@ -526,7 +564,8 @@ namespace LostAndFoundApp.Controllers
                     StatusName = x.Status != null ? x.Status.Name : "",
                     FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
                     x.ClaimedBy,
-                    x.CreatedBy
+                    x.CreatedBy,
+                    x.CreatedDateTime
                 })
                 .ToListAsync();
 
@@ -543,6 +582,7 @@ namespace LostAndFoundApp.Controllers
                 StorageLocationName = x.StorageLocationName,
                 StatusName = x.StatusName,
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
+                DaysInSystem = (int)(DateTime.UtcNow - x.CreatedDateTime).TotalDays,
                 FoundByName = x.FoundByName,
                 ClaimedBy = x.ClaimedBy,
                 CreatedBy = x.CreatedBy
