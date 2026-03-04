@@ -113,6 +113,7 @@ html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    height: 100%;
 }
 
 body {
@@ -120,9 +121,12 @@ body {
     background: var(--bg);
     color: var(--text-primary);
     line-height: 1.5;
-    min-height: 100vh;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     font-size: 15px;
     font-weight: 500;
+    overflow: hidden;
 }
 
 a {
@@ -141,7 +145,7 @@ nav {
     position: sticky;
     top: 0;
     z-index: 100;
-    height: 54px;
+    height: 80px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--border);
     display: flex;
@@ -319,6 +323,11 @@ nav .dropdown-divider {
     width: 100%;
     max-width: none;
     padding: 28px 24px 48px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 /* ── 5. PAGE HEADER ──────────────────────────────────────── */

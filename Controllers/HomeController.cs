@@ -54,7 +54,8 @@ namespace LostAndFoundApp.Controllers
                 .Select(g => new { StatusName = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            var totalItems = statusGroups.Sum(s => s.Count);
+            // Total = all records regardless of status (items with null status are still real records)
+            var totalItems = await _context.LostFoundItems.CountAsync();
             var claimedCount = statusGroups.FirstOrDefault(s => s.StatusName == "Claimed")?.Count ?? 0;
             var disposedCount = statusGroups.FirstOrDefault(s => s.StatusName == "Disposed")?.Count ?? 0;
             var foundCount = statusGroups.FirstOrDefault(s => s.StatusName == "Found")?.Count ?? 0;
@@ -90,11 +91,11 @@ namespace LostAndFoundApp.Controllers
             if (claimedItemDates.Any())
                 vm.AvgDaysToClaim = Math.Round(claimedItemDates.Average(x => (x.StatusDate - x.DateFound).TotalDays), 1);
 
-            // Average storage duration — days items in Stored status have been sitting
+            // Average storage duration — days items in Stored status have been sitting (from CreatedDateTime)
             var storedItemDates = await _context.LostFoundItems
                 .Include(x => x.Status)
                 .Where(x => x.Status != null && x.Status.Name == "Stored")
-                .Select(x => x.DateFound)
+                .Select(x => x.CreatedDateTime)
                 .ToListAsync();
             if (storedItemDates.Any())
                 vm.AvgStorageDuration = Math.Round(storedItemDates.Average(x => (DateTime.UtcNow - x).TotalDays), 1);
@@ -134,7 +135,7 @@ namespace LostAndFoundApp.Controllers
             var sevenDaysAgo  = now.AddDays(-7);
 
             vm.UnclaimedOver30Days = await _context.LostFoundItems
-                .CountAsync(x => x.DateFound <= thirtyDaysAgo
+                .CountAsync(x => x.CreatedDateTime <= thirtyDaysAgo
                     && x.Status != null && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
                     && x.Status.Name != "Transferred");
@@ -151,9 +152,9 @@ namespace LostAndFoundApp.Controllers
                 .CountAsync(x => x.Status != null &&
                     (x.Status.Name == "Found" || x.Status.Name == "Stored"));
 
-            var activeItems = totalItems - claimedCount - disposedCount - transferredCount;
-            vm.AwaitingActionPercent = activeItems > 0
-                ? Math.Round((double)vm.ItemsAwaitingAction / activeItems * 100, 1) : 0;
+            // AwaitingAction % of ALL items (not just active) — gives a true system-wide percentage
+            vm.AwaitingActionPercent = totalItems > 0
+                ? Math.Round((double)vm.ItemsAwaitingAction / totalItems * 100, 1) : 0;
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             // USER-SPECIFIC: My Work
