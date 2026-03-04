@@ -168,7 +168,7 @@
   <div class="dtc">
     <div class="dtc-head">
       <span class="dtc-title"><i class="bi bi-person-lines-fill" style="color:var(--accent-db)"></i> My Records <span class="dtc-badge">@Model.MyItemsCount total</span></span>
-      <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all →</a>
+      <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all</a>
     </div>
     @if (!Model.RecentRecords.Any())
     {
@@ -221,7 +221,7 @@
       </div>
       <div class="dtc-foot">
         <span class="dtc-foot-info">Showing @Model.RecentRecords.Count most recent</span>
-        <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all →</a>
+        <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all</a>
       </div>
     }
   </div>

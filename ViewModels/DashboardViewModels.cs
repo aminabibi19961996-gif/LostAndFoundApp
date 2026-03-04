@@ -40,6 +40,9 @@ namespace LostAndFoundApp.ViewModels
         /// <summary>Items unclaimed for over 30 days</summary>
         public int UnclaimedOver30Days { get; set; }
 
+        /// <summary>Items in the system for over 7 days from CreatedDateTime, not yet resolved (not Claimed/Disposed/Transferred)</summary>
+        public int ItemsOverdue7Days { get; set; }
+
         /// <summary>Items awaiting action (Found or Stored)</summary>
         public int ItemsAwaitingAction { get; set; }
         /// <summary>Percentage of total active items that are awaiting action</summary>

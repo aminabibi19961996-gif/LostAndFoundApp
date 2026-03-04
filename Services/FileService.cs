@@ -25,7 +25,7 @@ namespace LostAndFoundApp.Services
         {
             var allowedExtensions = _config.GetSection("FileUpload:AllowedPhotoExtensions").Get<string[]>()
                 ?? new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var storagePath = _config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos";
+            var storagePath = NormalizePath(_config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos");
             return await SaveFileAsync(file, storagePath, allowedExtensions);
         }
 
@@ -37,7 +37,7 @@ namespace LostAndFoundApp.Services
         {
             var allowedExtensions = _config.GetSection("FileUpload:AllowedAttachmentExtensions").Get<string[]>()
                 ?? new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt", ".jpg", ".jpeg", ".png" };
-            var storagePath = _config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments";
+            var storagePath = NormalizePath(_config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments");
             return await SaveFileAsync(file, storagePath, allowedExtensions);
         }
 
@@ -127,7 +127,7 @@ namespace LostAndFoundApp.Services
         /// </summary>
         public (byte[]? Bytes, string ContentType)? GetPhoto(string fileName)
         {
-            var storagePath = _config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos";
+            var storagePath = NormalizePath(_config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos");
             return GetFile(fileName, storagePath);
         }
 
@@ -137,7 +137,7 @@ namespace LostAndFoundApp.Services
         /// </summary>
         public (byte[]? Bytes, string ContentType)? GetAttachment(string fileName)
         {
-            var storagePath = _config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments";
+            var storagePath = NormalizePath(_config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments");
             return GetFile(fileName, storagePath);
         }
 
@@ -191,14 +191,14 @@ namespace LostAndFoundApp.Services
         public void DeletePhoto(string? fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName)) return;
-            var storagePath = _config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos";
+            var storagePath = NormalizePath(_config["FileUpload:PhotoStoragePath"] ?? "./SecureStorage/Photos");
             DeleteFile(fileName, storagePath);
         }
 
         public void DeleteAttachment(string? fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName)) return;
-            var storagePath = _config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments";
+            var storagePath = NormalizePath(_config["FileUpload:AttachmentStoragePath"] ?? "./SecureStorage/Attachments");
             DeleteFile(fileName, storagePath);
         }
 
@@ -219,6 +219,20 @@ namespace LostAndFoundApp.Services
                 _logger.LogError(ex, "Failed to delete file '{FileName}'. It may be locked or inaccessible.", fileName);
                 // Don't rethrow — file deletion failure should not crash the parent operation
             }
+        }
+
+        /// <summary>
+        /// Normalizes a storage path to an absolute path using Path.GetFullPath.
+        /// This is critical for Windows/IIS deployments where relative paths like
+        /// "./SecureStorage/Photos" can resolve to unexpected locations (e.g., C:\Windows\System32)
+        /// if the IIS app pool working directory differs from the app root.
+        /// On Linux this is a safe no-op when the path is already relative to cwd.
+        /// </summary>
+        private static string NormalizePath(string path)
+        {
+            // Convert forward slashes to OS-native separator for consistent behavior
+            // on Windows (backslash) and Linux (forward slash)
+            return Path.GetFullPath(path.Replace('/', Path.DirectorySeparatorChar));
         }
     }
 }

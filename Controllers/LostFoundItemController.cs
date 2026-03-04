@@ -15,13 +15,15 @@ namespace LostAndFoundApp.Controllers
         private readonly ApplicationDbContext _context;
         private readonly FileService _fileService;
         private readonly ActivityLogService _activityLogService;
+        private readonly ItemDiffService _diffService;
         private readonly ILogger<LostFoundItemController> _logger;
 
-        public LostFoundItemController(ApplicationDbContext context, FileService fileService, ActivityLogService activityLogService, ILogger<LostFoundItemController> logger)
+        public LostFoundItemController(ApplicationDbContext context, FileService fileService, ActivityLogService activityLogService, ItemDiffService diffService, ILogger<LostFoundItemController> logger)
         {
             _context = context;
             _fileService = fileService;
             _activityLogService = activityLogService;
+            _diffService = diffService;
             _logger = logger;
         }
 
@@ -140,8 +142,17 @@ namespace LostAndFoundApp.Controllers
             }
 
             _logger.LogInformation("LostFoundItem {TrackingId} created by {User}", item.TrackingId, item.CreatedBy);
-            await _activityLogService.LogAsync(HttpContext, "Create Record",
-                $"Created lost & found record #{item.TrackingId} (Item: {vm.ItemId}, Location: {vm.LocationFound}).", "Items");
+
+            // Log with key initial field values so the audit trail shows what was submitted
+            var itemNameForLog = (await _context.Items.FindAsync(item.ItemId))?.Name ?? item.ItemId.ToString();
+            var statusNameForLog = (await _context.Statuses.FindAsync(item.StatusId))?.Name ?? item.StatusId.ToString();
+            var createDetails = $"Created lost & found record #{item.TrackingId}\n" +
+                                $"CHANGES:\n" +
+                                $"- Item: \"{itemNameForLog}\"\n" +
+                                $"- Date Found: \"{item.DateFound:MM/dd/yyyy}\"\n" +
+                                $"- Location Found: \"{item.LocationFound}\"\n" +
+                                $"- Status: \"{statusNameForLog}\"";
+            await _activityLogService.LogAsync(HttpContext, "Create Record", createDetails, "Items");
             TempData["SuccessMessage"] = $"Item record #{item.TrackingId} created successfully.";
             return RedirectToAction(nameof(Details), new { id = item.TrackingId });
         }
@@ -255,6 +266,29 @@ namespace LostAndFoundApp.Controllers
                 return NotFound();
 
             // All authenticated users can edit any record — no ownership restriction
+
+            // Snapshot before-state for diff logging BEFORE any fields are mutated
+            var beforeSnapshot = new LostFoundItem
+            {
+                TrackingId   = item.TrackingId,
+                DateFound    = item.DateFound,
+                ItemId       = item.ItemId,
+                Description  = item.Description,
+                LocationFound= item.LocationFound,
+                RouteId      = item.RouteId,
+                VehicleId    = item.VehicleId,
+                StorageLocationId = item.StorageLocationId,
+                StatusId     = item.StatusId,
+                StatusDate   = item.StatusDate,
+                FoundById    = item.FoundById,
+                ClaimedBy    = item.ClaimedBy,
+                Notes        = item.Notes,
+                PhotoPath    = item.PhotoPath,
+                PhotoPath2   = item.PhotoPath2,
+                PhotoPath3   = item.PhotoPath3,
+                PhotoPath4   = item.PhotoPath4,
+                AttachmentPath = item.AttachmentPath
+            };
 
             // P0 FIX: Audit field tampering prevention - never trust client-sent values
             // Hidden inputs (CreatedBy, CreatedDateTime) can be manipulated; always preserve DB values
@@ -375,8 +409,12 @@ namespace LostAndFoundApp.Controllers
             }
 
             _logger.LogInformation("LostFoundItem {TrackingId} updated by {User}", item.TrackingId, User.Identity?.Name);
-            await _activityLogService.LogAsync(HttpContext, "Edit Record",
-                $"Updated lost & found record #{item.TrackingId}.", "Items");
+
+            // Build a field-level diff and store it in the activity log
+            var editDiff = await _diffService.BuildEditDiffAsync(
+                beforeSnapshot, item,
+                $"Updated lost & found record #{item.TrackingId}.");
+            await _activityLogService.LogAsync(HttpContext, "Edit Record", editDiff, "Items");
             TempData["SuccessMessage"] = $"Item record #{item.TrackingId} updated successfully.";
             return RedirectToAction(nameof(Details), new { id = item.TrackingId });
         }
@@ -782,7 +820,13 @@ namespace LostAndFoundApp.Controllers
             await _activityLogService.LogAsync(HttpContext, "Export Records",
                 $"Exported {results.Count} records to CSV.", "Items");
 
-            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            var csvContent = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            // Prepend UTF-8 BOM so Windows Excel opens the file with correct encoding
+            // Without BOM, Excel on Windows defaults to ANSI and garbles non-ASCII characters
+            var bom = System.Text.Encoding.UTF8.GetPreamble();
+            var bytes = new byte[bom.Length + csvContent.Length];
+            bom.CopyTo(bytes, 0);
+            csvContent.CopyTo(bytes, bom.Length);
             return File(bytes, "text/csv", $"lost-found-export-{DateTime.Now:yyyyMMdd-HHmmss}.csv");
         }
 
@@ -804,9 +848,21 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireAdminOrAbove")]
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _context.LostFoundItems.FindAsync(id);
+            var item = await _context.LostFoundItems
+                .Include(x => x.Status)
+                .FirstOrDefaultAsync(x => x.TrackingId == id);
+
             if (item == null)
                 return NotFound();
+
+            // Guard: Claimed / Disposed records are permanent audit records
+            var protectedStatuses = new[] { "Claimed", "Disposed" };
+            if (item.Status != null && protectedStatuses.Contains(item.Status.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                TempData["ErrorMessage"] = $"Record #{item.CustomTrackingId ?? id.ToString()} cannot be deleted because its status is \"{item.Status.Name}\". " +
+                    "Claimed and Disposed records are permanent audit records and cannot be removed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             // Capture file paths before removing entity so we can clean up after successful DB delete
             var photoPath = item.PhotoPath;
@@ -857,6 +913,7 @@ namespace LostAndFoundApp.Controllers
             }
 
             var items = await _context.LostFoundItems
+                .Include(x => x.Status)
                 .Where(x => idArray.Contains(x.TrackingId))
                 .ToListAsync();
 
@@ -866,14 +923,29 @@ namespace LostAndFoundApp.Controllers
                 return RedirectToAction(nameof(Search));
             }
 
-            var deletedCount = items.Count;
+            // Guard: split into deletable vs protected
+            var protectedStatuses = new[] { "Claimed", "Disposed" };
+            var protectedItems = items
+                .Where(x => x.Status != null && protectedStatuses.Contains(x.Status.Name, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+            var deletableItems = items.Except(protectedItems).ToList();
+
+            if (!deletableItems.Any())
+            {
+                TempData["ErrorMessage"] = $"None of the {items.Count} selected record(s) could be deleted. " +
+                    "Claimed and Disposed records are permanent audit records and cannot be removed.";
+                return RedirectToAction(nameof(Search));
+            }
+
+            var deletedCount = deletableItems.Count;
+            var skippedCount = protectedItems.Count;
 
             // Capture file paths BEFORE removing entities
-            var filesToDelete = items
+            var filesToDelete = deletableItems
                 .Select(i => (Photo: i.PhotoPath, Attachment: i.AttachmentPath))
                 .ToList();
 
-            _context.LostFoundItems.RemoveRange(items);
+            _context.LostFoundItems.RemoveRange(deletableItems);
 
             try
             {
@@ -895,8 +967,15 @@ namespace LostAndFoundApp.Controllers
 
             _logger.LogInformation("Bulk deleted {Count} records by {User}", deletedCount, User.Identity?.Name);
             await _activityLogService.LogAsync(HttpContext, "Bulk Delete",
-                $"Bulk deleted {deletedCount} lost & found records.", "Items");
-            TempData["SuccessMessage"] = $"{deletedCount} record(s) deleted successfully.";
+                $"Bulk deleted {deletedCount} lost & found records." +
+                (skippedCount > 0 ? $" {skippedCount} Claimed/Disposed record(s) were skipped (protected)." : ""),
+                "Items");
+
+            if (skippedCount > 0)
+                TempData["WarningMessage"] = $"{deletedCount} record(s) deleted. {skippedCount} record(s) with status Claimed or Disposed were skipped - those are permanent audit records.";
+            else
+                TempData["SuccessMessage"] = $"{deletedCount} record(s) deleted successfully.";
+
             return RedirectToAction(nameof(Search));
         }
 

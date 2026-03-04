@@ -33,8 +33,11 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console()
-    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day,
-                  outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        path: Path.Combine("Logs", "log-.txt"),
+        rollingInterval: RollingInterval.Day,
+        encoding: System.Text.Encoding.UTF8,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 builder.Host.UseSerilog();
 
@@ -129,6 +132,8 @@ builder.Services.AddScoped<FileService>();
 builder.Services.AddScoped<AdSyncService>();
 builder.Services.AddScoped<ActivityLogService>();
 builder.Services.AddSingleton<AdLoginRateLimiter>();
+builder.Services.AddSingleton<TimeZoneService>();
+builder.Services.AddScoped<ItemDiffService>();
 
 // Custom password validator that reads policy from database (Gap 1 fix)
 // Replaces Identity's hardcoded password rules with dynamic, SuperAdmin-configurable policy

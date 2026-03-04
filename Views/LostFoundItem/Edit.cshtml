@@ -1,4 +1,5 @@
 @model LostFoundItemEditViewModel
+@inject LostAndFoundApp.Services.TimeZoneService tzSvc
 @{
     ViewData["Title"] = $"Edit Record #{Model.TrackingId}";
 }
@@ -29,8 +30,8 @@
 
     .section-divider { grid-column: span 4; border-top: 1px solid var(--border); margin: 4px 0; }
 
-    .photos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .photo-slot { border: 2px dashed var(--border); border-radius: 10px; padding: 16px 12px; text-align: center; transition: border-color .2s, background .2s; position: relative; }
+    .photos-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: start; }
+    .photo-slot { border: 2px dashed var(--border); border-radius: 10px; padding: 14px 12px; text-align: center; transition: border-color .2s, background .2s; position: relative; }
     .photo-slot:hover { border-color: var(--accent); background: var(--accent-subtle); }
     .photo-slot.has-photo { border-style: solid; border-color: var(--green); }
     .photo-slot .slot-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: 8px; }
@@ -47,13 +48,13 @@
         .form-grid .span-3 { grid-column: span 2; }
         .form-grid .span-4 { grid-column: span 2; }
         .section-divider { grid-column: span 2; }
-        .photos-grid { grid-template-columns: repeat(2, 1fr); }
+        .photos-grid { grid-template-columns: 1fr 1fr; }
     }
     @@media (max-width: 600px) {
         .form-grid { grid-template-columns: 1fr; }
         .form-grid .span-2, .form-grid .span-3 { grid-column: span 1; }
         .section-divider { grid-column: span 1; }
-        .photos-grid { grid-template-columns: 1fr 1fr; }
+        .photos-grid { grid-template-columns: 1fr; }
     }
 </style>
 }
@@ -150,7 +151,7 @@
         <div class="card-body">
             <div class="form-grid">
 
-                @* ── Row 1: Status · Status Date · Days Since Found ── *@
+                @* ── Single Row: Status · Status Date · Days Since Found · Created By · Created Date & Time ── *@
                 <div class="fg-item">
                     <label asp-for="StatusId" class="form-label">Status *</label>
                     <div class="field-with-add">
@@ -165,31 +166,31 @@
                     <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
                     <div class="form-text">Defaults to current date</div>
                 </div>
-                <div class="fg-item span-2">
+                <div class="fg-item">
                     <label class="form-label">Days Since Found</label>
                     <div style="padding:9px 0;">
                         <span style="padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;background:@(Model.DaysSinceFound > 30 ? "rgba(248,113,113,0.1)" : "rgba(74,222,128,0.1)");color:@(Model.DaysSinceFound > 30 ? "var(--red)" : "var(--green)");">@Model.DaysSinceFound day(s)</span>
                     </div>
                     <div class="form-text">Auto calculated</div>
                 </div>
-
-                @* ── Row 2: Created By · Created Date/Time ── *@
-                <div class="fg-item span-2">
-                    <label class="form-label">Created By *</label>
+                <div class="fg-item">
+                    <label class="form-label">Created By</label>
                     <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;">@(Model.CreatedBy ?? "—")</div>
                 </div>
-                <div class="fg-item span-2">
-                    <label class="form-label">Created Date &amp; Time *</label>
-                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;">@Model.CreatedDateTime.ToString("MM/dd/yyyy hh:mm tt")</div>
-                </div>
 
-                @* ── Row 3: Modified By info ── *@
-                <div class="fg-item span-4" style="background:var(--bg-elevated);border-radius:8px;padding:10px 14px;margin-top:-4px;">
+                @* ── Row 2: Created Date & Time (full width with ET label) ── *@
+                <div class="fg-item span-4" style="background:var(--bg-elevated);border-radius:8px;padding:8px 14px;margin-top:-4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <i class="bi bi-clock" style="color:var(--accent);"></i>
+                        <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Created Date &amp; Time</span>
+                        <span style="font-size:14px;color:var(--text-secondary);font-weight:600;">@tzSvc.Format(Model.CreatedDateTime)</span>
+                        <span style="font-size:11px;color:var(--text-dim);padding:2px 6px;border-radius:4px;background:var(--bg-card);border:1px solid var(--border);">@tzSvc.ShortName</span>
+                    </div>
                     @if (!string.IsNullOrEmpty(Model.ModifiedBy))
                     {
                         <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
                             <i class="bi bi-clock-history"></i>
-                            <span><strong>Last Modified By:</strong> @Model.ModifiedBy on @Model.ModifiedDateTime?.ToString("MM/dd/yyyy hh:mm tt")</span>
+                            <span><strong>Last Modified By:</strong> @Model.ModifiedBy on @tzSvc.Format(Model.ModifiedDateTime) <span style="font-size:11px;color:var(--text-dim);">(@tzSvc.ShortName)</span></span>
                         </div>
                     }
                     else
@@ -233,18 +234,18 @@
                     <span class="text-muted small" style="font-size:11px;">Max 1000 characters</span>
                 </div>
 
-                @* ── Row 3: Photos (4 slots) ── *@
+                @* ── Row 3: 2 Photos + Attachment (3-column compact row) ── *@
                 <div class="section-divider"></div>
                 <div class="span-4">
-                    <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Photos * <span style="font-weight:500;text-transform:none;letter-spacing:0;font-size:11px;color:var(--text-dim);">— Upload up to 4 images (JPG, PNG, GIF · Max 10MB each)</span></label>
+                    <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:10px;">Media &amp; Files <span style="font-weight:500;text-transform:none;letter-spacing:0;font-size:11px;color:var(--text-dim);">— Up to 2 photos (JPG, PNG, GIF · Max 10MB each) + 1 attachment</span></label>
                     <div class="photos-grid">
                         @{
-                            var photoInputNames = new[] { "PhotoFile", "PhotoFile2", "PhotoFile3", "PhotoFile4" };
-                            var photoSlotLabels = new[] { "Photo 1", "Photo 2", "Photo 3", "Photo 4" };
-                            var existingPaths = new[] { Model.ExistingPhotoPath, Model.ExistingPhotoPath2, Model.ExistingPhotoPath3, Model.ExistingPhotoPath4 };
-                            var removeNames = new[] { "RemovePhoto", "RemovePhoto2", "RemovePhoto3", "RemovePhoto4" };
+                            var photoInputNames = new[] { "PhotoFile", "PhotoFile2" };
+                            var photoSlotLabels = new[] { "Photo 1", "Photo 2" };
+                            var existingPaths = new[] { Model.ExistingPhotoPath, Model.ExistingPhotoPath2 };
+                            var removeNames = new[] { "RemovePhoto", "RemovePhoto2" };
                         }
-                        @for (int i = 0; i < 4; i++)
+                        @for (int i = 0; i < 2; i++)
                         {
                             var hasExisting = !string.IsNullOrEmpty(existingPaths[i]);
                             <div class="photo-slot @(hasExisting ? "has-photo" : "")">
@@ -266,22 +267,25 @@
                                 <input type="file" name="@photoInputNames[i]" accept=".jpg,.jpeg,.png,.gif" class="form-control" style="font-size:12px;margin-top:6px;" data-photo-preview="preview_@photoInputNames[i]" />
                             </div>
                         }
-                    </div>
-                </div>
-
-                @* ── Row 4: Attachment ── *@
-                <div class="fg-item span-4" style="margin-top:8px;">
-                    <label asp-for="AttachmentFile" class="form-label">Attachment (File Upload) *</label>
-                    <input asp-for="AttachmentFile" class="form-control" type="file" />
-                    @if (!string.IsNullOrEmpty(Model.ExistingAttachmentPath))
-                    {
-                        <div class="file-status attached"><i class="bi bi-check-circle"></i> Current attachment attached</div>
-                        <div class="form-check" style="margin-top:4px;">
-                            <input type="checkbox" name="RemoveAttachment" value="true" class="form-check-input" id="removeAttachment" />
-                            <label class="form-check-label" for="removeAttachment" style="color:var(--red);font-size:12px;">Remove current attachment</label>
+                        @* Attachment slot in the 3rd column *@
+                        <div class="photo-slot" style="border-style:solid;border-color:@(!string.IsNullOrEmpty(Model.ExistingAttachmentPath) ? "var(--green)" : "var(--border)");">
+                            <div class="slot-label">Attachment</div>
+                            @if (!string.IsNullOrEmpty(Model.ExistingAttachmentPath))
+                            {
+                                <div class="file-status attached"><i class="bi bi-check-circle"></i> File attached</div>
+                                <div class="form-check" style="margin-top:4px;">
+                                    <input type="checkbox" name="RemoveAttachment" value="true" class="form-check-input" id="removeAttachment" />
+                                    <label class="form-check-label" for="removeAttachment" style="color:var(--red);font-size:12px;">Remove</label>
+                                </div>
+                            }
+                            else
+                            {
+                                <i class="bi bi-paperclip slot-icon"></i>
+                            }
+                            <input asp-for="AttachmentFile" class="form-control" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" style="font-size:12px;margin-top:6px;" />
+                            <div class="form-text" style="font-size:11px;margin-top:6px;">PDF, DOC, XLS, TXT, or images. Max 10MB.</div>
                         </div>
-                    }
-                    <div class="form-text">PDF, DOC, XLS, TXT, or images. Max 10MB.</div>
+                    </div>
                 </div>
             </div>
         </div>

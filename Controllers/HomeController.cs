@@ -131,10 +131,19 @@ namespace LostAndFoundApp.Controllers
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
             var thirtyDaysAgo = now.AddDays(-30);
+            var sevenDaysAgo  = now.AddDays(-7);
 
             vm.UnclaimedOver30Days = await _context.LostFoundItems
                 .CountAsync(x => x.DateFound <= thirtyDaysAgo
                     && x.Status != null && x.Status.Name != "Claimed"
+                    && x.Status.Name != "Disposed"
+                    && x.Status.Name != "Transferred");
+
+            // Overdue: in the system (CreatedDateTime) > 7 days and not resolved
+            vm.ItemsOverdue7Days = await _context.LostFoundItems
+                .CountAsync(x => x.CreatedDateTime <= sevenDaysAgo
+                    && x.Status != null
+                    && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
                     && x.Status.Name != "Transferred");
 
@@ -268,6 +277,16 @@ namespace LostAndFoundApp.Controllers
                     if (user != null && !string.IsNullOrEmpty(user.DisplayName))
                         contributor.DisplayName = user.DisplayName;
                 }
+
+                // Top item categories — shared widget across Supervisor and above
+                vm.TopItemTypes = await _context.LostFoundItems
+                    .Include(x => x.Item)
+                    .Where(x => x.Item != null)
+                    .GroupBy(x => x.Item!.Name)
+                    .Select(g => new TopItemType { ItemName = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(5)
+                    .ToListAsync();
             }
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

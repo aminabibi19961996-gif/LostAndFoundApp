@@ -88,7 +88,7 @@ namespace LostAndFoundApp.Controllers
 
         // GET: /Announcement/Create
         [HttpGet]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public IActionResult Create()
         {
             return View(new CreateAnnouncementViewModel());
@@ -97,7 +97,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /Announcement/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "RequireAdminOrAbove")]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Create(CreateAnnouncementViewModel model)
         {
             if (!ModelState.IsValid)

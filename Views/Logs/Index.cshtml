@@ -17,11 +17,24 @@
     .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .stable { width: 100%; border-collapse: collapse; }
     .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
-    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
     .stable tbody tr:last-child td { border-bottom: none; }
     .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
     .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+
+    /* Diff rendering */
+    .diff-summary { font-size: 13.5px; color: var(--text-secondary); }
+    .diff-toggle { display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 12px; font-weight: 600; color: var(--accent); cursor: pointer; border: 1px solid var(--accent); background: transparent; padding: 2px 8px; border-radius: 4px; opacity: .8; transition: opacity .14s, background .14s; }
+    .diff-toggle:hover { opacity: 1; background: var(--accent-subtle); }
+    .diff-panel { display: none; margin-top: 8px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .diff-panel.open { display: block; }
+    .diff-line { font-size: 12.5px; padding: 4px 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .diff-line:last-child { border-bottom: none; }
+    .diff-field { font-weight: 700; color: var(--text-muted); min-width: 130px; flex-shrink: 0; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; }
+    .diff-old { color: #f87171; text-decoration: line-through; opacity: .85; font-size: 12.5px; }
+    .diff-arrow { color: var(--text-dim); flex-shrink: 0; }
+    .diff-new { color: #4ade80; font-weight: 600; font-size: 12.5px; }
     @@media (max-width: 768px) { .fg { grid-template-columns: 1fr 1fr; } }
 </style>
 }
@@ -47,13 +60,10 @@
     <div class="fc-body">
         <form method="get" asp-action="Index">
             <div class="fg">
-                <!-- Search -->
                 <div>
                     <label class="form-label">Search</label>
                     <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Action, details, user..." />
                 </div>
-
-                <!-- Category -->
                 <div>
                     <label class="form-label">Category</label>
                     <select name="category" class="form-select">
@@ -67,8 +77,6 @@
                         <option value="System" selected="@(Model.CategoryFilter == "System" ? "selected" : null)">System</option>
                     </select>
                 </div>
-
-                <!-- Date Range -->
                 <div>
                     <label class="form-label">Date From</label>
                     <input type="date" name="dateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" class="form-control" />
@@ -77,8 +85,6 @@
                     <label class="form-label">Date To</label>
                     <input type="date" name="dateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
-
-                <!-- Actions -->
                 <div class="fg-actions">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
                     <a asp-action="Index" class="btn btn-ghost"><i class="bi bi-x-circle"></i></a>
@@ -93,15 +99,112 @@
     {
         <div style="overflow-x:auto;">
             <table class="stable">
-                <thead><tr><th>Timestamp</th><th>Action</th><th>Details</th><th>Performed By</th><th>Category</th><th>IP</th><th>Status</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Details / Changes</th>
+                        <th>Performed By</th>
+                        <th>Category</th>
+                        <th>IP</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
                 <tbody>
+                    @{
+                        int diffIdx = 0;
+                    }
                     @foreach (var log in Model.Logs)
                     {
-                        var catClass = log.Category?.ToLower() switch { "auth" => "badge-auth", "items" => "badge-items", "masterdata" => "badge-masterdata", "usermanagement" => "badge-usermanagement", "adsync" => "badge-adsync", "announcement" => "badge-announcement", "system" => "badge-system", _ => "badge-user" };
+                        var catClass = log.Category?.ToLower() switch {
+                            "auth"           => "badge-auth",
+                            "items"          => "badge-items",
+                            "masterdata"     => "badge-masterdata",
+                            "usermanagement" => "badge-usermanagement",
+                            "adsync"         => "badge-adsync",
+                            "announcement"   => "badge-announcement",
+                            "system"         => "badge-system",
+                            _                => "badge-user"
+                        };
+
+                        // Detect structured diff (CHANGES: sentinel written by ItemDiffService)
+                        var hasDiff = log.Details.Contains("CHANGES:");
+                        string summaryLine;
+                        List<string> changeLines;
+
+                        if (hasDiff)
+                        {
+                            var parts = log.Details.Split("CHANGES:", 2);
+                            summaryLine = parts[0].Trim();
+                            changeLines = parts.Length > 1
+                                ? parts[1]
+                                      .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(l => l.Trim())
+                                      .Where(l => l.StartsWith("-"))
+                                      .ToList()
+                                : new List<string>();
+                        }
+                        else
+                        {
+                            summaryLine = log.Details;
+                            changeLines = new List<string>();
+                        }
+
+                        var panelId = $"diff-{diffIdx++}";
+
                         <tr>
                             <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);white-space:nowrap;">@log.Timestamp.ToString("MM/dd/yyyy HH:mm")</td>
-                            <td style="font-weight:600;color:var(--text-primary);">@log.Action</td>
-                            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@log.Details">@log.Details</td>
+                            <td style="font-weight:600;color:var(--text-primary);white-space:nowrap;">@log.Action</td>
+                            <td style="min-width:240px;max-width:400px;">
+                                @if (hasDiff && changeLines.Any())
+                                {
+                                    <div class="diff-summary">@summaryLine</div>
+                                    <button class="diff-toggle" onclick="toggleDiff('@panelId', this)" type="button">
+                                        <i class="bi bi-list-ul"></i>&nbsp;@changeLines.Count change(s)
+                                    </button>
+                                    <div class="diff-panel" id="@panelId">
+                                        @foreach (var line in changeLines)
+                                        {
+                                            var withoutBullet = line.TrimStart('-').Trim();
+                                            var colonIdx = withoutBullet.IndexOf(':');
+                                            if (colonIdx > 0)
+                                            {
+                                                var fieldLabel = withoutBullet[..colonIdx].Trim();
+                                                var rest = withoutBullet[(colonIdx + 1)..].Trim();
+                                                var arrowIdx = rest.IndexOf(" -> ");
+                                                string oldVal, newVal;
+                                                if (arrowIdx >= 0)
+                                                {
+                                                    oldVal = rest[..arrowIdx].Trim().Trim('"');
+                                                    newVal = rest[(arrowIdx + 4)..].Trim().Trim('"');
+                                                }
+                                                else
+                                                {
+                                                    oldVal = "";
+                                                    newVal = rest.Trim('"');
+                                                }
+                                                <div class="diff-line">
+                                                    <span class="diff-field">@fieldLabel</span>
+                                                    @if (!string.IsNullOrEmpty(oldVal))
+                                                    {
+                                                        <span class="diff-old">@oldVal</span>
+                                                        <span class="diff-arrow">-></span>
+                                                    }
+                                                    <span class="diff-new">@newVal</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="diff-line"><span>@line</span></div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span style="max-width:350px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@log.Details">@log.Details</span>
+                                }
+                            </td>
                             <td>@log.PerformedBy</td>
                             <td><span class="badge-status @catClass">@log.Category</span></td>
                             <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">@log.IpAddress</td>
@@ -133,3 +236,17 @@
         </div>
     }
 </div>
+
+@section Scripts {
+<script>
+    function toggleDiff(panelId, btn) {
+        var panel = document.getElementById(panelId);
+        var isOpen = panel.classList.toggle('open');
+        // Update button icon and text
+        var count = btn.textContent.trim().match(/\d+\s+change/)?.[0] ?? 'changes';
+        btn.innerHTML = isOpen
+            ? '<i class="bi bi-chevron-up"></i>&nbsp;' + count
+            : '<i class="bi bi-list-ul"></i>&nbsp;' + count;
+    }
+</script>
+}

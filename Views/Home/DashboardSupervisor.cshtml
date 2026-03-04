@@ -113,6 +113,7 @@
     <div style="display:flex;gap:8px;">
       <a class="btn btn-primary btn-sm" asp-controller="LostFoundItem" asp-action="Create"><i class="bi bi-plus"></i> New Record</a>
       <a class="btn btn-secondary btn-sm" asp-controller="LostFoundItem" asp-action="Search"><i class="bi bi-search"></i> Search</a>
+      <a class="btn btn-secondary btn-sm" asp-controller="Announcement" asp-action="Create"><i class="bi bi-megaphone"></i> Post Announcement</a>
     </div>
   </div>
 
@@ -145,9 +146,17 @@
         <div class="crit-lbl">New This Week</div>
         <div class="crit-ctx">
           <span class="@(Model.WeekOverWeekChangePercent >= 0 ? "up" : "down")">
-            @(Model.WeekOverWeekChangePercent >= 0 ? "↑" : "↓")@Math.Abs(Model.WeekOverWeekChangePercent)%
+            @(Model.WeekOverWeekChangePercent >= 0 ? "(+)" : "(-)")@Math.Abs(Model.WeekOverWeekChangePercent)%
           </span> vs last week
         </div>
+      </div>
+    </div>
+    <div class="crit-card @(Model.ItemsOverdue7Days > 0 ? "danger" : "ok")">
+      <div class="crit-icon"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <div class="crit-num">@Model.ItemsOverdue7Days</div>
+        <div class="crit-lbl">Overdue (7+ days)</div>
+        <div class="crit-ctx">Entered 7+ days ago, unresolved</div>
       </div>
     </div>
   </div>
@@ -192,7 +201,7 @@
     <div class="dtc">
       <div class="dtc-head">
         <span class="dtc-title"><i class="bi bi-clock-history" style="color:var(--accent-db)"></i> Recent Records <span class="dtc-badge">@Model.TotalItems total</span></span>
-        <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all →</a>
+        <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all</a>
       </div>
       @if (!Model.RecentRecords.Any())
       {
@@ -233,39 +242,52 @@
         </div>
         <div class="dtc-foot">
           <span class="dtc-foot-info">Showing @Model.RecentRecords.Count of @Model.TotalItems</span>
-          <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all →</a>
+          <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all</a>
         </div>
       }
     </div>
 
-    <!-- SIDEBAR: Team Performance + Quick Stats -->
+    <!-- SIDEBAR: Top Categories + Contributors -->
     <div class="sidebar">
-      @if (Model.TopContributors.Any())
+      @if (Model.TopItemTypes.Any())
       {
+        var maxTopItem = Model.TopItemTypes.Max(t => t.Count);
+        var topRank = 0;
         <div class="s-panel">
-          <div class="s-panel-head">Top Contributors (30d)</div>
-          @{ var rank = 0; }
-          @foreach (var c in Model.TopContributors)
+          <div class="s-panel-head">Top Categories</div>
+          @foreach (var item in Model.TopItemTypes)
           {
-            rank++;
-            var pct = maxContributor > 0 ? (c.ItemsCreated * 100 / maxContributor) : 0;
+            topRank++;
+            var pct = maxTopItem > 0 ? (item.Count * 100 / maxTopItem) : 0;
             <div class="s-row">
-              <span style="font-size:12px;color:var(--t4);font-family:var(--mono);width:16px;text-align:right;flex-shrink:0;font-weight:600">@rank</span>
-              <span class="s-name">@c.DisplayName</span>
+              <span style="font-size:12px;color:var(--t4);font-family:var(--mono);width:16px;text-align:right;flex-shrink:0;font-weight:600">@topRank</span>
+              <span class="s-name">@item.ItemName</span>
               <div class="s-bar"><div class="s-fill" style="width:@(pct)%"></div></div>
-              <span class="s-val">@c.ItemsCreated</span>
+              <span class="s-val">@item.Count</span>
             </div>
           }
         </div>
       }
 
-      <div class="s-panel">
-        <div class="s-panel-head">Team Overview</div>
-        <div class="s-row"><span class="s-name">Total Users</span><span class="s-val">@Model.TotalUsers</span></div>
-        <div class="s-row"><span class="s-name">Active</span><span class="s-val ok">@Model.ActiveUsers</span></div>
-        <div class="s-row"><span class="s-name">Inactive</span><span class="s-val @(Model.InactiveUsers > 0 ? "warn" : "")">@Model.InactiveUsers</span></div>
-        <div class="s-row"><span class="s-name">AD Users</span><span class="s-val">@Model.AdUsers</span></div>
-      </div>
+      @if (Model.TopContributors.Any())
+      {
+        var maxContrib = Model.TopContributors.Max(c => c.ItemsCreated);
+        var contribRank = 0;
+        <div class="s-panel">
+          <div class="s-panel-head">Top Contributors (30d)</div>
+          @foreach (var c in Model.TopContributors)
+          {
+            contribRank++;
+            var pct2 = maxContrib > 0 ? (c.ItemsCreated * 100 / maxContrib) : 0;
+            <div class="s-row">
+              <span style="font-size:12px;color:var(--t4);font-family:var(--mono);width:16px;text-align:right;flex-shrink:0;font-weight:600">@contribRank</span>
+              <span class="s-name">@c.DisplayName</span>
+              <div class="s-bar"><div class="s-fill" style="width:@(pct2)%"></div></div>
+              <span class="s-val">@c.ItemsCreated</span>
+            </div>
+          }
+        </div>
+      }
 
       <div class="s-panel">
         <div class="s-panel-head">Status Distribution</div>

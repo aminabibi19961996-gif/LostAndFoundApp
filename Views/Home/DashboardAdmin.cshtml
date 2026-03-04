@@ -149,7 +149,15 @@
       <div>
         <div class="a-num">@Model.ItemsThisWeek</div>
         <div class="a-lbl">New This Week</div>
-        <div class="a-ctx"><span class="@(Model.WeekOverWeekChangePercent >= 0 ? "up" : "down")">@(Model.WeekOverWeekChangePercent >= 0 ? "↑" : "↓")@Math.Abs(Model.WeekOverWeekChangePercent)%</span> vs last week</div>
+        <div class="a-ctx"><span class="@(Model.WeekOverWeekChangePercent >= 0 ? "up" : "down")">@(Model.WeekOverWeekChangePercent >= 0 ? "(+)" : "(-)")@Math.Abs(Model.WeekOverWeekChangePercent)%</span> vs last week</div>
+      </div>
+    </div>
+    <div class="a-card @(Model.ItemsOverdue7Days > 0 ? "danger" : "ok")">
+      <div class="a-icon"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <div class="a-num">@Model.ItemsOverdue7Days</div>
+        <div class="a-lbl">Overdue (7+ days)</div>
+        <div class="a-ctx">Entered 7+ days ago, unresolved</div>
       </div>
     </div>
   </div>
@@ -199,7 +207,7 @@
     <div class="dtc">
       <div class="dtc-head">
         <span class="dtc-title"><i class="bi bi-clock-history" style="color:var(--accent-db)"></i> Recent Records <span class="dtc-badge">@Model.TotalItems total</span></span>
-        <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all →</a>
+        <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">View all</a>
       </div>
       @if (!Model.RecentRecords.Any())
       {
@@ -240,7 +248,7 @@
         </div>
         <div class="dtc-foot">
           <span class="dtc-foot-info">Showing @Model.RecentRecords.Count of @Model.TotalItems</span>
-          <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all →</a>
+          <a class="dtc-link" asp-controller="LostFoundItem" asp-action="Search">Search all</a>
         </div>
       }
     </div>

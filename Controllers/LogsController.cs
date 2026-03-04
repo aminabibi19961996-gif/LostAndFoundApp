@@ -153,7 +153,12 @@ namespace LostAndFoundApp.Controllers
 
             await _activityLogService.LogAsync(HttpContext, "Export Logs", $"Exported {logs.Count} activity log records.", "System");
 
-            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            var csvContent = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            // Prepend UTF-8 BOM so Windows Excel opens the file with correct encoding
+            var bom = System.Text.Encoding.UTF8.GetPreamble();
+            var bytes = new byte[bom.Length + csvContent.Length];
+            bom.CopyTo(bytes, 0);
+            csvContent.CopyTo(bytes, bom.Length);
             return File(bytes, "text/csv", $"activity_logs_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv");
         }
 

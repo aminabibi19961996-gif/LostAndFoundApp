@@ -75,12 +75,22 @@
         }
         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
         {
-            <form asp-action="Delete" asp-route-id="@Model.TrackingId" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-danger" data-confirm="Are you sure you want to permanently delete Record #@Model.CustomTrackingId? This cannot be undone.">
-                    <i class="bi bi-trash3"></i> Delete
-                </button>
-            </form>
+            var isProtected = Model.StatusName == "Claimed" || Model.StatusName == "Disposed";
+            if (isProtected)
+            {
+                <span class="btn btn-secondary" style="opacity:.55;cursor:not-allowed;" title="Claimed and Disposed records are permanent audit records and cannot be deleted.">
+                    <i class="bi bi-lock"></i> Protected
+                </span>
+            }
+            else
+            {
+                <form asp-action="Delete" asp-route-id="@Model.TrackingId" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger" data-confirm="Are you sure you want to permanently delete Record #@Model.CustomTrackingId? This cannot be undone.">
+                        <i class="bi bi-trash3"></i> Delete
+                    </button>
+                </form>
+            }
         }
     </div>
 </div>
