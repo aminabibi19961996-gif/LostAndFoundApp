@@ -866,6 +866,8 @@ namespace LostAndFoundApp.Controllers
                 _logger.LogError(ex, "Error creating found by name via AJAX");
                 return Json(new { success = false, message = "An error occurred while creating the name. Please try again." });
             }
+        }
+
         // =====================================================================
         // BULK CSV IMPORT — Admin / SuperAdmin only
         // =====================================================================
@@ -936,7 +938,7 @@ namespace LostAndFoundApp.Controllers
                         foreach (var name in names)
                         {
                             if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
-                            _context.Routes.Add(new Route { Name = name, IsActive = true });
+                            _context.Routes.Add(new Models.Route { Name = name, IsActive = true });
                             existingSet.Add(name.ToLower());
                             inserted++;
                         }
