@@ -203,10 +203,12 @@ namespace LostAndFoundApp.Controllers
                 AttachmentPath = item.AttachmentPath
             };
 
+            await _activityLogService.LogAsync(HttpContext, "View Record",
+                $"Viewed record {item.CustomTrackingId} ({item.Item?.Name ?? "Unknown"}).", "Items");
+
             return View(vm);
         }
 
-        // GET: /LostFoundItem/Edit/5
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -588,6 +590,9 @@ namespace LostAndFoundApp.Controllers
                 CreatedBy = x.CreatedBy
             }).ToList();
 
+            await _activityLogService.LogAsync(HttpContext, "Search",
+                $"Search returned {vm.Results.Count} result(s). Filters: {(filters.Any() ? string.Join(", ", filters) : "none")}.", "Items");
+
             return View(vm);
         }
 
@@ -720,12 +725,15 @@ namespace LostAndFoundApp.Controllers
                 CreatedBy = x.CreatedBy
             }).ToList();
 
+            await _activityLogService.LogAsync(HttpContext, "Print Search",
+                $"Printed search results: {results.Count} record(s). Filters: {(filters.Any() ? string.Join(", ", filters) : "none")}.", "Items");
+
             vm.Results = results;
             vm.TotalRecords = results.Count;
             return View(vm);
         }
 
-        // GET: /LostFoundItem/Photo/{fileName}  — authenticated file streaming
+        // GET: /LostFoundItem/Attachment/{fileName} 2014 authenticated file streaming
         [HttpGet]
         public IActionResult Photo(string id)
         {
@@ -783,10 +791,12 @@ namespace LostAndFoundApp.Controllers
                 ItemName = item.Item?.Name
             };
 
+            await _activityLogService.LogAsync(HttpContext, "Print Label",
+                $"Printed label for record {item.CustomTrackingId} ({item.Item?.Name ?? "Unknown"}).", "Items");
+
             return View(vm);
         }
-
-        // GET: /LostFoundItem/Attachment/{fileName} — authenticated file streaming
+        // GET: /LostFoundItem/Attachment/{fileName} 2014 authenticated file streaming
         [HttpGet]
         public IActionResult Attachment(string id)
         {
