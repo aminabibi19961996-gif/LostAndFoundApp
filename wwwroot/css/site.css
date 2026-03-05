@@ -976,8 +976,7 @@ nav .dropdown-divider {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
+    padding: 8px 0;
 }
 
 .pagination-info {
@@ -1056,6 +1055,21 @@ nav .dropdown-divider {
 .page-size-select option {
     background: var(--bg-elevated);
     color: var(--text-primary);
+}
+
+/* Sortable table headers */
+.table-modern thead th a {
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.table-modern thead th a:hover {
+    color: var(--accent) !important;
+}
+
+.table-modern thead th a:hover i {
+    color: var(--accent) !important;
+    opacity: 1 !important;
 }
 
 /* ── 13. PROGRESS BAR ────────────────────────────────────── */

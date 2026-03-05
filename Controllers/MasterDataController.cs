@@ -33,13 +33,14 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireSupervisorOrAbove")]
-        public async Task<IActionResult> Items(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
+        public async Task<IActionResult> Items(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize, string sortBy = "Name", string sortOrder = "asc")
         {
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
             var totalCount = await _context.Items.CountAsync();
-            var items = await _context.Items
-                .OrderBy(x => x.Name)
+            var query = _context.Items.AsQueryable();
+            query = ApplySort(query, sortBy, sortOrder);
+            var items = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -48,7 +49,9 @@ namespace LostAndFoundApp.Controllers
                 Items = items,
                 TotalCount = totalCount,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                SortBy = sortBy,
+                SortOrder = sortOrder
             };
             return View(vm);
         }
@@ -130,13 +133,14 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireSupervisorOrAbove")]
-        public async Task<IActionResult> Routes(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
+        public async Task<IActionResult> Routes(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize, string sortBy = "Name", string sortOrder = "asc")
         {
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
             var totalCount = await _context.Routes.CountAsync();
-            var routes = await _context.Routes
-                .OrderBy(x => x.Name)
+            var query = _context.Routes.AsQueryable();
+            query = ApplySort(query, sortBy, sortOrder);
+            var routes = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -145,7 +149,9 @@ namespace LostAndFoundApp.Controllers
                 Items = routes,
                 TotalCount = totalCount,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                SortBy = sortBy,
+                SortOrder = sortOrder
             };
             return View(vm);
         }
@@ -226,13 +232,14 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireSupervisorOrAbove")]
-        public async Task<IActionResult> Vehicles(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
+        public async Task<IActionResult> Vehicles(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize, string sortBy = "Name", string sortOrder = "asc")
         {
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
             var totalCount = await _context.Vehicles.CountAsync();
-            var vehicles = await _context.Vehicles
-                .OrderBy(x => x.Name)
+            var query = _context.Vehicles.AsQueryable();
+            query = ApplySort(query, sortBy, sortOrder);
+            var vehicles = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -241,7 +248,9 @@ namespace LostAndFoundApp.Controllers
                 Items = vehicles,
                 TotalCount = totalCount,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                SortBy = sortBy,
+                SortOrder = sortOrder
             };
             return View(vm);
         }
@@ -322,13 +331,14 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireSupervisorOrAbove")]
-        public async Task<IActionResult> StorageLocations(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
+        public async Task<IActionResult> StorageLocations(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize, string sortBy = "Name", string sortOrder = "asc")
         {
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
             var totalCount = await _context.StorageLocations.CountAsync();
-            var locations = await _context.StorageLocations
-                .OrderBy(x => x.Name)
+            var query = _context.StorageLocations.AsQueryable();
+            query = ApplySort(query, sortBy, sortOrder);
+            var locations = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -337,7 +347,9 @@ namespace LostAndFoundApp.Controllers
                 Items = locations,
                 TotalCount = totalCount,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                SortBy = sortBy,
+                SortOrder = sortOrder
             };
             return View(vm);
         }
@@ -418,13 +430,14 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireSupervisorOrAbove")]
-        public async Task<IActionResult> Statuses(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
+        public async Task<IActionResult> Statuses(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize, string sortBy = "Name", string sortOrder = "asc")
         {
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
             var totalCount = await _context.Statuses.CountAsync();
-            var statuses = await _context.Statuses
-                .OrderBy(x => x.Name)
+            var query = _context.Statuses.AsQueryable();
+            query = ApplySort(query, sortBy, sortOrder);
+            var statuses = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -433,7 +446,9 @@ namespace LostAndFoundApp.Controllers
                 Items = statuses,
                 TotalCount = totalCount,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                SortBy = sortBy,
+                SortOrder = sortOrder
             };
             return View(vm);
         }
@@ -514,13 +529,14 @@ namespace LostAndFoundApp.Controllers
         // =====================================================================
 
         [Authorize(Policy = "RequireSupervisorOrAbove")]
-        public async Task<IActionResult> FoundByNames(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize)
+        public async Task<IActionResult> FoundByNames(int pageIndex = 1, int pageSize = PaginationParams.DefaultPageSize, string sortBy = "Name", string sortOrder = "asc")
         {
             pageIndex = Math.Max(1, pageIndex);
             pageSize = Math.Clamp(pageSize, 1, PaginationParams.MaxPageSize);
             var totalCount = await _context.FoundByNames.CountAsync();
-            var names = await _context.FoundByNames
-                .OrderBy(x => x.Name)
+            var query = _context.FoundByNames.AsQueryable();
+            query = ApplySort(query, sortBy, sortOrder);
+            var names = await query
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -529,7 +545,9 @@ namespace LostAndFoundApp.Controllers
                 Items = names,
                 TotalCount = totalCount,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                SortBy = sortBy,
+                SortOrder = sortOrder
             };
             return View(vm);
         }
@@ -1041,6 +1059,31 @@ namespace LostAndFoundApp.Controllers
             // Unquoted field: everything up to the first comma
             var commaIdx = line.IndexOf(',');
             return (commaIdx >= 0 ? line[..commaIdx] : line).Trim();
+        }
+
+        /// <summary>
+        /// Generic sort helper for any master data entity with Name and IsActive properties.
+        /// Supports sorting by "Name" or "Status" (IsActive) in "asc" or "desc" order.
+        /// </summary>
+        private static IQueryable<T> ApplySort<T>(IQueryable<T> query, string sortBy, string sortOrder) where T : class
+        {
+            var isDesc = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+
+            // Build expression dynamically for the property
+            var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+
+            if (string.Equals(sortBy, "Status", StringComparison.OrdinalIgnoreCase))
+            {
+                var prop = System.Linq.Expressions.Expression.Property(param, "IsActive");
+                var lambda = System.Linq.Expressions.Expression.Lambda<Func<T, bool>>(prop, param);
+                return isDesc ? query.OrderByDescending(lambda) : query.OrderBy(lambda);
+            }
+            else // Default: sort by Name
+            {
+                var prop = System.Linq.Expressions.Expression.Property(param, "Name");
+                var lambda = System.Linq.Expressions.Expression.Lambda<Func<T, string>>(prop, param);
+                return isDesc ? query.OrderByDescending(lambda) : query.OrderBy(lambda);
+            }
         }
     }
 }

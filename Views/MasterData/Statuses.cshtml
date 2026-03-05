@@ -1,6 +1,12 @@
-@model PaginatedList<Status>
+@model PaginatedList<LostAndFoundApp.Models.Status>
 @{
     ViewData["Title"] = "Statuses";
+    var sortBy = Model.SortBy ?? "Name";
+    var sortOrder = Model.SortOrder ?? "asc";
+    var nameSort = sortBy == "Name" ? (sortOrder == "asc" ? "desc" : "asc") : "asc";
+    var statusSort = sortBy == "Status" ? (sortOrder == "asc" ? "desc" : "asc") : "asc";
+    var nameIcon = sortBy == "Name" ? (sortOrder == "asc" ? "bi-sort-alpha-down" : "bi-sort-alpha-up") : "bi-filter";
+    var statusIcon = sortBy == "Status" ? (sortOrder == "asc" ? "bi-sort-down" : "bi-sort-up") : "bi-filter";
 }
 
 <!-- HEADER -->
@@ -17,6 +23,14 @@
     </div>
 </div>
 
+<!-- PAGINATION (above table) -->
+@if (Model.Items.Any())
+{
+    <div style="margin-bottom:12px;">
+        <partial name="_Pagination" model="Model" />
+    </div>
+}
+
 <!-- TABLE -->
 <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
     @if (Model.Items.Any())
@@ -25,15 +39,26 @@
             <table class="table-modern" style="width:100%;border-collapse:collapse;">
                 <thead>
                     <tr>
-                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">Name</th>
-                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">Status</th>
+                        <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);width:60px;">Sr#</th>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
+                            <a href="@Url.Action("Statuses", "MasterData", new { pageIndex = 1, pageSize = Model.PageSize, sortBy = "Name", sortOrder = nameSort })" style="color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                                Name <i class="bi @nameIcon" style="font-size:11px;@(sortBy == "Name" ? "color:var(--accent);" : "opacity:.4;")"></i>
+                            </a>
+                        </th>
+                        <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);">
+                            <a href="@Url.Action("Statuses", "MasterData", new { pageIndex = 1, pageSize = Model.PageSize, sortBy = "Status", sortOrder = statusSort })" style="color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                                Status <i class="bi @statusIcon" style="font-size:11px;@(sortBy == "Status" ? "color:var(--accent);" : "opacity:.4;")"></i>
+                            </a>
+                        </th>
                         <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--bg-elevated);width:100px;"></th>
                     </tr>
                 </thead>
                 <tbody>
+                    @{ var srNo = Model.StartRecord; }
                     @foreach (var item in Model.Items)
                     {
                         <tr>
+                            <td style="padding:11px 16px;font-size:13px;font-weight:600;color:var(--text-muted);text-align:center;">@srNo</td>
                             <td style="padding:11px 16px;font-size:14.5px;font-weight:600;color:var(--text-primary);">@item.Name</td>
                             <td style="padding:11px 16px;">
                                 <span class="badge-role @(item.IsActive ? "badge-active" : "badge-inactive")">@(item.IsActive ? "Active" : "Inactive")</span>
@@ -58,12 +83,10 @@
                                 </div>
                             </td>
                         </tr>
+                        srNo++;
                     }
                 </tbody>
             </table>
-        </div>
-        <div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-elevated);">
-            <partial name="_Pagination" model="Model" />
         </div>
     }
     else

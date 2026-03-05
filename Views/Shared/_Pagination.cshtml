@@ -2,6 +2,8 @@
     // Using dynamic model to support any PaginatedList<T> type
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "MasterData";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    string sortBy = Model.SortBy ?? "Name";
+    string sortOrder = Model.SortOrder ?? "asc";
 }
 
 @if (Model.TotalCount > 0)
@@ -14,11 +16,11 @@
                 <ul class="pagination pagination-modern mb-0">
                     @* First *@
                     <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = 1, pageSize = Model.PageSize })" tabindex="-1">&#171;&#171;</a>
+                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = 1, pageSize = Model.PageSize, sortBy = sortBy, sortOrder = sortOrder })" tabindex="-1">&#171;&#171;</a>
                     </li>
                     @* Previous *@
                     <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
-                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = Model.PageIndex - 1, pageSize = Model.PageSize })" tabindex="-1">&#171;</a>
+                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = Model.PageIndex - 1, pageSize = Model.PageSize, sortBy = sortBy, sortOrder = sortOrder })" tabindex="-1">&#171;</a>
                     </li>
 
                     @* Page numbers *@
@@ -36,17 +38,17 @@
                     @for (int i = startPage; i <= endPage; i++)
                     {
                         <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                            <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = i, pageSize = Model.PageSize })">@i</a>
+                            <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = i, pageSize = Model.PageSize, sortBy = sortBy, sortOrder = sortOrder })">@i</a>
                         </li>
                     }
 
                     @* Next *@
                     <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = Model.PageIndex + 1, pageSize = Model.PageSize })">&#187;</a>
+                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = Model.PageIndex + 1, pageSize = Model.PageSize, sortBy = sortBy, sortOrder = sortOrder })">&#187;</a>
                     </li>
                     @* Last *@
                     <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
-                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = Model.TotalPages, pageSize = Model.PageSize })">&#187;&#187;</a>
+                        <a class="page-link" href="@Url.Action(action, controller, new { pageIndex = Model.TotalPages, pageSize = Model.PageSize, sortBy = sortBy, sortOrder = sortOrder })">&#187;&#187;</a>
                     </li>
                 </ul>
             </nav>
@@ -60,9 +62,9 @@
         @* ── Count info + per-page selector — always visible ── *@
         <div class="pagination-info">
             Showing @Model.StartRecord to @Model.EndRecord of @Model.TotalCount records
-            <select class="page-size-select" onchange="window.location.href = '@Url.Action(action, controller, new { pageIndex = 1, pageSize = "__SIZE__" })'.replace('__SIZE__', this.value);">
+            <select class="page-size-select" onchange="window.location.href = '@Url.Action(action, controller, new { pageIndex = 1, pageSize = "__SIZE__", sortBy = sortBy, sortOrder = sortOrder })'.replace('__SIZE__', this.value);">
                 @{
-                    var pageSizes = new[] { 5, 10, 25, 50, 100 };
+                    var pageSizes = new[] { 25, 50, 100, 200, 500 };
                 }
                 @foreach (var size in pageSizes)
                 {
