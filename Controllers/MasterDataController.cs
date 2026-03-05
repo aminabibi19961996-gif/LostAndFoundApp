@@ -901,9 +901,9 @@ namespace LostAndFoundApp.Controllers
             if (lines.Count < 2)
                 return Json(new { success = false, message = "The CSV file must have a header row and at least one data row." });
 
-            // Skip header row, extract first column value from each line
+            // bug fix #7: handle RFC 4180 quoted fields — e.g. "Smith, John" must not be split at the comma
             var names = lines.Skip(1)
-                .Select(l => l.Split(',')[0].Trim().Trim('"'))
+                .Select(l => ParseFirstCsvField(l))
                 .Where(n => !string.IsNullOrWhiteSpace(n))
                 .ToList();
 
@@ -1021,6 +1021,26 @@ namespace LostAndFoundApp.Controllers
                 _logger.LogError(ex, "Error during CSV import for {EntityType}", entityType);
                 return Json(new { success = false, message = "An unexpected error occurred during import. Please try again." });
             }
+        }
+
+        /// <summary>
+        /// Extracts the first field from a CSV line, correctly handling RFC 4180 quoted fields
+        /// that may contain commas (e.g. "Smith, John" → "Smith, John", not "Smith").
+        /// </summary>
+        private static string ParseFirstCsvField(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return string.Empty;
+            if (line[0] == '"')
+            {
+                // Quoted field: find closing quote (doubled quotes are escaped quotes inside)
+                var end = line.IndexOf('"', 1);
+                while (end >= 0 && end + 1 < line.Length && line[end + 1] == '"')
+                    end = line.IndexOf('"', end + 2);
+                return end > 0 ? line.Substring(1, end - 1).Replace("\"\"", "\"") : line.Trim('"');
+            }
+            // Unquoted field: everything up to the first comma
+            var commaIdx = line.IndexOf(',');
+            return (commaIdx >= 0 ? line[..commaIdx] : line).Trim();
         }
     }
 }

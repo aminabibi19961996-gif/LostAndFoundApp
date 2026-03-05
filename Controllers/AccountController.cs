@@ -65,21 +65,16 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Find user by email
+            // Find user by email — always show same message to prevent enumeration (bug fix #6)
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+            if (user != null)
             {
-                // Don't reveal whether user exists
-                TempData["SuccessMessage"] = "If an account with that email exists, the username has been sent.";
-                return RedirectToAction("Login");
+                await _activityLogService.LogAsync(HttpContext, "Username Recovery",
+                    $"Username recovery requested for email '{model.Email}'.", "Auth");
             }
 
-            // In production, send email with username. For now, show on screen (demo).
-            // TODO: Configure email service in production
-            await _activityLogService.LogAsync(HttpContext, "Username Recovery",
-                $"Username recovery requested for email '{model.Email}'.", "Auth");
-
-            TempData["SuccessMessage"] = $"Your username is: {user.UserName}. Contact an administrator to have it sent to your email.";
+            // Same message whether user exists or not — prevents email→username enumeration
+            TempData["SuccessMessage"] = "If an account with that email exists, please contact an administrator to retrieve your username.";
             return RedirectToAction("Login");
         }
 

@@ -461,9 +461,9 @@ namespace LostAndFoundApp.Controllers
             // system for ≥ ShortOverdueDays and are still unresolved.
             if (vm.ShowOverdueOnly)
             {
-                var overdueAgo = DateTime.UtcNow.AddDays(-vm.ShortOverdueDays);
+                var overdueAgo = DateTime.Today.AddDays(-vm.ShortOverdueDays);
                 query = query.Where(x =>
-                    x.CreatedDateTime <= overdueAgo
+                    x.DateFound <= overdueAgo
                     && x.Status != null
                     && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
@@ -605,10 +605,29 @@ namespace LostAndFoundApp.Controllers
 
             var filters = new List<string>();
 
+            // bug fix #2: apply ShowOverdueOnly in PrintSearch
+            if (vm.ShowOverdueOnly)
+            {
+                var overdueAgo = DateTime.Today.AddDays(-vm.ShortOverdueDays);
+                query = query.Where(x =>
+                    x.DateFound <= overdueAgo
+                    && x.Status != null
+                    && x.Status.Name != "Claimed"
+                    && x.Status.Name != "Disposed"
+                    && x.Status.Name != "Transferred");
+                filters.Add($"Overdue ({vm.ShortOverdueDays}+ days, unresolved)");
+            }
+
             if (vm.TrackingId.HasValue)
             {
                 query = query.Where(x => x.TrackingId == vm.TrackingId.Value);
                 filters.Add($"Tracking ID: {vm.TrackingId.Value}");
+            }
+            // bug fix #2: apply CustomTrackingId filter in PrintSearch
+            if (!string.IsNullOrEmpty(vm.CustomTrackingId))
+            {
+                query = query.Where(x => x.CustomTrackingId != null && x.CustomTrackingId.Contains(vm.CustomTrackingId));
+                filters.Add($"Custom ID: {vm.CustomTrackingId}");
             }
             if (vm.DateFoundFrom.HasValue)
             {
@@ -695,6 +714,7 @@ namespace LostAndFoundApp.Controllers
                 StorageLocationName = x.StorageLocationName,
                 StatusName = x.StatusName,
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
+                DaysInSystem = (DateTime.Today - x.DateFound.Date).Days,
                 FoundByName = x.FoundByName,
                 ClaimedBy = x.ClaimedBy,
                 CreatedBy = x.CreatedBy
@@ -823,12 +843,24 @@ namespace LostAndFoundApp.Controllers
                 query = query.Where(x => x.StorageLocationId == vm.StorageLocationId.Value);
             if (vm.FoundById.HasValue)
                 query = query.Where(x => x.FoundById == vm.FoundById.Value);
+            // bug fix #3: apply ShowOverdueOnly in Export
+            if (vm.ShowOverdueOnly)
+            {
+                var overdueAgo = DateTime.Today.AddDays(-vm.ShortOverdueDays);
+                query = query.Where(x =>
+                    x.DateFound <= overdueAgo
+                    && x.Status != null
+                    && x.Status.Name != "Claimed"
+                    && x.Status.Name != "Disposed"
+                    && x.Status.Name != "Transferred");
+            }
 
             var results = await query
                 .OrderByDescending(x => x.TrackingId)
                 .Select(x => new
                 {
                     x.TrackingId,
+                    x.CustomTrackingId,
                     x.DateFound,
                     ItemName = x.Item != null ? x.Item.Name : "",
                     x.Description,
@@ -850,11 +882,12 @@ namespace LostAndFoundApp.Controllers
 
             // Generate CSV
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("TrackingId,DateFound,ItemType,Description,LocationFound,Route,Vehicle,StorageLocation,Status,StatusDate,FoundBy,ClaimedBy,CreatedBy,CreatedDateTime,ModifiedBy,ModifiedDateTime,Notes");
+            // bug fix #13: added CustomTrackingId column
+            sb.AppendLine("CustomTrackingId,TrackingId,DateFound,ItemType,Description,LocationFound,Route,Vehicle,StorageLocation,Status,StatusDate,FoundBy,ClaimedBy,CreatedBy,CreatedDateTime,ModifiedBy,ModifiedDateTime,Notes");
 
             foreach (var r in results)
             {
-                sb.AppendLine($"{r.TrackingId},{r.DateFound:yyyy-MM-dd},\"{EscapeCsv(r.ItemName)}\",\"{EscapeCsv(r.Description)}\",\"{EscapeCsv(r.LocationFound)}\",\"{EscapeCsv(r.RouteName)}\",\"{EscapeCsv(r.VehicleName)}\",\"{EscapeCsv(r.StorageLocationName)}\",\"{r.StatusName}\",{r.StatusDate?.ToString("yyyy-MM-dd")},\"{EscapeCsv(r.FoundByName)}\",\"{EscapeCsv(r.ClaimedBy)}\",\"{r.CreatedBy}\",{r.CreatedDateTime:yyyy-MM-dd HH:mm:ss},\"{r.ModifiedBy}\",{r.ModifiedDateTime?.ToString("yyyy-MM-dd HH:mm:ss")},\"{EscapeCsv(r.Notes)}\"");
+                sb.AppendLine($"\"{EscapeCsv(r.CustomTrackingId)}\",{r.TrackingId},{r.DateFound:yyyy-MM-dd},\"{EscapeCsv(r.ItemName)}\",\"{EscapeCsv(r.Description)}\",\"{EscapeCsv(r.LocationFound)}\",\"{EscapeCsv(r.RouteName)}\",\"{EscapeCsv(r.VehicleName)}\",\"{EscapeCsv(r.StorageLocationName)}\",\"{r.StatusName}\",{r.StatusDate?.ToString("yyyy-MM-dd")},\"{EscapeCsv(r.FoundByName)}\",\"{EscapeCsv(r.ClaimedBy)}\",\"{r.CreatedBy}\",{r.CreatedDateTime:yyyy-MM-dd HH:mm:ss},\"{r.ModifiedBy}\",{r.ModifiedDateTime?.ToString("yyyy-MM-dd HH:mm:ss")},\"{EscapeCsv(r.Notes)}\"");
             }
 
             await _activityLogService.LogAsync(HttpContext, "Export Records",
@@ -981,8 +1014,9 @@ namespace LostAndFoundApp.Controllers
             var skippedCount = protectedItems.Count;
 
             // Capture file paths BEFORE removing entities
+            // bug fix #1: capture ALL photo paths 1-4 to prevent orphaned files
             var filesToDelete = deletableItems
-                .Select(i => (Photo: i.PhotoPath, Attachment: i.AttachmentPath))
+                .Select(i => (Photo: i.PhotoPath, Photo2: i.PhotoPath2, Photo3: i.PhotoPath3, Photo4: i.PhotoPath4, Attachment: i.AttachmentPath))
                 .ToList();
 
             _context.LostFoundItems.RemoveRange(deletableItems);
@@ -999,9 +1033,12 @@ namespace LostAndFoundApp.Controllers
             }
 
             // Clean up files AFTER successful DB commit to prevent orphaned records
-            foreach (var (photo, attachment) in filesToDelete)
+            foreach (var (photo, photo2, photo3, photo4, attachment) in filesToDelete)
             {
                 _fileService.DeletePhoto(photo);
+                _fileService.DeletePhoto(photo2);
+                _fileService.DeletePhoto(photo3);
+                _fileService.DeletePhoto(photo4);
                 _fileService.DeleteAttachment(attachment);
             }
 

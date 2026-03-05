@@ -913,6 +913,14 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            // bug fix #8: Short must be strictly less than Long
+            if (model.ShortOverdueDays >= model.LongOverdueDays)
+            {
+                ModelState.AddModelError(nameof(model.ShortOverdueDays),
+                    $"Short overdue days ({model.ShortOverdueDays}) must be less than long overdue days ({model.LongOverdueDays}).");
+                return View(model);
+            }
+
             var settings = await _context.OverdueSettings.FirstOrDefaultAsync();
             if (settings == null)
             {

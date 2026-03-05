@@ -12,9 +12,10 @@ namespace LostAndFoundApp.Services
 
         public TimeZoneService(IConfiguration configuration)
         {
-            // Try IANA ID first — works on Linux AND Windows (.NET 8 has built-in mapping)
-            // Fall back to the Windows ID for older runtimes, then UTC as last resort.
-            _tz = TryGetTz("America/New_York")
+            // Read configured timezone, try IANA then Windows ID, with America/New_York as default
+            var tzId = configuration.GetValue<string>("AppTimeZone");
+            _tz = (!string.IsNullOrWhiteSpace(tzId) ? TryGetTz(tzId) : null)
+               ?? TryGetTz("America/New_York")
                ?? TryGetTz("Eastern Standard Time")
                ?? TimeZoneInfo.Utc;
         }
