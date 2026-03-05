@@ -910,6 +910,12 @@ nav .dropdown-divider {
     border-color: rgba(245, 158, 11, 0.22);
 }
 
+.badge-supervisor {
+    background: rgba(6, 182, 212, 0.12);
+    color: #67E8F9;
+    border-color: rgba(6, 182, 212, 0.25);
+}
+
 .badge-active {
     background: rgba(16, 185, 129, 0.13);
     color: #6EE7B7;

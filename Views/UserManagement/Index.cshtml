@@ -124,7 +124,7 @@
             <tbody>
                 @foreach (var user in Model)
                 {
-                    var roleClass = user.Role.ToLower() switch { "superadmin" => "badge-superadmin", "admin" => "badge-admin", _ => "badge-user" };
+                    var roleClass = user.Role.ToLower() switch { "superadmin" => "badge-superadmin", "admin" => "badge-admin", "supervisor" => "badge-supervisor", _ => "badge-user" };
                     <tr>
                         <td style="color:var(--text-primary);font-weight:600;">@user.UserName</td>
                         <td>@(user.DisplayName ?? "—")</td>
