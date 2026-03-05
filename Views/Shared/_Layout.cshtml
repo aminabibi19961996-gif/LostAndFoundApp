@@ -18,6 +18,72 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+
+<!-- LOADING OVERLAY — shows magnifier animation while page loads -->
+<div id="loadingOverlay" style="
+    position:fixed;inset:0;z-index:99999;
+    background:linear-gradient(135deg, #0F1117 0%, #161927 50%, #0F1117 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    transition:opacity 0.5s ease, visibility 0.5s ease;
+">
+    <!-- Animated magnifying glass -->
+    <div style="position:relative;width:120px;height:120px;margin-bottom:32px;">
+        <svg viewBox="0 0 120 120" style="width:120px;height:120px;animation:loaderBounce 1.8s ease-in-out infinite;">
+            <!-- Glass circle -->
+            <circle cx="48" cy="48" r="28" fill="none" stroke="#7C8FFF" stroke-width="4" opacity="0.25"/>
+            <circle cx="48" cy="48" r="28" fill="none" stroke="url(#loaderGrad)" stroke-width="4"
+                    stroke-dasharray="176" stroke-dashoffset="132" stroke-linecap="round"
+                    style="animation:loaderSpin 1.4s linear infinite;transform-origin:48px 48px;"/>
+            <!-- Handle -->
+            <line x1="70" y1="70" x2="100" y2="100" stroke="#7C8FFF" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+            <!-- Sparkle inside lens -->
+            <circle cx="38" cy="38" r="4" fill="#A5B4FC" opacity="0.6" style="animation:loaderPulse 1.4s ease-in-out infinite;"/>
+            <circle cx="55" cy="42" r="2.5" fill="#67E8F9" opacity="0.4" style="animation:loaderPulse 1.4s ease-in-out 0.3s infinite;"/>
+            <defs>
+                <linearGradient id="loaderGrad" x1="20" y1="20" x2="76" y2="76" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#7C8FFF"/>
+                    <stop offset="100%" stop-color="#67E8F9"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <!-- Text -->
+    <div style="font-family:'Inter',system-ui,sans-serif;font-size:18px;font-weight:600;color:#A5B4FC;letter-spacing:0.03em;text-align:center;">
+        We are finding your thing
+        <span id="loadingDots" style="display:inline-block;width:30px;text-align:left;"></span>
+    </div>
+    <div style="font-family:'Inter',system-ui,sans-serif;font-size:13px;color:rgba(165,180,252,0.45);margin-top:10px;letter-spacing:0.05em;">
+        LOST &amp; FOUND
+    </div>
+</div>
+
+<style>
+    @keyframes loaderSpin {
+        to { stroke-dashoffset: -44; transform: rotate(360deg); }
+    }
+    @keyframes loaderBounce {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-10px); }
+    }
+    @keyframes loaderPulse {
+        0%, 100% { opacity: 0.3; r: 3; }
+        50%      { opacity: 0.9; r: 5; }
+    }
+    #loadingOverlay.hide {
+        opacity: 0;
+        visibility: hidden;
+    }
+</style>
+
+<script>
+    // Animate dots
+    (function(){
+        var d=document.getElementById('loadingDots'),c=0;
+        var iv=setInterval(function(){c=(c+1)%4;d.textContent='.'.repeat(c);},400);
+        window.__loaderInterval=iv;
+    })();
+</script>
+
 @if (User.Identity?.IsAuthenticated == true)
 {
     var userInitials = string.Join("", (User.Identity.Name ?? "U").Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
@@ -226,5 +292,21 @@
     })();
 </script>
 @await RenderSectionAsync("Scripts", required: false)
+
+<script>
+    // Dismiss loading overlay once page is ready
+    window.addEventListener('load', function() {
+        var overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            // Small delay so user sees the animation at least briefly
+            setTimeout(function() {
+                overlay.classList.add('hide');
+                clearInterval(window.__loaderInterval);
+                // Remove from DOM after fade completes
+                setTimeout(function() { overlay.remove(); }, 600);
+            }, 400);
+        }
+    });
+</script>
 </body>
 </html>
