@@ -123,6 +123,8 @@ body {
     font-weight: 500;
     /* overflow: clip keeps the sticky nav working and prevents the browser
        scrollbar from appearing on body, while still letting .page scroll. */
+    overflow: hidden;
+    /* Fallback for Safari < 16 */
     overflow: clip;
 }
 
@@ -188,6 +190,7 @@ nav {
 .nav-links {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     flex: 1;
 }
@@ -200,7 +203,7 @@ nav .nav-link {
     border-radius: var(--radius-md);
     color: var(--text-secondary);
     font-size: 13.5px;
-    font-weight: 500;
+    font-weight: 700;
     text-decoration: none;
     transition: background var(--transition), color var(--transition);
     white-space: nowrap;
@@ -491,11 +494,6 @@ nav .dropdown-divider {
 .w-100 {
     width: 100%;
     justify-content: center;
-}
-
-.py-2 {
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
 }
 
 /* ── 7. FORMS ────────────────────────────────────────────── */
@@ -802,10 +800,7 @@ nav .dropdown-divider {
     background: var(--bg-hover) !important;
 }
 
-/* Days warning */
-.fw-semibold {
-    font-weight: 600;
-}
+/* Days warning (fw-semibold defined in utilities section) */
 
 /* ── 11. BADGES ──────────────────────────────────────────── */
 
@@ -1024,6 +1019,43 @@ nav .dropdown-divider {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+}
+
+.page-size-select {
+    display: inline-block;
+    padding: 4px 28px 4px 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-left: 10px;
+    cursor: pointer;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    transition: border-color var(--transition);
+}
+
+.page-size-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 143, 255, 0.18);
+}
+
+.page-size-select option {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
 }
 
 /* ── 13. PROGRESS BAR ────────────────────────────────────── */
@@ -2109,6 +2141,28 @@ nav .dropdown-divider {
     padding-bottom: 10px !important;
 }
 
+/* Row action buttons (used in Search, MasterData, and other list views) */
+.ra {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.ra:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+}
+
 .px-3 {
     padding-left: 16px !important;
     padding-right: 16px !important;
@@ -2168,9 +2222,7 @@ nav .dropdown-divider {
 }
 
 /* Misc */
-.w-100 {
-    width: 100%;
-}
+/* .w-100 defined in buttons section with justify-content:center */
 
 .overflow-auto {
     overflow: auto;

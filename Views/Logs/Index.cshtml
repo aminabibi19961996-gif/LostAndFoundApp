@@ -9,19 +9,34 @@
     .log-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
     .log-header h1 i { font-size: 20px; color: var(--accent); }
     .log-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
     .fc-body { padding: 18px 20px; }
     .fg { display: grid; grid-template-columns: 1fr 150px 140px 140px auto; gap: 12px; align-items: end; }
-    .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; }
+    .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .fg .form-control, .fg .form-select { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary); padding: 9px 12px; border-radius: 8px; font-size: 13.5px; width: 100%; }
     .fg-actions { display: flex; gap: 8px; align-self: end; }
     .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     .stable { width: 100%; border-collapse: collapse; }
     .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
-    .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+    .stable tbody td { padding: 12px 16px; font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
     .stable tbody tr:last-child td { border-bottom: none; }
     .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
     .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+
+    /* Category badges */
+    .cat-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .cat-auth { background: rgba(124,143,255,0.12); color: #A5B4FC; border: 1px solid rgba(124,143,255,0.25); }
+    .cat-items { background: rgba(74,222,128,0.10); color: #6EE7B7; border: 1px solid rgba(74,222,128,0.2); }
+    .cat-masterdata { background: rgba(6,182,212,0.10); color: #67E8F9; border: 1px solid rgba(6,182,212,0.2); }
+    .cat-usermanagement { background: rgba(245,158,11,0.10); color: #FDE68A; border: 1px solid rgba(245,158,11,0.2); }
+    .cat-announcement { background: rgba(168,85,247,0.10); color: #C4B5FD; border: 1px solid rgba(168,85,247,0.2); }
+    .cat-adsync { background: rgba(236,72,153,0.10); color: #F9A8D4; border: 1px solid rgba(236,72,153,0.2); }
+    .cat-system { background: rgba(100,116,139,0.12); color: #94A3B8; border: 1px solid rgba(100,116,139,0.25); }
+
+    /* Status badge */
+    .status-ok { color: #4ade80; font-weight: 600; font-size: 13px; }
+    .status-fail { color: #f87171; font-weight: 600; font-size: 13px; }
 
     /* Diff rendering */
     .diff-summary { font-size: 13.5px; color: var(--text-secondary); }
@@ -59,6 +74,7 @@
 <div class="fc">
     <div class="fc-body">
         <form method="get" asp-action="Index">
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
             <div class="fg">
                 <div>
                     <label class="form-label">Search</label>
@@ -117,14 +133,14 @@
                     @foreach (var log in Model.Logs)
                     {
                         var catClass = log.Category?.ToLower() switch {
-                            "auth"           => "badge-auth",
-                            "items"          => "badge-items",
-                            "masterdata"     => "badge-masterdata",
-                            "usermanagement" => "badge-usermanagement",
-                            "adsync"         => "badge-adsync",
-                            "announcement"   => "badge-announcement",
-                            "system"         => "badge-system",
-                            _                => "badge-user"
+                            "auth"           => "cat-auth",
+                            "items"          => "cat-items",
+                            "masterdata"     => "cat-masterdata",
+                            "usermanagement" => "cat-usermanagement",
+                            "adsync"         => "cat-adsync",
+                            "announcement"   => "cat-announcement",
+                            "system"         => "cat-system",
+                            _                => "cat-system"
                         };
 
                         // Detect structured diff (CHANGES: sentinel written by ItemDiffService)
@@ -206,26 +222,48 @@
                                 }
                             </td>
                             <td>@log.PerformedBy</td>
-                            <td><span class="badge-status @catClass">@log.Category</span></td>
+                            <td><span class="cat-badge @catClass">@log.Category</span></td>
                             <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted);">@log.IpAddress</td>
-                            <td><span class="badge-role @(log.Status == "Success" ? "badge-active" : "badge-inactive")">@log.Status</span></td>
+                            <td>
+                                @if (log.Status == "Success")
+                                {
+                                    <span class="status-ok"><i class="bi bi-check-circle-fill"></i> Success</span>
+                                }
+                                else
+                                {
+                                    <span class="status-fail"><i class="bi bi-x-circle-fill"></i> @log.Status</span>
+                                }
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
 
-        @if (Model.TotalPages > 1)
-        {
-            <div class="rc-footer">
-                <span style="font-size:12.5px;color:var(--text-dim);">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount records</span>
-                <div style="display:flex;gap:6px;">
-                    @if (Model.CurrentPage > 1) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-left"></i></a> }
-                    @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++) { <a asp-action="Index" asp-route-page="@i" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-sm @(i == Model.CurrentPage ? "btn-primary" : "btn-secondary")">@i</a> }
-                    @if (Model.CurrentPage < Model.TotalPages) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-right"></i></a> }
-                </div>
+        <div class="rc-footer">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:12.5px;color:var(--text-dim);">
+                    Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount records
+                </span>
+                <span style="font-size:12.5px;color:var(--text-dim);">|</span>
+                <span style="font-size:12px;color:var(--text-muted);">Per page</span>
+                <select class="page-size-select" id="logPageSizeSelect" onchange="changePageSize(this.value)">
+                    <option value="25" selected="@(Model.PageSize == 25)">25</option>
+                    <option value="50" selected="@(Model.PageSize == 50)">50</option>
+                    <option value="100" selected="@(Model.PageSize == 100)">100</option>
+                    <option value="200" selected="@(Model.PageSize == 200)">200</option>
+                    <option value="500" selected="@(Model.PageSize == 500)">500</option>
+                </select>
             </div>
-        }
+            @if (Model.TotalPages > 1)
+            {
+                <div style="display:flex;gap:6px;">
+                    @if (Model.CurrentPage > 1) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" asp-route-pageSize="@Model.PageSize" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-left"></i></a> }
+                    @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++) { <a asp-action="Index" asp-route-page="@i" asp-route-pageSize="@Model.PageSize" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-sm @(i == Model.CurrentPage ? "btn-primary" : "btn-secondary")">@i</a> }
+                    @if (Model.CurrentPage < Model.TotalPages) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" asp-route-pageSize="@Model.PageSize" asp-route-category="@Model.CategoryFilter" asp-route-search="@Model.SearchTerm" asp-route-dateFrom="@Model.DateFrom?.ToString("yyyy-MM-dd")" asp-route-dateTo="@Model.DateTo?.ToString("yyyy-MM-dd")" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-right"></i></a> }
+                </div>
+            }
+        </div>
     }
     else
     {
@@ -242,11 +280,17 @@
     function toggleDiff(panelId, btn) {
         var panel = document.getElementById(panelId);
         var isOpen = panel.classList.toggle('open');
-        // Update button icon and text
         var count = btn.textContent.trim().match(/\d+\s+change/)?.[0] ?? 'changes';
         btn.innerHTML = isOpen
             ? '<i class="bi bi-chevron-up"></i>&nbsp;' + count
             : '<i class="bi bi-list-ul"></i>&nbsp;' + count;
+    }
+
+    function changePageSize(size) {
+        var url = new URL(window.location.href);
+        url.searchParams.set('pageSize', size);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
     }
 </script>
 }

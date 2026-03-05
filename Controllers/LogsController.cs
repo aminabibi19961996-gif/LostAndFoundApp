@@ -32,7 +32,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         // GET: /Logs
-        public async Task<IActionResult> Index(string? category, string? search, DateTime? dateFrom, DateTime? dateTo, int page = 1)
+        public async Task<IActionResult> Index(string? category, string? search, DateTime? dateFrom, DateTime? dateTo, int page = 1, int pageSize = 100)
         {
             var query = _context.ActivityLogs.AsQueryable();
 
@@ -89,7 +89,9 @@ namespace LostAndFoundApp.Controllers
                 query = query.Where(l => l.Timestamp <= dateTo.Value.AddDays(1));
 
             var totalCount = await query.CountAsync();
-            var pageSize = 50;
+            // Clamp pageSize to reasonable bounds
+            if (pageSize < 25) pageSize = 25;
+            if (pageSize > 500) pageSize = 500;
             var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
             if (page < 1) page = 1;
             if (page > totalPages && totalPages > 0) page = totalPages;

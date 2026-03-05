@@ -342,6 +342,7 @@
                             var sortParams = new Dictionary<string, string?>
                             {
                                 { "TrackingId", Model.TrackingId?.ToString() },
+                                { "CustomTrackingId", Model.CustomTrackingId },
                                 { "DateFoundFrom", Model.DateFoundFrom?.ToString("yyyy-MM-dd") },
                                 { "DateFoundTo", Model.DateFoundTo?.ToString("yyyy-MM-dd") },
                                 { "ItemId", Model.ItemId?.ToString() },
@@ -543,11 +544,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-modal-target]').forEach(function(trigger) {
         trigger.addEventListener('click', function(e) {
             e.preventDefault();
+            // Guard — require at least 1 selected checkbox
+            var selected = document.querySelectorAll('.record-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Please select at least one record first.');
+                return;
+            }
             var modalId = this.getAttribute('data-modal-target');
             var modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = '';
-                document.body.style.overflow = 'hidden';
 
                 // Set default status date to today when opening bulk status modal
                 if (modalId === 'bulkStatusModal') {
@@ -581,7 +587,6 @@ document.addEventListener('DOMContentLoaded', function() {
             var modal = document.getElementById(modalId);
             if (modal) {
                 modal.style.display = 'none';
-                document.body.style.overflow = '';
             }
         });
     });

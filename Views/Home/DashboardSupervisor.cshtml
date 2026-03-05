@@ -2,11 +2,9 @@
 @{
     ViewData["Title"] = "Supervisor Dashboard";
     var total = Model.TotalItems > 0 ? Model.TotalItems : 1;
-    var maxContributor = Model.TopContributors.Any() ? Model.TopContributors.Max(c => c.ItemsCreated) : 1;
 }
 
 @section Styles {
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root {
   --accent-db:#7C8FFF;--accent-s:rgba(124,143,255,0.10);

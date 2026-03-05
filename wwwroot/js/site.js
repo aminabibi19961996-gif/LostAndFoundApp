@@ -136,7 +136,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             // If no more announcements, close modal
                             if (announcements.length === 0) {
                                 modal.style.display = 'none';
-                                document.body.style.overflow = '';
                                 return;
                             }
 
@@ -155,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 function closeModal() {
                     modal.style.display = 'none';
-                    document.body.style.overflow = '';
                     // Mark remaining as "popup shown" (bumps counter, doesn't dismiss)
                     var ids = announcements.map(function (a) { return a.id; });
                     if (ids.length > 0 && token) {
@@ -179,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 showAnnouncement(0);
                 modal.style.display = '';
-                document.body.style.overflow = 'hidden';
             }).catch(function () { });
     })();
 

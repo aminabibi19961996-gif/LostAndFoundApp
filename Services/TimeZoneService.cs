@@ -12,12 +12,19 @@ namespace LostAndFoundApp.Services
 
         public TimeZoneService(IConfiguration configuration)
         {
-            // Read configured timezone, try IANA then Windows ID, with America/New_York as default
+            // Read configured timezone; "Auto" or empty means use the host system's local timezone.
             var tzId = configuration.GetValue<string>("AppTimeZone");
-            _tz = (!string.IsNullOrWhiteSpace(tzId) ? TryGetTz(tzId) : null)
-               ?? TryGetTz("America/New_York")
-               ?? TryGetTz("Eastern Standard Time")
-               ?? TimeZoneInfo.Utc;
+
+            if (string.IsNullOrWhiteSpace(tzId) || tzId.Equals("Auto", StringComparison.OrdinalIgnoreCase))
+            {
+                // Auto-detect: use the system's local timezone (works on Windows & Linux)
+                _tz = TimeZoneInfo.Local;
+            }
+            else
+            {
+                // Try configured timezone ID (supports both Windows and IANA IDs)
+                _tz = TryGetTz(tzId) ?? TimeZoneInfo.Local;
+            }
         }
 
         private static TimeZoneInfo? TryGetTz(string id)
@@ -69,14 +76,19 @@ namespace LostAndFoundApp.Services
             return Format(utcDateTime.Value, format);
         }
 
-        /// <summary>Short display name for the timezone, e.g. "ET".</summary>
+        /// <summary>Short display name for the timezone abbreviation.</summary>
         public string ShortName
         {
             get
             {
-                // Use the abbreviation from the current moment (handles EST vs EDT automatically)
                 var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _tz);
-                return _tz.IsDaylightSavingTime(now) ? "EDT" : "EST";
+                // Use DaylightName or StandardName (e.g. "Eastern Daylight Time" -> "EDT")
+                var name = _tz.IsDaylightSavingTime(now) ? _tz.DaylightName : _tz.StandardName;
+                // Build abbreviation from first letter of each word (e.g. "Eastern Standard Time" -> "EST")
+                var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 1)
+                    return string.Concat(parts.Select(p => p[0]));
+                return name.Length > 4 ? name[..4] : name;
             }
         }
     }

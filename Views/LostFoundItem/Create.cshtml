@@ -119,7 +119,7 @@
                     <span asp-validation-for="LocationFound" class="text-danger small"></span>
                 </div>
                 <div class="fg-item">
-                    <label asp-for="RouteId" class="form-label">Route # *</label>
+                    <label asp-for="RouteId" class="form-label">Route #</label>
                     <div class="field-with-add">
                         <select asp-for="RouteId" asp-items="Model.Routes" class="form-select"><option value="">Select route...</option></select>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
@@ -127,7 +127,7 @@
                     </div>
                 </div>
                 <div class="fg-item">
-                    <label asp-for="VehicleId" class="form-label">Vehicle # *</label>
+                    <label asp-for="VehicleId" class="form-label">Vehicle #</label>
                     <div class="field-with-add">
                         <select asp-for="VehicleId" asp-items="Model.Vehicles" class="form-select"><option value="">Select vehicle...</option></select>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
@@ -216,7 +216,7 @@
 
                 @* ── Row 1: Storage Location · Claimed By ── *@
                 <div class="fg-item span-2">
-                    <label asp-for="StorageLocationId" class="form-label">Storage Location *</label>
+                    <label asp-for="StorageLocationId" class="form-label">Storage Location</label>
                     <div class="field-with-add">
                         <select asp-for="StorageLocationId" asp-items="Model.StorageLocations" class="form-select"><option value="">Select location...</option></select>
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
@@ -224,13 +224,13 @@
                     </div>
                 </div>
                 <div class="fg-item span-2">
-                    <label asp-for="ClaimedBy" class="form-label">Claimed By *</label>
+                    <label asp-for="ClaimedBy" class="form-label">Claimed By</label>
                     <input asp-for="ClaimedBy" class="form-control" placeholder="Name of claimant" />
                 </div>
 
                 @* ── Row 2: Notes (full width) ── *@
                 <div class="fg-item span-4">
-                    <label asp-for="Notes" class="form-label">Notes *</label>
+                    <label asp-for="Notes" class="form-label">Notes</label>
                     <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
                     <span class="text-muted small" style="font-size:11px;">Max 1000 characters</span>
                 </div>
