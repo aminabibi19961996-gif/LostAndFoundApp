@@ -38,3 +38,7 @@ appsettings.Development.json
 
 # Secure file uploads — never commit user data
 SecureStorage/
+
+# Publish output
+publish-win/
+publish/
