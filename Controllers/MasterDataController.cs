@@ -866,6 +866,159 @@ namespace LostAndFoundApp.Controllers
                 _logger.LogError(ex, "Error creating found by name via AJAX");
                 return Json(new { success = false, message = "An error occurred while creating the name. Please try again." });
             }
+        // =====================================================================
+        // BULK CSV IMPORT — Admin / SuperAdmin only
+        // =====================================================================
+
+        /// <summary>
+        /// Accepts a CSV file and bulk-imports records into the specified master data table.
+        /// The CSV must have a header row followed by one Name per row.
+        /// Duplicates (case-insensitive) are skipped. All imported records are set to Active.
+        /// Supported entityType values: Items, Routes, Vehicles, StorageLocations, Statuses, FoundByNames
+        /// </summary>
+        [HttpPost]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportCsv(string entityType, IFormFile csvFile)
+        {
+            if (csvFile == null || csvFile.Length == 0)
+                return Json(new { success = false, message = "No file was uploaded." });
+
+            if (!csvFile.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                return Json(new { success = false, message = "Only .csv files are supported." });
+
+            // ── Parse CSV ──────────────────────────────────────────────────────
+            var lines = new List<string>();
+            using (var reader = new System.IO.StreamReader(csvFile.OpenReadStream()))
+            {
+                string? line;
+                while ((line = await reader.ReadLineAsync()) != null)
+                    lines.Add(line);
+            }
+
+            if (lines.Count < 2)
+                return Json(new { success = false, message = "The CSV file must have a header row and at least one data row." });
+
+            // Skip header row, extract first column value from each line
+            var names = lines.Skip(1)
+                .Select(l => l.Split(',')[0].Trim().Trim('"'))
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .ToList();
+
+            if (names.Count == 0)
+                return Json(new { success = false, message = "No valid names found in the CSV file." });
+
+            // ── Load existing names for duplicate check ─────────────────────────
+            int inserted = 0, skipped = 0;
+            var entityLabel = entityType;
+
+            try
+            {
+                switch (entityType)
+                {
+                    case "Items":
+                    {
+                        var existing = await _context.Items.Select(x => x.Name.ToLower()).ToListAsync();
+                        var existingSet = new HashSet<string>(existing);
+                        foreach (var name in names)
+                        {
+                            if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
+                            _context.Items.Add(new Item { Name = name, IsActive = true });
+                            existingSet.Add(name.ToLower());
+                            inserted++;
+                        }
+                        break;
+                    }
+                    case "Routes":
+                    {
+                        var existing = await _context.Routes.Select(x => x.Name.ToLower()).ToListAsync();
+                        var existingSet = new HashSet<string>(existing);
+                        foreach (var name in names)
+                        {
+                            if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
+                            _context.Routes.Add(new Route { Name = name, IsActive = true });
+                            existingSet.Add(name.ToLower());
+                            inserted++;
+                        }
+                        break;
+                    }
+                    case "Vehicles":
+                    {
+                        var existing = await _context.Vehicles.Select(x => x.Name.ToLower()).ToListAsync();
+                        var existingSet = new HashSet<string>(existing);
+                        foreach (var name in names)
+                        {
+                            if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
+                            _context.Vehicles.Add(new Vehicle { Name = name, IsActive = true });
+                            existingSet.Add(name.ToLower());
+                            inserted++;
+                        }
+                        break;
+                    }
+                    case "StorageLocations":
+                    {
+                        var existing = await _context.StorageLocations.Select(x => x.Name.ToLower()).ToListAsync();
+                        var existingSet = new HashSet<string>(existing);
+                        foreach (var name in names)
+                        {
+                            if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
+                            _context.StorageLocations.Add(new StorageLocation { Name = name, IsActive = true });
+                            existingSet.Add(name.ToLower());
+                            inserted++;
+                        }
+                        break;
+                    }
+                    case "Statuses":
+                    {
+                        var existing = await _context.Statuses.Select(x => x.Name.ToLower()).ToListAsync();
+                        var existingSet = new HashSet<string>(existing);
+                        foreach (var name in names)
+                        {
+                            if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
+                            _context.Statuses.Add(new Status { Name = name, IsActive = true });
+                            existingSet.Add(name.ToLower());
+                            inserted++;
+                        }
+                        break;
+                    }
+                    case "FoundByNames":
+                    {
+                        var existing = await _context.FoundByNames.Select(x => x.Name.ToLower()).ToListAsync();
+                        var existingSet = new HashSet<string>(existing);
+                        foreach (var name in names)
+                        {
+                            if (existingSet.Contains(name.ToLower())) { skipped++; continue; }
+                            _context.FoundByNames.Add(new FoundByName { Name = name, IsActive = true });
+                            existingSet.Add(name.ToLower());
+                            inserted++;
+                        }
+                        break;
+                    }
+                    default:
+                        return Json(new { success = false, message = $"Unknown entity type: {entityType}" });
+                }
+
+                if (inserted > 0)
+                    await _context.SaveChangesAsync();
+
+                await _activityLogService.LogAsync(HttpContext, "Bulk CSV Import",
+                    $"Imported {inserted} record(s) into {entityType} (skipped {skipped} duplicate(s)) via CSV.", "MasterData");
+
+                return Json(new
+                {
+                    success = true,
+                    inserted,
+                    skipped,
+                    message = inserted == 0
+                        ? $"No new records were imported — all {skipped} row(s) were duplicates already in the system."
+                        : $"Successfully imported {inserted} record(s). {(skipped > 0 ? $"{skipped} duplicate(s) were skipped." : "")}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during CSV import for {EntityType}", entityType);
+                return Json(new { success = false, message = "An unexpected error occurred during import. Please try again." });
+            }
         }
     }
 }

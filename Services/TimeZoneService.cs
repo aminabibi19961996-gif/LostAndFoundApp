@@ -12,27 +12,17 @@ namespace LostAndFoundApp.Services
 
         public TimeZoneService(IConfiguration configuration)
         {
-            var tzId = configuration.GetValue<string>("AppTimeZone") ?? "Eastern Standard Time";
+            // Try IANA ID first — works on Linux AND Windows (.NET 8 has built-in mapping)
+            // Fall back to the Windows ID for older runtimes, then UTC as last resort.
+            _tz = TryGetTz("America/New_York")
+               ?? TryGetTz("Eastern Standard Time")
+               ?? TimeZoneInfo.Utc;
+        }
 
-            // TimeZoneInfo.FindSystemTimeZoneById works on both Windows (Windows IDs)
-            // and Linux (IANA IDs). On Linux with tzdata installed, both ID formats
-            // work via the BCL's built-in IANA/Windows mapping table.
-            try
-            {
-                _tz = TimeZoneInfo.FindSystemTimeZoneById(tzId);
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                // Fallback: try the IANA equivalent in case the platform doesn't support Windows IDs
-                try
-                {
-                    _tz = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-                }
-                catch
-                {
-                    _tz = TimeZoneInfo.Utc;
-                }
-            }
+        private static TimeZoneInfo? TryGetTz(string id)
+        {
+            try { return TimeZoneInfo.FindSystemTimeZoneById(id); }
+            catch { return null; }
         }
 
         /// <summary>The configured display timezone (e.g. Eastern Time).</summary>

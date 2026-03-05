@@ -11,7 +11,10 @@
         </h1>
         <div style="font-size:14px;color:var(--text-muted);font-weight:500;">@Model.TotalCount status(es)</div>
     </div>
-    <a asp-action="CreateStatus" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Status</a>
+    <div style="display:flex;align-items:center;gap:8px;">
+        <partial name="_CsvImportModal" model='("Statuses", "statuses")' />
+        <a asp-action="CreateStatus" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Status</a>
+    </div>
 </div>
 
 <!-- TABLE -->

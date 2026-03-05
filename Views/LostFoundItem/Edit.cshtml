@@ -149,9 +149,9 @@
     <div class="card">
         <div class="card-head"><i class="bi bi-shield-check"></i> Status &amp; Audit Trail</div>
         <div class="card-body">
-            <div class="form-grid">
+            <div style="display:grid;grid-template-columns:1.5fr 1fr 0.8fr 0.8fr 1.3fr;gap:16px;align-items:start;">
 
-                @* ── Single Row: Status · Status Date · Days Since Found · Created By · Created Date & Time ── *@
+                @* ── all 5 fields in one row ── *@
                 <div class="fg-item">
                     <label asp-for="StatusId" class="form-label">Status *</label>
                     <div class="field-with-add">
@@ -178,29 +178,30 @@
                     <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;">@(Model.CreatedBy ?? "—")</div>
                 </div>
 
-                @* ── Row 2: Created Date & Time (full width with ET label) ── *@
-                <div class="fg-item span-4" style="background:var(--bg-elevated);border-radius:8px;padding:8px 14px;margin-top:-4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <i class="bi bi-clock" style="color:var(--accent);"></i>
-                        <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Created Date &amp; Time</span>
-                        <span style="font-size:14px;color:var(--text-secondary);font-weight:600;">@tzSvc.Format(Model.CreatedDateTime)</span>
-                        <span style="font-size:11px;color:var(--text-dim);padding:2px 6px;border-radius:4px;background:var(--bg-card);border:1px solid var(--border);">@tzSvc.ShortName</span>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.ModifiedBy))
-                    {
-                        <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
-                            <i class="bi bi-clock-history"></i>
-                            <span><strong>Last Modified By:</strong> @Model.ModifiedBy on @tzSvc.Format(Model.ModifiedDateTime) <span style="font-size:11px;color:var(--text-dim);">(@tzSvc.ShortName)</span></span>
-                        </div>
-                    }
-                    else
-                    {
-                        <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
-                            <i class="bi bi-info-circle"></i>
-                            <span>This record has not been modified since creation. When edited, the "Modified By" / "Modified Date/Time" fields will update automatically.</span>
-                        </div>
-                    }
+                @* ── Created Date & Time (ET) ── *@
+                <div class="fg-item">
+                    <label class="form-label" style="display:flex;align-items:center;gap:5px;">
+                        <i class="bi bi-clock" style="color:var(--accent);font-size:11px;"></i>
+                        Created Date &amp; Time
+                        <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-dim);">@tzSvc.ShortName</span>
+                    </label>
+                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;font-weight:600;">@tzSvc.Format(Model.CreatedDateTime)</div>
                 </div>
+
+            </div>
+
+            @* ── Modified-by footer line ── *@
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
+                @if (!string.IsNullOrEmpty(Model.ModifiedBy))
+                {
+                    <i class="bi bi-clock-history"></i>
+                    <span><strong>Last Modified By:</strong> @Model.ModifiedBy on @tzSvc.Format(Model.ModifiedDateTime) (@tzSvc.ShortName)</span>
+                }
+                else
+                {
+                    <i class="bi bi-info-circle"></i>
+                    <span>This record has not been modified since creation. When edited, the "Modified By" / "Modified Date/Time" fields will update automatically.</span>
+                }
             </div>
         </div>
     </div>

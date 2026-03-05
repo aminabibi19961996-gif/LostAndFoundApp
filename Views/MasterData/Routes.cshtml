@@ -11,7 +11,10 @@
         </h1>
         <div style="font-size:14px;color:var(--text-muted);font-weight:500;">@Model.TotalCount route(s)</div>
     </div>
-    <a asp-action="CreateRoute" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Route</a>
+    <div style="display:flex;align-items:center;gap:8px;">
+        <partial name="_CsvImportModal" model='("Routes", "routes")' />
+        <a asp-action="CreateRoute" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Route</a>
+    </div>
 </div>
 
 <!-- TABLE -->

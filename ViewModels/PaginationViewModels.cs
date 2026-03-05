@@ -21,8 +21,8 @@ namespace LostAndFoundApp.ViewModels
     /// </summary>
     public class PaginationParams
     {
-        public const int DefaultPageSize = 10;
-        public const int MaxPageSize = 50;
+        public const int DefaultPageSize = 100;
+        public const int MaxPageSize = 500;
         public int PageIndex { get; set; } = 1;
         public int PageSize { get; set; } = DefaultPageSize;
     }
