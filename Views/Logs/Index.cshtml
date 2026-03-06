@@ -5,11 +5,11 @@
 
 @section Styles {
 <style>
-    .log-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .log-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; flex-shrink: 0; }
     .log-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
     .log-header h1 i { font-size: 20px; color: var(--accent); }
     .log-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; flex-shrink: 0; }
     .fc-body { padding: 18px 20px; }
     .fg { display: grid; grid-template-columns: 1fr 150px 140px 140px auto; gap: 12px; align-items: end; }
     .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; display: block; }
@@ -54,7 +54,7 @@
 </style>
 }
 
-<div class="log-header md-header">
+<div class="log-header">
     <div>
         <h1><i class="bi bi-journal-text"></i> Activity Logs</h1>
         <div class="count">@Model.TotalCount record(s) found</div>
@@ -71,7 +71,7 @@
     }
 </div>
 
-<div class="fc md-header">
+<div class="fc">
     <div class="fc-body">
         <form method="get" asp-action="Index">
             <input type="hidden" name="pageSize" value="@Model.PageSize" />
