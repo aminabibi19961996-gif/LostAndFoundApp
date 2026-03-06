@@ -14,10 +14,17 @@ if (window.jQuery && jQuery.validator && jQuery.validator.unobtrusive) {
 document.addEventListener('DOMContentLoaded', function () {
     // Page scroll detection: list pages keep overflow:hidden on .page (table scrolls internally).
     // Non-list pages (forms, details, profiles, settings) need page-level scrolling.
+    // Dashboards use .dash-page which handles its own overflow.
     var pageEl = document.querySelector('main.page');
     if (pageEl) {
+        // Explicit override: data-page-scroll="true" on any element forces page scroll
+        var explicitScroll = pageEl.querySelector('[data-page-scroll]');
+        // Dashboards handle their own scrolling via .dash-page
+        var isDashboard = pageEl.querySelector('.dash-page');
+        // List pages use .md-card or .rc for table containers
         var isListPage = pageEl.querySelector('.md-card, .rc');
-        if (!isListPage) {
+
+        if (explicitScroll || (!isDashboard && !isListPage)) {
             pageEl.style.overflowY = 'auto';
         }
     }

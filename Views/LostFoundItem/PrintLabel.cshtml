@@ -7,6 +7,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
     <style>
@@ -22,7 +23,8 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #f0f2f5;
+            background: #fff;
+            color: #111827;
         }
         .label-container {
             background: #fff;
@@ -31,14 +33,14 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
-            border: 1px solid #e0e0e0;
+            border: 2px solid #e5e7eb;
         }
         .qr-code {
             width: 250px;
             height: 250px;
             margin: 0 auto 25px;
             padding: 10px;
-            border: 1px solid #eee;
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
         }
         .qr-code img {
@@ -50,7 +52,7 @@
             text-align: center;
             display: grid;
             gap: 12px;
-            border-top: 2px solid #f0f2f5;
+            border-top: 2px solid #e5e7eb;
             padding-top: 20px;
         }
         .info-item {
@@ -72,7 +74,7 @@
         }
         .tracking-id {
             font-family: var(--font-mono);
-            color: #6366f1;
+            color: #4f46e5;
             font-size: 22px;
         }
         .no-print {
@@ -82,14 +84,14 @@
             z-index: 100;
         }
         .btn {
-            background: #6366f1;
+            background: #4f46e5;
             color: #fff;
             border: none;
             padding: 12px 24px;
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
             font-family: var(--font-main);
             font-size: 14px;
             display: flex;
@@ -97,19 +99,26 @@
             gap: 8px;
             text-decoration: none;
         }
-        .btn:hover { background: #4f46e5; }
-        
+        .btn:hover { background: #4338ca; }
+
         @@media print {
             body { background: #fff; padding: 0; display: block; }
-            .no-print { display: none; }
-            .label-container { 
-                box-shadow: none; 
-                border: none; 
-                width: 100%; 
-                margin: 0; 
-                padding: 0;
+            .no-print { display: none !important; }
+            .label-container {
+                box-shadow: none;
+                border: 2px solid #000;
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto;
+                padding: 20px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
-            .qr-code { border: none; }
+            .qr-code { border: 1px solid #000; }
+            .info-grid { border-top: 2px solid #000; }
+            .label { color: #333; }
+            .value { color: #000; }
+            .tracking-id { color: #000; }
         }
     </style>
 </head>
@@ -143,12 +152,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        window.onload = function() {
-            // Uncomment to auto-open print dialog
-            // window.print();
-        };
-    </script>
 </body>
 </html>
