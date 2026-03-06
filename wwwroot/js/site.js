@@ -12,6 +12,16 @@ if (window.jQuery && jQuery.validator && jQuery.validator.unobtrusive) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Page scroll detection: list pages keep overflow:hidden on .page (table scrolls internally).
+    // Non-list pages (forms, details, profiles, settings) need page-level scrolling.
+    var pageEl = document.querySelector('main.page');
+    if (pageEl) {
+        var isListPage = pageEl.querySelector('.md-card, .rc');
+        if (!isListPage) {
+            pageEl.style.overflowY = 'auto';
+        }
+    }
+
     // Confirmation dialogs for destructive actions
     document.querySelectorAll('[data-confirm]').forEach(function (el) {
         el.addEventListener('click', function (e) {

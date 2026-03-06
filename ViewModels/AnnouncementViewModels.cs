@@ -33,7 +33,7 @@ namespace LostAndFoundApp.ViewModels
         public List<AnnouncementListItem> Announcements { get; set; } = new();
         public int TotalCount { get; set; }
         public int CurrentPage { get; set; } = 1;
-        public int PageSize { get; set; } = 25;
+        public int PageSize { get; set; } = 100;
         public int TotalPages { get; set; }
     }
 

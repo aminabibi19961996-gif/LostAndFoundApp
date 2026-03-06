@@ -42,7 +42,7 @@ namespace LostAndFoundApp.Controllers
         [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Index(int page = 1)
         {
-            var pageSize = 25;
+            var pageSize = 100;
             var query = _context.Announcements.AsQueryable();
 
             var totalCount = await query.CountAsync();

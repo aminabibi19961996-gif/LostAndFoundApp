@@ -15,14 +15,14 @@
     .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; display: block; }
     .fg .form-control, .fg .form-select { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary); padding: 9px 12px; border-radius: 8px; font-size: 13.5px; width: 100%; }
     .fg-actions { display: flex; gap: 8px; align-self: end; }
-    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .stable { width: 100%; border-collapse: collapse; }
     .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
     .stable tbody td { padding: 12px 16px; font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
     .stable tbody tr:last-child td { border-bottom: none; }
     .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
     .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-    .rc-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
 
     /* Category badges */
     .cat-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
@@ -54,7 +54,7 @@
 </style>
 }
 
-<div class="log-header">
+<div class="log-header md-header">
     <div>
         <h1><i class="bi bi-journal-text"></i> Activity Logs</h1>
         <div class="count">@Model.TotalCount record(s) found</div>
@@ -71,7 +71,7 @@
     }
 </div>
 
-<div class="fc">
+<div class="fc md-header">
     <div class="fc-body">
         <form method="get" asp-action="Index">
             <input type="hidden" name="pageSize" value="@Model.PageSize" />
@@ -113,7 +113,7 @@
 <div class="rc">
     @if (Model.Logs.Any())
     {
-        <div style="overflow-x:auto;">
+        <div class="md-scroll">
             <table class="stable">
                 <thead>
                     <tr>
@@ -240,7 +240,7 @@
             </table>
         </div>
 
-        <div class="rc-footer">
+        <div class="md-pagination" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:12.5px;color:var(--text-dim);">
                     Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount records

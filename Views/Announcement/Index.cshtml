@@ -9,7 +9,7 @@
     .an-header h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; letter-spacing: -.02em; }
     .an-header h1 i { font-size: 20px; color: var(--accent); }
     .an-header .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .stable { width: 100%; border-collapse: collapse; }
     .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); background: var(--bg-elevated); white-space: nowrap; }
     .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
@@ -18,11 +18,11 @@
     .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     .ra { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; transition: background .12s, color .12s; }
     .ra:hover { background: var(--bg-hover); color: var(--accent); }
-    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
 </style>
 }
 
-<div class="an-header">
+<div class="an-header md-header">
     <div>
         <h1><i class="bi bi-megaphone"></i> Announcements</h1>
         <div class="count">@Model.TotalCount announcement(s) — Messages to Admin and User roles</div>
@@ -33,7 +33,7 @@
 <div class="rc">
     @if (Model.Announcements.Any())
     {
-        <div style="overflow-x:auto;">
+        <div class="md-scroll">
             <table class="stable">
                 <thead><tr><th>Title</th><th>Target</th><th>Created</th><th>Expires</th><th>Read</th><th>Status</th><th></th></tr></thead>
                 <tbody>
@@ -60,17 +60,17 @@
             </table>
         </div>
 
-        @if (Model.TotalPages > 1)
-        {
-            <div class="rc-footer">
-                <span style="font-size:12.5px;color:var(--text-dim);">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount entries</span>
+        <div class="md-pagination" style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12.5px;color:var(--text-dim);">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalCount entries</span>
+            @if (Model.TotalPages > 1)
+            {
                 <div style="display:flex;gap:6px;">
                     @if (Model.CurrentPage > 1) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-left"></i></a> }
                     @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++) { <a asp-action="Index" asp-route-page="@i" class="btn btn-sm @(i == Model.CurrentPage ? "btn-primary" : "btn-secondary")">@i</a> }
                     @if (Model.CurrentPage < Model.TotalPages) { <a asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)" class="btn btn-secondary btn-sm"><i class="bi bi-chevron-right"></i></a> }
                 </div>
-            </div>
-        }
+            }
+        </div>
     }
     else
     {

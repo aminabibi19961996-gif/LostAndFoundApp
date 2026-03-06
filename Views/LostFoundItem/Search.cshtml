@@ -430,10 +430,10 @@
             </table>
         </div>
 
-        @if (Model.TotalPages > 1)
-        {
-            <div class="rc-footer">
-                <span class="rc-footer-info">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalRecords records</span>
+        <div class="rc-footer">
+            <span class="rc-footer-info">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalRecords records</span>
+            @if (Model.TotalPages > 1)
+            {
                 <nav>
                     <ul class="pagination">
                         @if (Model.CurrentPage > 1)
@@ -499,8 +499,8 @@
                         }
                     </ul>
                 </nav>
-            </div>
-        }
+            }
+        </div>
     }
     else
     {

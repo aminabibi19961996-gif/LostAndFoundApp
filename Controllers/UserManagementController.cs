@@ -54,7 +54,7 @@ namespace LostAndFoundApp.Controllers
         // GET: /UserManagement
         public async Task<IActionResult> Index(string search, string role, string accountType, string status, int page = 1)
         {
-            const int pageSize = 50;
+            const int pageSize = 100;
 
             // Batched query: get all users and roles in single queries instead of N+1
             var users = await _userManager.Users.ToListAsync();
@@ -209,7 +209,7 @@ namespace LostAndFoundApp.Controllers
             await _activityLogService.LogAsync(HttpContext, "Create User",
                 $"Created local user '{model.UserName}' with role '{model.Role}'.", "UserManagement");
             _logger.LogInformation("Super Admin created local user '{User}' with role '{Role}'.", model.UserName, model.Role);
-            TempData["SuccessMessage"] = $"User '{model.UserName}' created successfully with role '{model.Role}'. They must change their password on first login.";
+            TempData["SuccessMessage"] = $"User '{model.UserName}' created successfully.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -363,7 +363,7 @@ namespace LostAndFoundApp.Controllers
             await _activityLogService.LogAsync(HttpContext, "Reset Password",
                 $"Password reset for user '{user.UserName}' by administrator.", "UserManagement");
             _logger.LogInformation("Password reset for user '{User}' by '{Admin}'.", user.UserName, User.Identity?.Name);
-            TempData["SuccessMessage"] = $"Password for '{user.UserName}' has been reset to: {tempPassword} — They must change it on next login.";
+            TempData["SuccessMessage"] = $"Password for '{user.UserName}' has been reset to: {tempPassword}";
             return RedirectToAction(nameof(Index));
         }
 
@@ -832,7 +832,7 @@ namespace LostAndFoundApp.Controllers
                 }
             });
 
-            TempData["SuccessMessage"] = "AD sync has been triggered and is running in the background. Refresh this page in a few moments to see results.";
+            TempData["SuccessMessage"] = "AD sync triggered successfully.";
             return RedirectToAction(nameof(AdGroups));
         }
 
@@ -886,7 +886,7 @@ namespace LostAndFoundApp.Controllers
             await _activityLogService.LogAsync(HttpContext, "Update Password Policy",
                 $"Password policy updated: MinLength={model.MinimumLength}, Digit={model.RequireDigit}, Lower={model.RequireLowercase}, Upper={model.RequireUppercase}, NonAlpha={model.RequireNonAlphanumeric}.", "UserManagement");
 
-            TempData["SuccessMessage"] = "Password policy has been updated successfully. Changes take effect immediately for all new password operations.";
+            TempData["SuccessMessage"] = "Password policy updated successfully.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -936,7 +936,7 @@ namespace LostAndFoundApp.Controllers
             await _activityLogService.LogAsync(HttpContext, "Update Overdue Settings",
                 $"Overdue thresholds updated: Short={model.ShortOverdueDays} days, Long={model.LongOverdueDays} days.", "UserManagement");
 
-            TempData["SuccessMessage"] = $"Overdue thresholds updated: {model.ShortOverdueDays} days (short) / {model.LongOverdueDays} days (long). Dashboards and Search will reflect new values immediately.";
+            TempData["SuccessMessage"] = $"Overdue thresholds updated: {model.ShortOverdueDays} days (short) / {model.LongOverdueDays} days (long).";
             return RedirectToAction(nameof(OverdueSettings));
         }
 

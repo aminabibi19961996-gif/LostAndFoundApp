@@ -81,12 +81,9 @@
                 </tbody>
             </table>
         </div>
-        @if (Model.TotalPages > 1)
-        {
-            <div class="md-pagination">
-                <partial name="_Pagination" model="Model" />
-            </div>
-        }
+        <div class="md-pagination">
+            <partial name="_Pagination" model="Model" />
+        </div>
     }
     else
     {

@@ -17,7 +17,7 @@
     .fg .form-control, .fg .form-select { font-size: 14px; padding: 9px 12px; }
     .fg-actions { display: flex; gap: 8px; align-self: end; }
 
-    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
     .stable { width: 100%; border-collapse: collapse; }
     .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--bg-elevated); }
@@ -31,7 +31,7 @@
     .ra { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; text-decoration: none; transition: background .12s, color .12s; }
     .ra:hover { background: var(--bg-hover); color: var(--accent); }
 
-    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
     .rc-footer-info { font-size: 13.5px; color: var(--text-dim); font-weight: 500; }
 
     @@media (max-width: 768px) { .fg { grid-template-columns: 1fr 1fr; } }
@@ -39,7 +39,7 @@
 }
 
 <!-- HEADER -->
-<div class="um-header">
+<div class="um-header md-header">
     <div>
         <h1><i class="bi bi-people"></i> User Management
             @if (User.IsInRole("Supervisor"))
@@ -59,7 +59,7 @@
 </div>
 
 <!-- FILTERS -->
-<div class="fc">
+<div class="fc md-header">
     <div class="fc-body">
         <form method="get" asp-action="Index">
             <div class="fg">
@@ -107,7 +107,7 @@
 
 <!-- TABLE -->
 <div class="rc">
-    <div style="overflow-x:auto;">
+    <div class="md-scroll">
         <table class="stable">
             <thead>
                 <tr>
@@ -165,10 +165,10 @@
         </table>
     </div>
 
-    @if (ViewBag.TotalPages > 1)
-    {
-        <div class="rc-footer">
-            <span class="rc-footer-info">Page @ViewBag.CurrentPage of @ViewBag.TotalPages · @ViewBag.FilteredCount user(s)</span>
+    <div class="md-pagination" style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13.5px;color:var(--text-dim);font-weight:500;">Page @ViewBag.CurrentPage of @ViewBag.TotalPages · @ViewBag.FilteredCount user(s)</span>
+        @if (ViewBag.TotalPages > 1)
+        {
             <div style="display:flex;gap:6px;">
                 @if (ViewBag.CurrentPage > 1)
                 {
@@ -179,6 +179,6 @@
                     <a asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-search="@ViewBag.Search" asp-route-role="@ViewBag.Role" asp-route-accountType="@ViewBag.AccountType" asp-route-status="@ViewBag.Status" class="btn btn-secondary btn-sm">Next <i class="bi bi-chevron-right"></i></a>
                 }
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>

@@ -17,7 +17,7 @@ namespace LostAndFoundApp.ViewModels
 
         // Pagination
         public int CurrentPage { get; set; } = 1;
-        public int PageSize { get; set; } = 50;
+        public int PageSize { get; set; } = 100;
         public int TotalPages { get; set; }
     }
 }

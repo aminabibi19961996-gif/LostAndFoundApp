@@ -151,6 +151,7 @@ nav {
     align-items: center;
     padding: 0 28px;
     gap: 0;
+    flex-shrink: 0;
 }
 
 .nav-brand {
@@ -322,12 +323,19 @@ nav .dropdown-divider {
 .page {
     width: 100%;
     max-width: none;
-    padding: 28px 24px 48px;
+    padding: 28px 24px 12px;
     flex: 1;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 0;
+}
+
+/* Headers, filters, and alerts inside .page must never shrink */
+.md-header,
+.page > .alert,
+.page > .alert-dismissible {
+    flex-shrink: 0;
 }
 
 /* ── 5. PAGE HEADER ──────────────────────────────────────── */
@@ -336,6 +344,7 @@ nav .dropdown-divider {
     padding-bottom: 24px;
     margin-bottom: 24px;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
 .page-title,
@@ -528,6 +537,46 @@ nav .dropdown-divider {
 
 .form-control::placeholder {
     color: var(--text-muted);
+}
+
+/* Make native date/time picker icons visible on dark backgrounds */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+    color-scheme: dark;
+    min-height: 40px;
+}
+
+/* Ensure empty date inputs show visible placeholder text */
+input[type="date"]:not(:valid)::-webkit-datetime-edit,
+input[type="time"]:not(:valid)::-webkit-datetime-edit,
+input[type="datetime-local"]:not(:valid)::-webkit-datetime-edit {
+    color: var(--text-muted);
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit {
+    color: var(--text-primary);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) sepia(0.3) saturate(5) hue-rotate(200deg);
+    cursor: pointer;
+    opacity: 0.9;
+    transition: opacity 0.15s, transform 0.15s;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(124, 143, 255, 0.12);
 }
 
 .form-control:focus,
@@ -742,12 +791,25 @@ nav .dropdown-divider {
     overflow-x: auto;
 }
 
-.md-scroll::-webkit-scrollbar { width: 6px; }
-.md-scroll::-webkit-scrollbar-track { background: transparent; }
-.md-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-.md-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+.md-scroll::-webkit-scrollbar {
+    width: 6px;
+}
 
-.md-scroll .table-modern thead {
+.md-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.md-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+.md-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.md-scroll .table-modern thead,
+.md-scroll .stable thead {
     position: sticky;
     top: 0;
     z-index: 5;
@@ -1019,6 +1081,7 @@ nav .dropdown-divider {
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
+    flex-shrink: 0;
 }
 
 .pagination-info {
@@ -2614,7 +2677,7 @@ nav .dropdown-divider {
     }
 
     .page {
-        padding: 20px 16px 40px;
+        padding: 20px 16px 12px;
     }
 
     .login-card {
