@@ -10,7 +10,7 @@
 }
 
 <!-- HEADER -->
-<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+<div class="md-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
     <div>
         <h1 style="font-family:var(--font-display);font-size:1.625rem;font-weight:800;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
             <i class="bi bi-signpost-2" style="color:var(--accent)"></i> Routes
@@ -23,19 +23,12 @@
     </div>
 </div>
 
-<!-- PAGINATION (above table) -->
-@if (Model.Items.Any())
-{
-    <div style="margin-bottom:12px;">
-        <partial name="_Pagination" model="Model" />
-    </div>
-}
 
 <!-- TABLE -->
-<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+<div class="md-card">
     @if (Model.Items.Any())
     {
-        <div style="overflow-x:auto;">
+        <div class="md-scroll">
             <table class="table-modern" style="width:100%;border-collapse:collapse;">
                 <thead>
                     <tr>
@@ -88,6 +81,12 @@
                 </tbody>
             </table>
         </div>
+        @if (Model.TotalPages > 1)
+        {
+            <div class="md-pagination">
+                <partial name="_Pagination" model="Model" />
+            </div>
+        }
     }
     else
     {

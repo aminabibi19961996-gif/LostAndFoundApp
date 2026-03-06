@@ -32,13 +32,16 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th><th>Date Found</th><th>Item</th><th>Description</th><th>Location</th><th>Route</th><th>Vehicle</th><th>Storage</th><th>Found By</th><th>Claimed By</th><th>Status</th><th>Days</th>
+                <th>#</th><th>ID</th><th>Date Found</th><th>Item</th><th>Description</th><th>Location</th><th>Route</th><th>Vehicle</th><th>Storage</th><th>Found By</th><th>Claimed By</th><th>Status</th><th>Days</th>
             </tr>
         </thead>
         <tbody>
+            @{ var printRowNum = 0; }
             @foreach (var item in Model.Results)
             {
+                printRowNum++;
                 <tr>
+                    <td>@printRowNum</td>
                     <td>@item.CustomTrackingId</td>
                     <td>@item.DateFound.ToString("MM/dd/yy")</td>
                     <td>@item.ItemName</td>

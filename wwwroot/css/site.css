@@ -718,6 +718,48 @@ nav .dropdown-divider {
     overflow-x: auto;
 }
 
+/* ── MASTER DATA LIST CARD (scrollable table) ─────────── */
+
+.md-header {
+    flex-shrink: 0;
+}
+
+.md-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.md-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.md-scroll::-webkit-scrollbar { width: 6px; }
+.md-scroll::-webkit-scrollbar-track { background: transparent; }
+.md-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.md-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+.md-scroll .table-modern thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.md-pagination {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+}
+
 .table-modern {
     width: 100%;
     border-collapse: collapse;

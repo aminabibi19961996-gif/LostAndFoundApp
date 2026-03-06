@@ -167,7 +167,6 @@ namespace LostAndFoundApp.Data
             }
 
             // ─── Seed Default AD Security Groups ──────────────────
-            // Two security groups with mapped application roles
             if (!await context.AdGroups.AnyAsync())
             {
                 context.AdGroups.AddRange(

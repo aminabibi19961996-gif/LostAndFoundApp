@@ -540,6 +540,8 @@ namespace LostAndFoundApp.Controllers
                 "ItemName" => vm.SortOrder == "asc" ? query.OrderBy(x => x.Item != null ? x.Item.Name : "") : query.OrderByDescending(x => x.Item != null ? x.Item.Name : ""),
                 "StatusName" => vm.SortOrder == "asc" ? query.OrderBy(x => x.Status != null ? x.Status.Name : "") : query.OrderByDescending(x => x.Status != null ? x.Status.Name : ""),
                 "LocationFound" => vm.SortOrder == "asc" ? query.OrderBy(x => x.LocationFound) : query.OrderByDescending(x => x.LocationFound),
+                // Days = Today - DateFound, so sorting Days ascending = DateFound descending (most recent first = fewest days)
+                "DaysSinceFound" => vm.SortOrder == "asc" ? query.OrderByDescending(x => x.DateFound) : query.OrderBy(x => x.DateFound),
                 _ => vm.SortOrder == "asc" ? query.OrderBy(x => x.TrackingId) : query.OrderByDescending(x => x.TrackingId),
             };
 

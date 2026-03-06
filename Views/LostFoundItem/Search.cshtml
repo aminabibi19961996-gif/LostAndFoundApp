@@ -5,38 +5,49 @@
 
 @section Styles {
 <style>
-    .search-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .search-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; flex-shrink: 0; }
     .search-header-left { display: flex; align-items: center; gap: 12px; }
     .search-header-left h1 { font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
     .search-header-left h1 i { font-size: 20px; color: var(--accent); }
     .search-header-left .count { font-size: 14px; color: var(--text-muted); font-weight: 500; }
     .search-actions { display: flex; gap: 8px; align-items: center; }
 
-    /* Filter card */
-    .fc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
-    .fc-body { padding: 18px 20px; }
-    .fg { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-    .fg .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; }
-    .fg .form-control, .fg .form-select { font-size: 14px; padding: 9px 12px; }
-    .fc-actions { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    /* Filter card — accent left border for visual distinction */
+    .fc { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; margin-bottom: 28px; overflow: visible; position: relative; z-index: 2; flex-shrink: 0; }
+    .fc-body { padding: 20px 22px; }
+    .fg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .fg .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-bottom: 6px; display: block; }
+    .fg .form-control, .fg .form-select { font-size: 13.5px; padding: 9px 12px; }
+    .fc-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 14px 22px; border-top: 2px solid var(--border); background: var(--bg-elevated); border-radius: 0 0 12px 12px; }
+    .fc-actions .fc-left { margin-right: auto; }
+    @@media (max-width: 1200px) { .fg { grid-template-columns: repeat(4, 1fr); } }
+    @@media (max-width: 900px)  { .fg { grid-template-columns: repeat(3, 1fr); } }
+    @@media (max-width: 600px)  { .fg { grid-template-columns: repeat(2, 1fr); } }
 
-    /* Results card */
-    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .rc-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); }
+    /* Results card — fills remaining height, table scrolls inside */
+    .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .rc-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto; }
+    .rc-scroll::-webkit-scrollbar { width: 6px; }
+    .rc-scroll::-webkit-scrollbar-track { background: transparent; }
+    .rc-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+    .rc-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    .rc-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
     .rc-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-primary); }
 
     /* Search table */
     .stable { width: 100%; border-collapse: collapse; }
-    .stable thead th { padding: 11px 16px; text-align: left; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--bg-elevated); }
+    .stable thead { position: sticky; top: 0; z-index: 10; }
+    .stable thead th { padding: 12px 16px; text-align: left; font-size: 11.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .07em; border-bottom: 2px solid var(--accent); white-space: nowrap; background: #0A0A0A; }
     .stable thead th:first-child { padding-left: 20px; }
     .stable thead th a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-    .stable thead th a:hover { color: var(--text-primary); }
+    .stable thead th a:hover { color: var(--accent); }
     .stable tbody td { padding: 12px 16px; font-size: 14.5px; font-weight: 500; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
     .stable tbody td:first-child { padding-left: 20px; }
     .stable tbody tr:last-child td { border-bottom: none; }
     .stable tbody tr:hover td { background: var(--bg-elevated); color: var(--text-primary); }
     .stable tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     .stable .tid { font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); font-weight: 600; }
+    .stable .row-num { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); font-weight: 600; min-width: 28px; text-align: center; }
 
     /* Status badges */
     .sb { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12.5px; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
@@ -53,8 +64,8 @@
     .ra:hover { background: var(--bg-hover); color: var(--accent); }
     .cb { cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px; }
 
-    /* Pagination footer */
-    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    /* Pagination footer — pinned at bottom of .rc */
+    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
     .rc-footer-info { font-size: 13.5px; color: var(--text-dim); font-weight: 500; }
 
     .days-warn  { color: var(--amber); font-weight: 700; }
@@ -197,22 +208,12 @@
 <div class="fc">
     <div class="fc-body">
         <form method="get" asp-action="Search">
-            @* ── Overdue Quick Filter ── *@
-            @if (!Model.ShowOverdueOnly)
-            {
-                <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-                    <a asp-action="Search" asp-route-ShowOverdueOnly="true" class="btn btn-sm" style="background:rgba(239,68,68,0.1);color:#EF4444;border:1px solid rgba(239,68,68,0.3);font-weight:700;">
-                        <i class="bi bi-clock-history me-1"></i> Show Overdue Items (@Model.ShortOverdueDays+ days)
-                    </a>
-                    <span style="font-size:12px;color:var(--text-dim);">Lists all unresolved items older than @Model.ShortOverdueDays days</span>
-                </div>
-            }
             @if (Model.ShowOverdueOnly)
             {
                 <input type="hidden" name="ShowOverdueOnly" value="true" />
             }
             <div class="fg">
-                @* ── ID ── *@
+                @* ── Row 1: IDs + Dates + Item ── *@
                 <div>
                     <label class="form-label">Internal ID</label>
                     <input type="number" name="TrackingId" value="@Model.TrackingId" class="form-control" placeholder="#" />
@@ -221,8 +222,6 @@
                     <label class="form-label">Tracking ID</label>
                     <input type="text" name="CustomTrackingId" value="@Model.CustomTrackingId" class="form-control" placeholder="LF-YYMMDD-XXXX" />
                 </div>
-
-                @* ── WHEN ── *@
                 <div>
                     <label class="form-label">Date From</label>
                     <input type="date" name="DateFoundFrom" value="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")" class="form-control" />
@@ -231,8 +230,6 @@
                     <label class="form-label">Date To</label>
                     <input type="date" name="DateFoundTo" value="@Model.DateFoundTo?.ToString("yyyy-MM-dd")" class="form-control" />
                 </div>
-
-                @* ── WHAT ── *@
                 <div>
                     <label class="form-label">Item</label>
                     <select name="ItemId" class="form-select">
@@ -247,7 +244,7 @@
                     </select>
                 </div>
 
-                @* ── WHERE ── *@
+                @* ── Row 2: Location + Status + Who ── *@
                 <div>
                     <label class="form-label">Route</label>
                     <select name="RouteId" class="form-select">
@@ -287,8 +284,6 @@
                         }
                     </select>
                 </div>
-
-                @* ── WHO ── *@
                 <div>
                     <label class="form-label">Found By</label>
                     <select name="FoundById" class="form-select">
@@ -302,8 +297,6 @@
                         }
                     </select>
                 </div>
-
-                @* ── STATUS ── *@
                 <div>
                     <label class="form-label">Status</label>
                     <select name="StatusId" class="form-select">
@@ -319,8 +312,14 @@
                 </div>
             </div>
             <div class="fc-actions">
-                <a asp-action="Search" class="btn btn-ghost btn-sm">
-                    <i class="bi bi-x-circle me-1"></i> Clear Filters
+                @if (!Model.ShowOverdueOnly)
+                {
+                    <a asp-action="Search" asp-route-ShowOverdueOnly="true" class="fc-left btn btn-sm" style="background:rgba(239,68,68,0.08);color:#EF4444;border:1px solid rgba(239,68,68,0.25);font-weight:600;font-size:12px;">
+                        <i class="bi bi-clock-history me-1"></i> Overdue (@Model.ShortOverdueDays+ days)
+                    </a>
+                }
+                <a asp-action="Search" class="btn btn-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
                 </a>
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-search me-1"></i> Search
@@ -334,7 +333,7 @@
 <div class="rc">
     @if (Model.Results.Any())
     {
-        <div style="overflow-x:auto;">
+        <div class="rc-scroll">
             <table class="stable">
                 <thead>
                     <tr>
@@ -359,19 +358,22 @@
                         {
                             <th style="width:36px;"><input type="checkbox" id="selectAll" class="cb" /></th>
                         }
+                        <th style="width:42px;">#</th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="TrackingId" asp-route-SortOrder="@NextOrder("TrackingId")">ID <i class="bi @SortIcon("TrackingId")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="DateFound" asp-route-SortOrder="@NextOrder("DateFound")">Date Found <i class="bi @SortIcon("DateFound")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="ItemName" asp-route-SortOrder="@NextOrder("ItemName")">Item <i class="bi @SortIcon("ItemName")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="LocationFound" asp-route-SortOrder="@NextOrder("LocationFound")">Location <i class="bi @SortIcon("LocationFound")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="StatusName" asp-route-SortOrder="@NextOrder("StatusName")">Status <i class="bi @SortIcon("StatusName")"></i></a></th>
-                        <th>Days</th>
+                        <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="DaysSinceFound" asp-route-SortOrder="@NextOrder("DaysSinceFound")">Days <i class="bi @SortIcon("DaysSinceFound")"></i></a></th>
                         <th>Claimed By</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
+                    @{ var rowNumber = (Model.CurrentPage - 1) * Model.PageSize; }
                     @foreach (var item in Model.Results)
                     {
+                        rowNumber++;
                         var statusClass = (item.StatusName?.ToLower()) switch {
                             "found" => "sb-found",
                             "claimed" => "sb-claimed",
@@ -385,6 +387,7 @@
                             {
                                 <td><input type="checkbox" class="record-checkbox cb" value="@item.TrackingId" /></td>
                             }
+                            <td><span class="row-num">@rowNumber</span></td>
                             <td><span class="tid">@item.CustomTrackingId</span></td>
                             <td>@item.DateFound.ToString("MM/dd/yyyy")</td>
                             <td style="color:var(--text-primary);font-weight:500;">@item.ItemName</td>
