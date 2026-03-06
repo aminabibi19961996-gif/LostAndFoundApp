@@ -773,6 +773,98 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     flex-shrink: 0;
 }
 
+/* Reusable MasterData page header */
+.md-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.md-hdr-title {
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.02em;
+}
+
+.md-hdr-title i {
+    color: var(--accent);
+    font-size: 20px;
+}
+
+.md-hdr-count {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.md-hdr-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* MasterData table utility cells */
+.md-sr {
+    padding: 11px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.md-name {
+    padding: 11px 16px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.md-cell {
+    padding: 11px 16px;
+}
+
+.md-cell-actions {
+    padding: 11px 16px;
+}
+
+.md-cell-actions > div {
+    display: flex;
+    gap: 3px;
+}
+
+/* MasterData empty state */
+.md-empty {
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.md-empty i {
+    font-size: 2.5rem;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 12px;
+}
+
+.md-empty-title {
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.md-empty-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
 .md-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -843,6 +935,19 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     border-bottom: 1px solid var(--border);
     background: var(--bg-elevated);
     white-space: nowrap;
+}
+
+/* Sortable column header link */
+.sort-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-link:hover {
+    color: var(--text-primary);
 }
 
 .table-modern thead th:first-child {
@@ -1341,8 +1446,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     color: var(--text-primary);
 }
 
-/* Search page: announcement-modal (bulk actions) */
-.announcement-modal {
+/* ── APP MODAL SYSTEM ─────────────────────────────────── */
+/* Generic modal used for bulk actions, CSV import, etc.  */
+/* .announcement-modal-* aliases kept for backward compat */
+.announcement-modal,
+.app-modal {
     position: fixed;
     inset: 0;
     z-index: 500;
@@ -1351,14 +1459,16 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     justify-content: center;
 }
 
-.announcement-modal-backdrop {
+.announcement-modal-backdrop,
+.app-modal-backdrop {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(2px);
 }
 
-.announcement-modal-content {
+.announcement-modal-content,
+.app-modal-content {
     position: relative;
     background: var(--bg-elevated);
     border: 1px solid var(--border);
@@ -1369,7 +1479,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     overflow: hidden;
 }
 
-.announcement-modal-header {
+.announcement-modal-header,
+.app-modal-header {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1381,11 +1492,13 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     color: var(--text-primary);
 }
 
-.announcement-modal-header i {
+.announcement-modal-header i,
+.app-modal-header i {
     color: var(--accent);
 }
 
-.announcement-modal-close {
+.announcement-modal-close,
+.app-modal-close {
     margin-left: auto;
     background: transparent;
     border: none;
@@ -1398,16 +1511,19 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     transition: background var(--transition), color var(--transition);
 }
 
-.announcement-modal-close:hover {
+.announcement-modal-close:hover,
+.app-modal-close:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
 }
 
-.announcement-modal-body {
+.announcement-modal-body,
+.app-modal-body {
     padding: 20px;
 }
 
-.announcement-modal-footer {
+.announcement-modal-footer,
+.app-modal-footer {
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -1415,6 +1531,57 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
     padding: 12px 20px;
     border-top: 1px solid var(--border);
     background: var(--bg-card);
+}
+
+/* CSV Import Modal components */
+.csv-hint {
+    background: rgba(124, 143, 255, 0.08);
+    border: 1px solid rgba(124, 143, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.csv-hint strong {
+    color: var(--text-primary);
+}
+
+.csv-hint .csv-example {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    display: block;
+}
+
+.csv-preview {
+    display: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+
+.csv-preview-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.csv-result {
+    display: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    margin-bottom: 4px;
 }
 
 @keyframes modalIn {

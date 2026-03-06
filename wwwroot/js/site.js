@@ -61,9 +61,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    // Announcement popup system — only runs when user is authenticated (navbar present)
+    // Announcement popup system — only runs when user is authenticated (navbar present).
+    // Login page and first-login password change page have no nav, so this safely skips them.
     (function () {
-        if (!document.querySelector('nav')) return;
+        if (!document.querySelector('nav')) return; // unauthenticated page — skip announcements
 
         var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 

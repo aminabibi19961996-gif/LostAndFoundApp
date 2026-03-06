@@ -31,11 +31,11 @@
             <div class="announcement-modal-body">
 
                 <!-- Format hint -->
-                <div style="background:rgba(124,143,255,0.08);border:1px solid rgba(124,143,255,0.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:var(--text-secondary);">
-                    <strong style="color:var(--text-primary);">CSV Format:</strong>
+                <div class="csv-hint">
+                    <strong>CSV Format:</strong>
                     The first row is treated as a header and skipped. Each subsequent row should have the name in the <strong>first column</strong>.
                     Duplicates are skipped automatically.
-                    <br/><span style="font-size:12px;color:var(--text-dim);margin-top:4px;display:block;">Example:&nbsp;&nbsp;<code>Name</code> / <code>10</code> / <code>10A</code> / <code>15B</code></span>
+                    <br/><span class="csv-example">Example:&nbsp;&nbsp;<code>Name</code> / <code>10</code> / <code>10A</code> / <code>15B</code></span>
                 </div>
 
                 <form id="@formId" enctype="multipart/form-data">
@@ -43,18 +43,18 @@
                     <input type="hidden" name="entityType" value="@Model.EntityType" />
 
                     <div style="margin-bottom:14px;">
-                        <label class="form-label" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Select CSV File</label>
+                        <label class="form-label">Select CSV File</label>
                         <input type="file" id="@fileId" name="csvFile" accept=".csv" class="form-control" onchange="previewCsv('@fileId','@previewId')" />
                     </div>
 
                     <!-- Live row preview -->
-                    <div id="@previewId" style="display:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;max-height:180px;overflow-y:auto;margin-bottom:14px;font-size:13px;">
-                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px;">Preview (first 20 rows after header)</div>
+                    <div id="@previewId" class="csv-preview">
+                        <div class="csv-preview-label">Preview (first 20 rows after header)</div>
                         <div class="preview-list"></div>
                     </div>
 
                     <!-- Result banner -->
-                    <div id="@resultId" style="display:none;border-radius:8px;padding:10px 14px;font-size:13.5px;margin-bottom:4px;"></div>
+                    <div id="@resultId" class="csv-result"></div>
                 </form>
             </div>
             <div class="announcement-modal-footer">
