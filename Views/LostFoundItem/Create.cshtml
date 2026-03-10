@@ -151,9 +151,9 @@
     <div class="card">
         <div class="card-head"><i class="bi bi-shield-check"></i> Status &amp; Audit Trail</div>
         <div class="card-body">
-            <div class="form-grid">
+            <div style="display:grid;grid-template-columns:1.5fr 1fr 0.8fr 1fr 1fr;gap:16px;align-items:start;">
 
-                @* ── Single Row: Status · Status Date · Days Since Found · Created By · Created Date & Time ── *@
+                @* ── Status ── *@
                 <div class="fg-item">
                     <label asp-for="StatusId" class="form-label">Status *</label>
                     <div class="field-with-add">
@@ -168,11 +168,15 @@
                     <div class="form-text">Defaults to "Found"</div>
                     <span asp-validation-for="StatusId" class="text-danger small"></span>
                 </div>
+
+                @* ── Status Date ── *@
                 <div class="fg-item">
                     <label asp-for="StatusDate" class="form-label">Status Date *</label>
                     <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
                     <div class="form-text">Defaults to current date</div>
                 </div>
+
+                @* ── Days Since Found ── *@
                 <div class="fg-item">
                     <label class="form-label">Days Since Found</label>
                     <div id="daysSinceFoundBadge" style="padding:9px 0;">
@@ -180,28 +184,30 @@
                     </div>
                     <div class="form-text">Auto calculated</div>
                 </div>
+
+                @* ── Created By (with date/time below) ── *@
                 <div class="fg-item">
                     <label class="form-label">Created By</label>
-                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;">@Model.CreatedByPreview</div>
-                    <div class="form-text">Auto-populated from current user</div>
-                </div>
-
-                @* ── Row 2: Created Date & Time preview bar ── *@
-                <div class="fg-item span-4" style="background:var(--bg-elevated);border-radius:8px;padding:8px 14px;margin-top:-4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <i class="bi bi-clock" style="color:var(--accent);"></i>
-                    <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);">Created Date &amp; Time</span>
-                    <span id="liveTimestamp" style="font-size:14px;color:var(--text-secondary);font-weight:600;"></span>
-                    <span style="font-size:11px;color:var(--text-dim);padding:2px 6px;border-radius:4px;background:var(--bg-card);border:1px solid var(--border);">@tzSvc.ShortName</span>
-                    <span style="font-size:12px;color:var(--text-dim);">Auto-populated on submit</span>
-                </div>
-
-                @* ── Row 3: Modified By info note ── *@
-                <div class="fg-item span-4" style="background:var(--bg-elevated);border-radius:8px;padding:10px 14px;margin-top:-4px;">
-                    <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
-                        <i class="bi bi-info-circle"></i>
-                        <span><strong>What happens if another user edits?</strong> — The "Modified By" and "Modified Date/Time" fields will be auto-updated with the editing user's name and timestamp.</span>
+                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0 2px;">@Model.CreatedByPreview</div>
+                    <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">
+                        <i class="bi bi-clock" style="font-size:10px;color:var(--accent);"></i>
+                        <span id="liveTimestamp"></span>
+                        <span style="font-size:10px;padding:1px 4px;border-radius:3px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-dim);">@tzSvc.ShortName</span>
                     </div>
+                    <div class="form-text">Auto-populated on submit</div>
                 </div>
+
+                @* ── Modified By (placeholder for new records) ── *@
+                <div class="fg-item">
+                    <label class="form-label">Modified By</label>
+                    <div style="font-size:14px;color:var(--text-dim);padding:9px 0 2px;">—</div>
+                    <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">
+                        <i class="bi bi-clock-history" style="font-size:10px;"></i>
+                        <span>—</span>
+                    </div>
+                    <div class="form-text">Updated on edit</div>
+                </div>
+
             </div>
         </div>
     </div>

@@ -149,9 +149,9 @@
     <div class="card">
         <div class="card-head"><i class="bi bi-shield-check"></i> Status &amp; Audit Trail</div>
         <div class="card-body">
-            <div style="display:grid;grid-template-columns:1.5fr 1fr 0.8fr 0.8fr 1.3fr;gap:16px;align-items:start;">
+            <div style="display:grid;grid-template-columns:1.5fr 1fr 0.8fr 1fr 1fr;gap:16px;align-items:start;">
 
-                @* ── all 5 fields in one row ── *@
+                @* ── Status ── *@
                 <div class="fg-item">
                     <label asp-for="StatusId" class="form-label">Status *</label>
                     <div class="field-with-add">
@@ -161,11 +161,15 @@
                     </div>
                     <div class="form-text">Defaults to "Found"</div>
                 </div>
+
+                @* ── Status Date ── *@
                 <div class="fg-item">
                     <label asp-for="StatusDate" class="form-label">Status Date *</label>
                     <input asp-for="StatusDate" class="form-control" type="date" id="StatusDate" />
                     <div class="form-text">Defaults to current date</div>
                 </div>
+
+                @* ── Days Since Found ── *@
                 <div class="fg-item">
                     <label class="form-label">Days Since Found</label>
                     <div style="padding:9px 0;">
@@ -173,35 +177,40 @@
                     </div>
                     <div class="form-text">Auto calculated</div>
                 </div>
+
+                @* ── Created By (with date/time below) ── *@
                 <div class="fg-item">
                     <label class="form-label">Created By</label>
-                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;">@(Model.CreatedBy ?? "—")</div>
+                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0 2px;">@(Model.CreatedBy ?? "—")</div>
+                    <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                        <i class="bi bi-clock" style="font-size:10px;color:var(--accent);"></i>
+                        <span>@tzSvc.Format(Model.CreatedDateTime)</span>
+                        <span style="font-size:10px;padding:1px 4px;border-radius:3px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-dim);">@tzSvc.ShortName</span>
+                    </div>
                 </div>
 
-                @* ── Created Date & Time (ET) ── *@
+                @* ── Modified By (with date/time below) ── *@
                 <div class="fg-item">
-                    <label class="form-label" style="display:flex;align-items:center;gap:5px;">
-                        <i class="bi bi-clock" style="color:var(--accent);font-size:11px;"></i>
-                        Created Date &amp; Time
-                        <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-dim);">@tzSvc.ShortName</span>
-                    </label>
-                    <div style="font-size:14px;color:var(--text-secondary);padding:9px 0;font-weight:600;">@tzSvc.Format(Model.CreatedDateTime)</div>
+                    <label class="form-label">Modified By</label>
+                    @if (!string.IsNullOrEmpty(Model.ModifiedBy))
+                    {
+                        <div style="font-size:14px;color:var(--text-secondary);padding:9px 0 2px;">@Model.ModifiedBy</div>
+                        <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                            <i class="bi bi-clock-history" style="font-size:10px;color:var(--accent);"></i>
+                            <span>@tzSvc.Format(Model.ModifiedDateTime)</span>
+                            <span style="font-size:10px;padding:1px 4px;border-radius:3px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-dim);">@tzSvc.ShortName</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="font-size:14px;color:var(--text-dim);padding:9px 0 2px;">—</div>
+                        <div style="font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:4px;">
+                            <i class="bi bi-clock-history" style="font-size:10px;"></i>
+                            <span>—</span>
+                        </div>
+                    }
                 </div>
 
-            </div>
-
-            @* ── Modified-by footer line ── *@
-            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
-                @if (!string.IsNullOrEmpty(Model.ModifiedBy))
-                {
-                    <i class="bi bi-clock-history"></i>
-                    <span><strong>Last Modified By:</strong> @Model.ModifiedBy on @tzSvc.Format(Model.ModifiedDateTime) (@tzSvc.ShortName)</span>
-                }
-                else
-                {
-                    <i class="bi bi-info-circle"></i>
-                    <span>This record has not been modified since creation. When edited, the "Modified By" / "Modified Date/Time" fields will update automatically.</span>
-                }
             </div>
         </div>
     </div>
@@ -245,6 +254,7 @@
                             var photoSlotLabels = new[] { "Photo 1", "Photo 2" };
                             var existingPaths = new[] { Model.ExistingPhotoPath, Model.ExistingPhotoPath2 };
                             var removeNames = new[] { "RemovePhoto", "RemovePhoto2" };
+                            var canRemoveFiles = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
                         }
                         @for (int i = 0; i < 2; i++)
                         {
@@ -255,10 +265,13 @@
                                 {
                                     <img src="@Url.Action("Photo", "LostFoundItem", new { id = existingPaths[i] })" alt="@photoSlotLabels[i]" class="existing-thumb" />
                                     <div class="file-status attached"><i class="bi bi-check-circle"></i> Photo attached</div>
-                                    <div class="form-check" style="margin-top:4px;">
-                                        <input type="checkbox" name="@removeNames[i]" value="true" class="form-check-input" id="@removeNames[i]" />
-                                        <label class="form-check-label" for="@removeNames[i]" style="color:var(--red);font-size:12px;">Remove</label>
-                                    </div>
+                                    @if (canRemoveFiles)
+                                    {
+                                        <div class="form-check" style="margin-top:4px;">
+                                            <input type="checkbox" name="@removeNames[i]" value="true" class="form-check-input" id="@removeNames[i]" />
+                                            <label class="form-check-label" for="@removeNames[i]" style="color:var(--red);font-size:12px;">Remove</label>
+                                        </div>
+                                    }
                                 }
                                 else
                                 {
@@ -274,10 +287,13 @@
                             @if (!string.IsNullOrEmpty(Model.ExistingAttachmentPath))
                             {
                                 <div class="file-status attached"><i class="bi bi-check-circle"></i> File attached</div>
-                                <div class="form-check" style="margin-top:4px;">
-                                    <input type="checkbox" name="RemoveAttachment" value="true" class="form-check-input" id="removeAttachment" />
-                                    <label class="form-check-label" for="removeAttachment" style="color:var(--red);font-size:12px;">Remove</label>
-                                </div>
+                                @if (canRemoveFiles)
+                                {
+                                    <div class="form-check" style="margin-top:4px;">
+                                        <input type="checkbox" name="RemoveAttachment" value="true" class="form-check-input" id="removeAttachment" />
+                                        <label class="form-check-label" for="removeAttachment" style="color:var(--red);font-size:12px;">Remove</label>
+                                    </div>
+                                }
                             }
                             else
                             {

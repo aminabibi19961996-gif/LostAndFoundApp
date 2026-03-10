@@ -216,16 +216,9 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // Ownership restriction: User role can only edit records they created.
-            // Supervisor, Admin, and SuperAdmin can edit any record.
-            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin") && !User.IsInRole("Supervisor"))
-            {
-                if (item.CreatedBy != User.Identity?.Name)
-                {
-                    TempData["ErrorMessage"] = "You can only edit records that you created.";
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-            }
+            // All authenticated users can edit any record — no ownership restriction.
+            // Fields like Storage Location, Claimed By, Status, Status Date, and Notes
+            // need to be editable by any user (e.g., when giving an item to a claimant).
 
             var vm = new LostFoundItemEditViewModel
             {
@@ -276,16 +269,9 @@ namespace LostAndFoundApp.Controllers
             if (item == null)
                 return NotFound();
 
-            // Ownership restriction: User role can only edit records they created.
-            // Supervisor, Admin, and SuperAdmin can edit any record.
-            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin") && !User.IsInRole("Supervisor"))
-            {
-                if (item.CreatedBy != User.Identity?.Name)
-                {
-                    TempData["ErrorMessage"] = "You can only edit records that you created.";
-                    return RedirectToAction(nameof(Details), new { id = vm.TrackingId });
-                }
-            }
+            // All authenticated users can edit any record — no ownership restriction.
+            // Fields like Storage Location, Claimed By, Status, Status Date, and Notes
+            // need to be editable by any user (e.g., when giving an item to a claimant).
 
             // Snapshot before-state for diff logging BEFORE any fields are mutated
             var beforeSnapshot = new LostFoundItem
@@ -333,29 +319,33 @@ namespace LostAndFoundApp.Controllers
             item.ModifiedBy = User.Identity?.Name ?? "Unknown";
             item.ModifiedDateTime = DateTime.UtcNow;
 
-            // Handle photo removals (checkboxes)
-            var removePhotoKeys = new[] { "RemovePhoto", "RemovePhoto2", "RemovePhoto3", "RemovePhoto4" };
-            var itemPhotoPaths = new[] { item.PhotoPath, item.PhotoPath2, item.PhotoPath3, item.PhotoPath4 };
-            for (int i = 0; i < removePhotoKeys.Length; i++)
+            // Handle photo removals (checkboxes) — only admin roles can delete existing files
+            var canRemoveFiles = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
+            if (canRemoveFiles)
             {
-                if (Request.Form[removePhotoKeys[i]] == "true" && !string.IsNullOrEmpty(itemPhotoPaths[i]))
+                var removePhotoKeys = new[] { "RemovePhoto", "RemovePhoto2", "RemovePhoto3", "RemovePhoto4" };
+                var itemPhotoPaths = new[] { item.PhotoPath, item.PhotoPath2, item.PhotoPath3, item.PhotoPath4 };
+                for (int i = 0; i < removePhotoKeys.Length; i++)
                 {
-                    _fileService.DeletePhoto(itemPhotoPaths[i]);
-                    switch (i)
+                    if (Request.Form[removePhotoKeys[i]] == "true" && !string.IsNullOrEmpty(itemPhotoPaths[i]))
                     {
-                        case 0: item.PhotoPath = null; break;
-                        case 1: item.PhotoPath2 = null; break;
-                        case 2: item.PhotoPath3 = null; break;
-                        case 3: item.PhotoPath4 = null; break;
+                        _fileService.DeletePhoto(itemPhotoPaths[i]);
+                        switch (i)
+                        {
+                            case 0: item.PhotoPath = null; break;
+                            case 1: item.PhotoPath2 = null; break;
+                            case 2: item.PhotoPath3 = null; break;
+                            case 3: item.PhotoPath4 = null; break;
+                        }
                     }
                 }
-            }
 
-            // Handle attachment removal checkbox
-            if (Request.Form["RemoveAttachment"] == "true" && !string.IsNullOrEmpty(item.AttachmentPath))
-            {
-                _fileService.DeleteAttachment(item.AttachmentPath);
-                item.AttachmentPath = null;
+                // Handle attachment removal checkbox
+                if (Request.Form["RemoveAttachment"] == "true" && !string.IsNullOrEmpty(item.AttachmentPath))
+                {
+                    _fileService.DeleteAttachment(item.AttachmentPath);
+                    item.AttachmentPath = null;
+                }
             }
 
             // Handle photo replacements (up to 4)
