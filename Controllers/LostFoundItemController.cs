@@ -460,7 +460,7 @@ namespace LostAndFoundApp.Controllers
                     && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
                     && x.Status.Name != "Transferred");
-                filters.Add($"Overdue ({vm.ShortOverdueDays}+ days, unresolved)");
+                filters.Add($"Overdue (≥{vm.ShortOverdueDays} days, unresolved)");
             }
 
             // Apply filters — empty/null filters are ignored
@@ -520,6 +520,16 @@ namespace LostAndFoundApp.Controllers
                 var foundName = vm.FoundByNames?.FirstOrDefault(i => i.Value == vm.FoundById.Value.ToString())?.Text ?? vm.FoundById.Value.ToString();
                 filters.Add($"Found By: {foundName}");
             }
+            if (!string.IsNullOrEmpty(vm.DescriptionSearch))
+            {
+                query = query.Where(x => x.Description != null && x.Description.Contains(vm.DescriptionSearch));
+                filters.Add($"Description: \"{vm.DescriptionSearch}\"");
+            }
+            if (!string.IsNullOrEmpty(vm.NotesSearch))
+            {
+                query = query.Where(x => x.Notes != null && x.Notes.Contains(vm.NotesSearch));
+                filters.Add($"Notes: \"{vm.NotesSearch}\"");
+            }
 
             vm.FilterSummary = filters.Any() ? string.Join(" | ", filters) : "All Records (No Filters Applied)";
 
@@ -559,7 +569,8 @@ namespace LostAndFoundApp.Controllers
                     FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
                     x.ClaimedBy,
                     x.CreatedBy,
-                    x.CreatedDateTime
+                    x.CreatedDateTime,
+                    x.Notes
                 })
                 .ToListAsync();
 
@@ -578,6 +589,7 @@ namespace LostAndFoundApp.Controllers
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
                 DaysInSystem = (int)(DateTime.UtcNow - x.CreatedDateTime).TotalDays,
                 FoundByName = x.FoundByName,
+                Notes = x.Notes,
                 ClaimedBy = x.ClaimedBy,
                 CreatedBy = x.CreatedBy
             }).ToList();
@@ -612,7 +624,7 @@ namespace LostAndFoundApp.Controllers
                     && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
                     && x.Status.Name != "Transferred");
-                filters.Add($"Overdue ({vm.ShortOverdueDays}+ days, unresolved)");
+                filters.Add($"Overdue (≥{vm.ShortOverdueDays} days, unresolved)");
             }
 
             if (vm.TrackingId.HasValue)
@@ -672,6 +684,16 @@ namespace LostAndFoundApp.Controllers
                 var foundName = vm.FoundByNames?.FirstOrDefault(i => i.Value == vm.FoundById.Value.ToString())?.Text ?? vm.FoundById.Value.ToString();
                 filters.Add($"Found By: {foundName}");
             }
+            if (!string.IsNullOrEmpty(vm.DescriptionSearch))
+            {
+                query = query.Where(x => x.Description != null && x.Description.Contains(vm.DescriptionSearch));
+                filters.Add($"Description: \"{vm.DescriptionSearch}\"");
+            }
+            if (!string.IsNullOrEmpty(vm.NotesSearch))
+            {
+                query = query.Where(x => x.Notes != null && x.Notes.Contains(vm.NotesSearch));
+                filters.Add($"Notes: \"{vm.NotesSearch}\"");
+            }
 
             vm.FilterSummary = filters.Any() ? string.Join(" | ", filters) : "All Records (No Filters Applied)";
 
@@ -694,7 +716,8 @@ namespace LostAndFoundApp.Controllers
                     StatusName = x.Status != null ? x.Status.Name : "",
                     FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
                     x.ClaimedBy,
-                    x.CreatedBy
+                    x.CreatedBy,
+                    x.Notes
                 })
                 .ToListAsync();
 
@@ -713,6 +736,7 @@ namespace LostAndFoundApp.Controllers
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
                 DaysInSystem = (DateTime.Today - x.DateFound.Date).Days,
                 FoundByName = x.FoundByName,
+                Notes = x.Notes,
                 ClaimedBy = x.ClaimedBy,
                 CreatedBy = x.CreatedBy
             }).ToList();
@@ -845,6 +869,10 @@ namespace LostAndFoundApp.Controllers
                 query = query.Where(x => x.StorageLocationId == vm.StorageLocationId.Value);
             if (vm.FoundById.HasValue)
                 query = query.Where(x => x.FoundById == vm.FoundById.Value);
+            if (!string.IsNullOrEmpty(vm.DescriptionSearch))
+                query = query.Where(x => x.Description != null && x.Description.Contains(vm.DescriptionSearch));
+            if (!string.IsNullOrEmpty(vm.NotesSearch))
+                query = query.Where(x => x.Notes != null && x.Notes.Contains(vm.NotesSearch));
             // bug fix #3: apply ShowOverdueOnly in Export
             if (vm.ShowOverdueOnly)
             {

@@ -79,7 +79,7 @@
     <table>
         <thead>
             <tr>
-                <th>#</th><th>ID</th><th>Date Found</th><th>Item</th><th>Description</th><th>Location</th><th>Route</th><th>Vehicle</th><th>Storage</th><th>Found By</th><th>Claimed By</th><th>Status</th><th>Days</th>
+                <th>#</th><th>ID</th><th>Date Found</th><th>Item</th><th>Description</th><th>Notes</th><th>Location</th><th>Route</th><th>Vehicle</th><th>Storage</th><th>Found By</th><th>Claimed By</th><th>Status</th><th>Days</th>
             </tr>
         </thead>
         <tbody>
@@ -93,6 +93,7 @@
                     <td>@item.DateFound.ToString("MM/dd/yy")</td>
                     <td>@item.ItemName</td>
                     <td>@(item.Description?.Length > 50 ? item.Description[..50] + "..." : item.Description)</td>
+                    <td>@(item.Notes?.Length > 50 ? item.Notes[..50] + "..." : item.Notes)</td>
                     <td>@item.LocationFound</td>
                     <td>@item.RouteName</td>
                     <td>@item.VehicleName</td>

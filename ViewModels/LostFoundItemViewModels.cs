@@ -210,6 +210,8 @@ namespace LostAndFoundApp.ViewModels
         public int? VehicleId { get; set; }
         public int? StorageLocationId { get; set; }
         public int? FoundById { get; set; }
+        public string? DescriptionSearch { get; set; }
+        public string? NotesSearch { get; set; }
 
         // Sort
         public string SortField { get; set; } = "TrackingId";
@@ -257,6 +259,7 @@ namespace LostAndFoundApp.ViewModels
         public int DaysSinceFound { get; set; }
         public int DaysInSystem { get; set; }
         public string FoundByName { get; set; } = string.Empty;
+        public string? Notes { get; set; }
         public string? ClaimedBy { get; set; }
         public string? CreatedBy { get; set; }
     }

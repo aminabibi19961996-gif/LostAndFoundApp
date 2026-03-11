@@ -116,6 +116,8 @@
                asp-route-VehicleId="@Model.VehicleId"
                asp-route-StorageLocationId="@Model.StorageLocationId"
                asp-route-FoundById="@Model.FoundById"
+               asp-route-DescriptionSearch="@Model.DescriptionSearch"
+               asp-route-NotesSearch="@Model.NotesSearch"
                class="btn btn-secondary" title="Export to CSV">
                 <i class="bi bi-download"></i> Export
             </a>
@@ -130,6 +132,8 @@
                asp-route-VehicleId="@Model.VehicleId"
                asp-route-StorageLocationId="@Model.StorageLocationId"
                asp-route-FoundById="@Model.FoundById"
+               asp-route-DescriptionSearch="@Model.DescriptionSearch"
+               asp-route-NotesSearch="@Model.NotesSearch"
                class="btn btn-secondary" target="_blank">
                 <i class="bi bi-printer"></i> Print
             </a>
@@ -310,12 +314,20 @@
                         }
                     </select>
                 </div>
+                <div>
+                    <label class="form-label">Description</label>
+                    <input type="text" name="DescriptionSearch" value="@Model.DescriptionSearch" class="form-control" placeholder="Keywords…" />
+                </div>
+                <div>
+                    <label class="form-label">Notes</label>
+                    <input type="text" name="NotesSearch" value="@Model.NotesSearch" class="form-control" placeholder="Keywords…" />
+                </div>
             </div>
             <div class="fc-actions">
                 @if (!Model.ShowOverdueOnly)
                 {
                     <a asp-action="Search" asp-route-ShowOverdueOnly="true" class="fc-left btn btn-sm" style="background:rgba(239,68,68,0.08);color:#EF4444;border:1px solid rgba(239,68,68,0.25);font-weight:600;font-size:12px;">
-                        <i class="bi bi-clock-history me-1"></i> Overdue (@Model.ShortOverdueDays+ days)
+                        <i class="bi bi-clock-history me-1"></i> Overdue (≥@Model.ShortOverdueDays days)
                     </a>
                 }
                 <a asp-action="Search" class="btn btn-secondary">
@@ -350,6 +362,8 @@
                                 { "VehicleId", Model.VehicleId?.ToString() },
                                 { "StorageLocationId", Model.StorageLocationId?.ToString() },
                                 { "FoundById", Model.FoundById?.ToString() },
+                                { "DescriptionSearch", Model.DescriptionSearch },
+                                { "NotesSearch", Model.NotesSearch },
                             };
                             string SortIcon(string field) => Model.SortField == field ? (Model.SortOrder == "asc" ? "bi-sort-up" : "bi-sort-down") : "bi-chevron-expand";
                             string NextOrder(string field) => Model.SortField == field && Model.SortOrder == "desc" ? "asc" : "desc";
@@ -363,6 +377,8 @@
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="DateFound" asp-route-SortOrder="@NextOrder("DateFound")">Date Found <i class="bi @SortIcon("DateFound")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="ItemName" asp-route-SortOrder="@NextOrder("ItemName")">Item <i class="bi @SortIcon("ItemName")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="LocationFound" asp-route-SortOrder="@NextOrder("LocationFound")">Location <i class="bi @SortIcon("LocationFound")"></i></a></th>
+                        <th>Description</th>
+                        <th>Notes</th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="StatusName" asp-route-SortOrder="@NextOrder("StatusName")">Status <i class="bi @SortIcon("StatusName")"></i></a></th>
                         <th><a asp-action="Search" asp-all-route-data="sortParams" asp-route-SortField="DaysSinceFound" asp-route-SortOrder="@NextOrder("DaysSinceFound")">Days <i class="bi @SortIcon("DaysSinceFound")"></i></a></th>
                         <th>Claimed By</th>
@@ -392,6 +408,8 @@
                             <td>@item.DateFound.ToString("MM/dd/yyyy")</td>
                             <td style="color:var(--text-primary);font-weight:500;">@item.ItemName</td>
                             <td style="font-size:12.5px;">@item.LocationFound</td>
+                            <td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Description">@(item.Description ?? "—")</td>
+                            <td style="font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Notes">@(item.Notes ?? "—")</td>
                             <td><span class="sb @statusClass">@(item.StatusName ?? "Unknown")</span></td>
                             <td>
                                 @{
@@ -451,6 +469,8 @@
                                    asp-route-VehicleId="@Model.VehicleId"
                                    asp-route-StorageLocationId="@Model.StorageLocationId"
                                    asp-route-FoundById="@Model.FoundById"
+                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
+                                   asp-route-NotesSearch="@Model.NotesSearch"
                                    asp-route-SortField="@Model.SortField"
                                    asp-route-SortOrder="@Model.SortOrder">
                                     <i class="bi bi-chevron-left"></i>
@@ -472,6 +492,8 @@
                                    asp-route-VehicleId="@Model.VehicleId"
                                    asp-route-StorageLocationId="@Model.StorageLocationId"
                                    asp-route-FoundById="@Model.FoundById"
+                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
+                                   asp-route-NotesSearch="@Model.NotesSearch"
                                    asp-route-SortField="@Model.SortField"
                                    asp-route-SortOrder="@Model.SortOrder">@i</a>
                             </li>
@@ -491,6 +513,8 @@
                                    asp-route-VehicleId="@Model.VehicleId"
                                    asp-route-StorageLocationId="@Model.StorageLocationId"
                                    asp-route-FoundById="@Model.FoundById"
+                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
+                                   asp-route-NotesSearch="@Model.NotesSearch"
                                    asp-route-SortField="@Model.SortField"
                                    asp-route-SortOrder="@Model.SortOrder">
                                     <i class="bi bi-chevron-right"></i>
