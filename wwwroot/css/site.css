@@ -92,6 +92,89 @@
     --transition: 140ms ease-out;
 }
 
+/* ── 1b. LIGHT THEME OVERRIDES ────────────────────────────── */
+
+[data-theme="light"] {
+    /* Backgrounds — clean white base */
+    --bg: #F5F6FA;
+    --bg-card: #FFFFFF;
+    --bg-elevated: #F0F1F5;
+    --bg-hover: #E8E9EF;
+    --bg-input: #FFFFFF;
+
+    /* Borders */
+    --border: rgba(0, 0, 0, 0.09);
+    --border-h: rgba(0, 0, 0, 0.16);
+    --border-focus: rgba(99, 114, 224, 0.55);
+
+    /* Text — high contrast on white */
+    --text-primary: #1A1D2E;
+    --text-secondary: #4A4D5E;
+    --text-muted: #6E7185;
+    --text-dim: #9EA1B2;
+    --white: #FFFFFF;
+
+    /* Accent — Periwinkle Indigo (slightly deeper for light bg) */
+    --accent: #5B6ED6;
+    --accent-hover: #4C5EC5;
+    --accent-subtle: rgba(91, 110, 214, 0.09);
+    --accent-border: rgba(91, 110, 214, 0.20);
+    --accent-gradient: linear-gradient(135deg, #5B6ED6, #8B6EC5);
+
+    /* Status (darker text, lighter tinted backgrounds) */
+    --status-found-bg: rgba(16, 185, 129, 0.10);
+    --status-found-text: #059669;
+    --status-found-border: rgba(16, 185, 129, 0.22);
+
+    --status-claimed-bg: rgba(59, 130, 246, 0.10);
+    --status-claimed-text: #2563EB;
+    --status-claimed-border: rgba(59, 130, 246, 0.22);
+
+    --status-stored-bg: rgba(245, 158, 11, 0.10);
+    --status-stored-text: #D97706;
+    --status-stored-border: rgba(245, 158, 11, 0.22);
+
+    --status-transferred-bg: rgba(139, 92, 246, 0.10);
+    --status-transferred-text: #7C3AED;
+    --status-transferred-border: rgba(139, 92, 246, 0.22);
+
+    --status-disposed-bg: rgba(107, 114, 128, 0.08);
+    --status-disposed-text: #6B7280;
+    --status-disposed-border: rgba(107, 114, 128, 0.18);
+
+    /* Semantic */
+    --green: #16A34A;
+    --green-light: rgba(22, 163, 74, 0.10);
+    --red: #DC2626;
+    --red-light: rgba(220, 38, 38, 0.10);
+    --amber: #D97706;
+    --amber-light: rgba(217, 119, 6, 0.10);
+    --blue: #2563EB;
+    --blue-light: rgba(37, 99, 235, 0.10);
+
+    /* Old aliases (light equivalents) */
+    --black: #F5F6FA;
+    --black-light: #FFFFFF;
+    --black-mid: #F0F1F5;
+    --black-surface: #E8E9EF;
+
+    /* Shadows — softer for light mode */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+    --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.14);
+}
+
+/* Theme toggle transition — smooth color change on theme switch */
+html[data-theme] body,
+html[data-theme] nav,
+html[data-theme] .md-card,
+html[data-theme] .rc,
+html[data-theme] .dash-page,
+html[data-theme] .modal-content {
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
 /* ── 2. RESET & BASE ─────────────────────────────────────── */
 
 *,
@@ -2964,4 +3047,184 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
 /* Page item for old Bootstrap pagination refs */
 .page-item {
     list-style: none;
+}
+
+/* ── 28. THEME TOGGLE ────────────────────────────────────── */
+
+.theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border-color: var(--border-h);
+}
+
+.theme-toggle i {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover i {
+    transform: rotate(25deg);
+}
+
+/* ── 29. LIGHT MODE OVERRIDES (hardcoded values) ─────────── */
+
+/* Elements with hardcoded rgba(255,255,255,...) borders need fixing in light mode */
+[data-theme="light"] .btn-secondary:hover {
+    border-color: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="light"] .btn-outline-secondary:hover {
+    border-color: rgba(0, 0, 0, 0.14);
+}
+
+/* Logo swap — dark logo shown by default, light logo on light theme */
+.nav-logo.logo-dark  { display: block !important; }
+.nav-logo.logo-light { display: none !important; }
+[data-theme="light"] .nav-logo.logo-dark  { display: none !important; }
+[data-theme="light"] .nav-logo.logo-light { display: block !important; }
+
+/* Nav brand icon SVG — keep white text on gradient in both themes */
+[data-theme="light"] .nav-brand-icon svg {
+    color: #fff;
+}
+
+/* Loading overlay — adapt for light mode */
+[data-theme="light"] #loadingOverlay {
+    background: linear-gradient(135deg, #E8EAF0 0%, #F0F1F7 50%, #E8EAF0 100%) !important;
+}
+
+[data-theme="light"] #loadingOverlay div[style*="color:#A5B4FC"],
+[data-theme="light"] #loadingOverlay div[style*="color:rgba(165,180,252"] {
+    color: var(--accent) !important;
+}
+
+/* Profile icon and logout icon — adapt for light mode */
+[data-theme="light"] .nav-actions .btn-ghost i[style*="color:#E0E0E0"] {
+    color: var(--text-muted) !important;
+}
+
+/* Any nav btn-ghost icon that was hardcoded light gray */
+[data-theme="light"] .nav-actions .btn-ghost i {
+    color: var(--text-secondary) !important;
+}
+
+/* Validation errors — readable in light mode */
+[data-theme="light"] .validation-summary-errors {
+    color: #DC2626;
+}
+
+/* Status icon colors on dashboard cards — adapt for light readability */
+[data-theme="light"] .stat-meta .positive { color: #059669; }
+[data-theme="light"] .stat-meta .negative { color: #DC2626; }
+[data-theme="light"] .stat-meta .neutral  { color: #2563EB; }
+
+/* Field errors — adapt for light mode */
+[data-theme="light"] .field-validation-error,
+[data-theme="light"] .text-danger {
+    color: #DC2626 !important;
+}
+
+/* ── 30. DASHBOARD LIGHT MODE — Override view-level :root vars ─────── */
+/*
+   All 4 dashboard views (SuperAdmin, Admin, Supervisor, User) define
+   --t1 through --t4 in :root which are dark-mode only. We override here
+   so text is readable on light backgrounds. We also remap status colors
+   to darker, contrast-safe variants for white cards.                      */
+
+[data-theme="light"] .dash-page {
+    /* Dashboard text hierarchy (dark text on light bg) */
+    --t1: #1A1D2E;
+    --t2: #4A4D5E;
+    --t3: #6E7185;
+    --t4: #9EA1B2;
+
+    /* Status colors — deepened for WCAG AA contrast on white */
+    --found-c: #059669;
+    --claim-c: #2563EB;
+    --store-c: #D97706;
+    --xfer-c: #7C3AED;
+    --disp-c: #6B7280;
+
+    --found-bg: rgba(16, 185, 129, 0.10);
+    --claim-bg: rgba(59, 130, 246, 0.10);
+    --store-bg: rgba(245, 158, 11, 0.10);
+    --xfer-bg: rgba(139, 92, 246, 0.10);
+    --disp-bg: rgba(107, 114, 128, 0.08);
+
+    --found-b: rgba(16, 185, 129, 0.22);
+    --claim-b: rgba(59, 130, 246, 0.22);
+    --store-b: rgba(245, 158, 11, 0.22);
+    --xfer-b: rgba(139, 92, 246, 0.22);
+    --disp-b: rgba(107, 114, 128, 0.18);
+
+    /* Semantic alert colors — safe on white */
+    --green-db: #16A34A;
+    --danger-db: #DC2626;
+    --warn-db: #D97706;
+}
+
+/* Dashboard card hover in light mode — use dark overlay instead of white */
+[data-theme="light"] .stat-card:hover {
+    border-color: rgba(0, 0, 0, 0.14) !important;
+}
+[data-theme="light"] .kpi:hover {
+    border-color: rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Scrollbar tracks in light mode — dark thumbs on light track */
+[data-theme="light"] .dash-page::-webkit-scrollbar-thumb,
+[data-theme="light"] .dtc-body::-webkit-scrollbar-thumb,
+[data-theme="light"] .sidebar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard action row icons (eye, pencil, etc.) — ensure visible */
+[data-theme="light"] .d-ra {
+    color: var(--t3) !important;
+}
+[data-theme="light"] .d-ra:hover {
+    color: var(--accent) !important;
+}
+
+/* SuperAdmin roles sidebar — keep distinct colors readable on light */
+[data-theme="light"] .s-row span[style*="color:#A5B4FC"] {
+    color: var(--accent) !important;
+}
+
+/* User dashboard action buttons — fix white-border hover on light bg */
+[data-theme="light"] .action-btn.secondary:hover {
+    border-color: rgba(0, 0, 0, 0.18) !important;
+}
+
+/* KPI accent glow — use darker tint on light bg */
+[data-theme="light"] .kpi.accent::before {
+    background: radial-gradient(circle, rgba(124, 143, 255, 0.08) 0%, transparent 70%) !important;
+}
+
+/* Sidebar fill bar gradient — darken for light mode */
+[data-theme="light"] .s-fill {
+    background: linear-gradient(90deg, #5B6EE1, #7C3AED) !important;
+}
+
+/* Health card top bars — inherit from updated vars automatically */
+/* Loading overlay SVG elements */
+[data-theme="light"] #loadingOverlay svg circle[stroke="#7C8FFF"],
+[data-theme="light"] #loadingOverlay svg line[stroke="#7C8FFF"] {
+    stroke: var(--accent) !important;
 }

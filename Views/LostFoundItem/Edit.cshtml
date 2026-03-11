@@ -99,6 +99,7 @@
                         @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor"))
                         { <button type="button" class="btn btn-sm btn-secondary" data-inline-create data-target-select="ItemId" data-endpoint="@Url.Action("AddItemAjax", "MasterData")" data-label="item" title="Add new"><i class="bi bi-plus"></i></button> }
                     </div>
+                    <span asp-validation-for="ItemId" class="text-danger small"></span>
                 </div>
 
                 @* ── Row 2: Found By · Location Found · Route # · Vehicle # ── *@
@@ -114,7 +115,8 @@
                 </div>
                 <div class="fg-item">
                     <label asp-for="LocationFound" class="form-label">Location Found *</label>
-                    <input asp-for="LocationFound" class="form-control" />
+                    <input asp-for="LocationFound" class="form-control" placeholder="Where was the item found?" />
+                    <span asp-validation-for="LocationFound" class="text-danger small"></span>
                 </div>
                 <div class="fg-item">
                     <label asp-for="RouteId" class="form-label">Route #</label>
@@ -135,8 +137,8 @@
 
                 @* ── Row 3: Item Description (full width) ── *@
                 <div class="fg-item span-4">
-                    <label asp-for="Description" class="form-label">Item Description</label>
-                    <textarea asp-for="Description" class="form-control" rows="3" maxlength="512"></textarea>
+                    <label asp-for="Description" class="form-label">Item Description *</label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Detailed description of the item..."></textarea>
                     <span class="text-muted small" style="font-size:11px;">Max 500 characters</span>
                 </div>
             </div>
@@ -234,13 +236,13 @@
                 </div>
                 <div class="fg-item span-2">
                     <label asp-for="ClaimedBy" class="form-label">Claimed By</label>
-                    <input asp-for="ClaimedBy" class="form-control" />
+                    <input asp-for="ClaimedBy" class="form-control" placeholder="Name of claimant" />
                 </div>
 
                 @* ── Row 2: Notes (full width) ── *@
                 <div class="fg-item span-4">
                     <label asp-for="Notes" class="form-label">Notes</label>
-                    <textarea asp-for="Notes" class="form-control" rows="3" maxlength="1000"></textarea>
+                    <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
                     <span class="text-muted small" style="font-size:11px;">Max 1000 characters</span>
                 </div>
 

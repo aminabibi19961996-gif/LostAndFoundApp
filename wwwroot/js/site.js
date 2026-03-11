@@ -265,4 +265,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Make showToast available globally
     window.showToast = showToast;
+
+    // ── THEME TOGGLE ────────────────────────────────────────
+    (function () {
+        var toggle = document.getElementById('themeToggle');
+        if (!toggle) return;
+
+        var icon = toggle.querySelector('i');
+        var html = document.documentElement;
+
+        function applyIcon() {
+            var isDark = html.getAttribute('data-theme') !== 'light';
+            if (icon) {
+                icon.className = isDark ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+            }
+            toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+        }
+
+        // Set initial icon based on current theme
+        applyIcon();
+
+        toggle.addEventListener('click', function () {
+            var current = html.getAttribute('data-theme');
+            var next = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('lf-theme', next);
+            applyIcon();
+        });
+    })();
 });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,6 +16,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // Anti-flash: apply saved theme before CSS paints
+        (function(){
+            var t = localStorage.getItem('lf-theme');
+            if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+        })();
+    </script>
     <link href="~/css/site.css" rel="stylesheet" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -93,7 +100,8 @@
     <!-- NAV -->
     <nav>
         <a class="nav-brand" asp-controller="Home" asp-action="Index" style="display:flex;align-items:center;justify-content:center;height:80px;padding:10px 16px;">
-            <img src="/images/logo.png?v=2" alt="Lost &amp; Found Logo" style="height:56px;width:auto;max-width:100%;display:block;object-fit:contain;object-position:center;" />
+            <img src="/images/logo.png?v=2" alt="Lost &amp; Found Logo" class="nav-logo logo-dark" style="height:56px;width:auto;max-width:100%;display:block;object-fit:contain;object-position:center;" />
+            <img src="/images/logo-light.png" alt="Lost &amp; Found Logo" class="nav-logo logo-light" style="height:56px;width:auto;max-width:100%;display:none;object-fit:contain;object-position:center;" />
         </a>
 
         <div class="nav-links">
@@ -201,7 +209,9 @@
                     </button>
                 </form>
             </div>
-            <div class="avatar" title="@User.Identity.Name" style="width:36px;height:36px;font-size:14px;font-weight:800;">@userInitials</div>
+            <button type="button" class="theme-toggle" id="themeToggle" title="Toggle light/dark mode" style="font-size:24px;">
+                <i class="bi bi-moon-stars-fill" style="font-size:24px;"></i>
+            </button>
         </div>
     </nav>
 }
