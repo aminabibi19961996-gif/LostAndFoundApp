@@ -523,7 +523,7 @@ namespace LostAndFoundApp.Controllers
                         GroupName = groupName,
                         MappedRole = mappedRole,
                         IsActive = true,
-                        DateAdded = DateTime.UtcNow
+                        DateAdded = DateTime.Now
                     });
                     addedCount++;
                 }
@@ -673,7 +673,7 @@ namespace LostAndFoundApp.Controllers
                 Username = username.Trim(),
                 MappedRole = mappedRole,
                 IsActive = true,
-                DateAdded = DateTime.UtcNow
+                DateAdded = DateTime.Now
             });
             await _context.SaveChangesAsync();
 
@@ -1003,7 +1003,7 @@ namespace LostAndFoundApp.Controllers
             if (!allowedValues.Contains(days))
                 return BadRequest(new { error = "Days must be 30, 60, or 90." });
 
-            var cutoff = DateTime.UtcNow.AddDays(-days);
+            var cutoff = DateTime.Now.AddDays(-days);
             var count = await _context.ActivityLogs.CountAsync(l => l.Timestamp < cutoff);
             return Json(new { count });
         }
@@ -1072,7 +1072,7 @@ namespace LostAndFoundApp.Controllers
             if (!allowedValues.Contains(days))
                 return BadRequest(new { error = "Days must be 365 or 730." });
 
-            var cutoff = DateTime.UtcNow.AddDays(-days);
+            var cutoff = DateTime.Now.AddDays(-days);
             var count = await _context.LostFoundItems.CountAsync(i => i.CreatedDateTime < cutoff);
             return Json(new { count });
         }

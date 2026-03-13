@@ -36,7 +36,7 @@ namespace LostAndFoundApp.Services
                 {
                     // Calculate delay until next sync time
                     var syncHour = _config.GetValue<int>("ActiveDirectory:DailySyncHourUtc", 2);
-                    var now = DateTime.UtcNow;
+                    var now = DateTime.Now;
                     var nextSync = now.Date.AddHours(syncHour);
                     if (nextSync <= now)
                         nextSync = nextSync.AddDays(1);

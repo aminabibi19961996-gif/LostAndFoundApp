@@ -25,7 +25,7 @@ namespace LostAndFoundApp.Models
         [Required, StringLength(256)]
         public string CreatedBy { get; set; } = string.Empty;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         /// <summary>
         /// Optional expiry date. Null means the announcement never expires.

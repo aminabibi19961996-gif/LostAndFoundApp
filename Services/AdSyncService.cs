@@ -361,7 +361,7 @@ namespace LostAndFoundApp.Services
         {
             var log = new AdSyncLog
             {
-                Timestamp = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 Success = result.Success,
                 UsersCreated = result.UsersCreated,
                 UsersUpdated = result.UsersUpdated,

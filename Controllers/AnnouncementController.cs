@@ -123,7 +123,7 @@ namespace LostAndFoundApp.Controllers
                 Message = model.Message.Trim(),
                 TargetRole = model.TargetRole,
                 CreatedBy = User.Identity?.Name ?? "System",
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
                 ExpiresAt = model.ExpiresAt,
                 IsActive = true
             };
@@ -194,7 +194,7 @@ namespace LostAndFoundApp.Controllers
             if (userRole == "SuperAdmin" || userRole == "Admin" || userRole == "Supervisor")
                 return RedirectToAction(nameof(Index));
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
@@ -262,7 +262,7 @@ namespace LostAndFoundApp.Controllers
 
             if (existing != null)
             {
-                existing.DismissedAt = DateTime.UtcNow;
+                existing.DismissedAt = DateTime.Now;
             }
             else
             {
@@ -271,8 +271,8 @@ namespace LostAndFoundApp.Controllers
                     AnnouncementId = id,
                     UserId = user.Id,
                     PopupShownCount = 1,
-                    FirstReadAt = DateTime.UtcNow,
-                    DismissedAt = DateTime.UtcNow
+                    FirstReadAt = DateTime.Now,
+                    DismissedAt = DateTime.Now
                 });
             }
 
@@ -293,7 +293,7 @@ namespace LostAndFoundApp.Controllers
             if (user == null) return RedirectToAction("Login", "Account");
 
             var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
@@ -351,7 +351,7 @@ namespace LostAndFoundApp.Controllers
 
             if (existing != null)
             {
-                existing.DismissedAt = DateTime.UtcNow;
+                existing.DismissedAt = DateTime.Now;
             }
             else
             {
@@ -360,8 +360,8 @@ namespace LostAndFoundApp.Controllers
                     AnnouncementId = id,
                     UserId = user.Id,
                     PopupShownCount = 1,
-                    FirstReadAt = DateTime.UtcNow,
-                    DismissedAt = DateTime.UtcNow
+                    FirstReadAt = DateTime.Now,
+                    DismissedAt = DateTime.Now
                 });
             }
 
@@ -386,7 +386,7 @@ namespace LostAndFoundApp.Controllers
             if (userRole == "SuperAdmin")
                 return Json(new object[0]);
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
@@ -451,7 +451,7 @@ namespace LostAndFoundApp.Controllers
                         AnnouncementId = announcementId,
                         UserId = user.Id,
                         PopupShownCount = 1,
-                        FirstReadAt = DateTime.UtcNow
+                        FirstReadAt = DateTime.Now
                     });
                 }
             }
@@ -471,7 +471,7 @@ namespace LostAndFoundApp.Controllers
             if (userRole == "SuperAdmin")
                 return Json(new { count = 0 });
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             var count = await _context.Announcements
                 .Where(a => a.IsActive)

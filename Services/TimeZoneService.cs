@@ -81,7 +81,7 @@ namespace LostAndFoundApp.Services
         {
             get
             {
-                var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _tz);
+                var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.Now, _tz);
                 // Use DaylightName or StandardName (e.g. "Eastern Daylight Time" -> "EDT")
                 var name = _tz.IsDaylightSavingTime(now) ? _tz.DaylightName : _tz.StandardName;
                 // Build abbreviation from first letter of each word (e.g. "Eastern Standard Time" -> "EST")

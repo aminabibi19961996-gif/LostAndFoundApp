@@ -29,7 +29,7 @@ namespace LostAndFoundApp.Services
                 try
                 {
                     // Calculate delay until next run (4 AM UTC daily)
-                    var now = DateTime.UtcNow;
+                    var now = DateTime.Now;
                     var nextRun = now.Date.AddHours(4);
                     if (nextRun <= now)
                         nextRun = nextRun.AddDays(1);
@@ -92,7 +92,7 @@ namespace LostAndFoundApp.Services
             var retentionDays = settings?.RetentionDays ?? 365;
 
             // Calculate cutoff date
-            var cutoff = DateTime.UtcNow.AddDays(-retentionDays);
+            var cutoff = DateTime.Now.AddDays(-retentionDays);
 
             // Query records to be purged so we can clean up physical files first.
             // Only select the file path columns to minimise memory usage.
@@ -114,7 +114,7 @@ namespace LostAndFoundApp.Services
                 // Record purge results even when nothing was deleted
                 if (settings != null)
                 {
-                    settings.LastPurgedAt = DateTime.UtcNow;
+                    settings.LastPurgedAt = DateTime.Now;
                     settings.LastPurgedCount = 0;
                     await context.SaveChangesAsync();
                 }
@@ -152,7 +152,7 @@ namespace LostAndFoundApp.Services
             // Record purge results in the settings row
             if (settings != null)
             {
-                settings.LastPurgedAt = DateTime.UtcNow;
+                settings.LastPurgedAt = DateTime.Now;
                 settings.LastPurgedCount = deletedCount;
                 await context.SaveChangesAsync();
             }

@@ -28,7 +28,7 @@ namespace LostAndFoundApp.Services
                 try
                 {
                     // Calculate delay until next run (3 AM UTC daily)
-                    var now = DateTime.UtcNow;
+                    var now = DateTime.Now;
                     var nextRun = now.Date.AddHours(3);
                     if (nextRun <= now)
                         nextRun = nextRun.AddDays(1);
@@ -91,7 +91,7 @@ namespace LostAndFoundApp.Services
             var retentionDays = settings?.RetentionDays ?? 30;
 
             // Calculate cutoff date
-            var cutoff = DateTime.UtcNow.AddDays(-retentionDays);
+            var cutoff = DateTime.Now.AddDays(-retentionDays);
 
             // Delete all activity logs older than the cutoff
             var deletedCount = await Microsoft.EntityFrameworkCore.RelationalQueryableExtensions
@@ -101,7 +101,7 @@ namespace LostAndFoundApp.Services
             // Record purge results in the settings row
             if (settings != null)
             {
-                settings.LastPurgedAt = DateTime.UtcNow;
+                settings.LastPurgedAt = DateTime.Now;
                 settings.LastPurgedCount = deletedCount;
                 await context.SaveChangesAsync();
             }

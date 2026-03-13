@@ -175,14 +175,14 @@ namespace LostAndFoundApp.Data
                         GroupName = "LostandFound Admin",
                         MappedRole = "Admin",
                         IsActive = true,
-                        DateAdded = DateTime.UtcNow
+                        DateAdded = DateTime.Now
                     },
                     new AdGroup
                     {
                         GroupName = "LostandFound User",
                         MappedRole = "User",
                         IsActive = true,
-                        DateAdded = DateTime.UtcNow
+                        DateAdded = DateTime.Now
                     }
                 );
                 await context.SaveChangesAsync();

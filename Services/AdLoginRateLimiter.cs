@@ -16,7 +16,7 @@ namespace LostAndFoundApp.Services
         private readonly int _maxAttempts;
         private readonly TimeSpan _lockoutDuration;
         private readonly TimeSpan _cleanupInterval;
-        private DateTime _lastCleanup = DateTime.UtcNow;
+        private DateTime _lastCleanup = DateTime.Now;
 
         public AdLoginRateLimiter(IConfiguration config)
         {
@@ -35,14 +35,14 @@ namespace LostAndFoundApp.Services
 
             if (_attempts.TryGetValue(username, out var info))
             {
-                if (info.LockedUntil.HasValue && info.LockedUntil.Value > DateTime.UtcNow)
+                if (info.LockedUntil.HasValue && info.LockedUntil.Value > DateTime.Now)
                 {
-                    var remaining = info.LockedUntil.Value - DateTime.UtcNow;
+                    var remaining = info.LockedUntil.Value - DateTime.Now;
                     return (true, remaining);
                 }
 
                 // Lockout expired — reset
-                if (info.LockedUntil.HasValue && info.LockedUntil.Value <= DateTime.UtcNow)
+                if (info.LockedUntil.HasValue && info.LockedUntil.Value <= DateTime.Now)
                 {
                     _attempts.TryRemove(username, out _);
                 }
@@ -61,11 +61,11 @@ namespace LostAndFoundApp.Services
             lock (info)
             {
                 info.FailedCount++;
-                info.LastAttempt = DateTime.UtcNow;
+                info.LastAttempt = DateTime.Now;
 
                 if (info.FailedCount >= _maxAttempts)
                 {
-                    info.LockedUntil = DateTime.UtcNow.Add(_lockoutDuration);
+                    info.LockedUntil = DateTime.Now.Add(_lockoutDuration);
                 }
             }
         }
@@ -95,11 +95,11 @@ namespace LostAndFoundApp.Services
         /// </summary>
         private void CleanupIfNeeded()
         {
-            if (DateTime.UtcNow - _lastCleanup < _cleanupInterval) return;
-            _lastCleanup = DateTime.UtcNow;
+            if (DateTime.Now - _lastCleanup < _cleanupInterval) return;
+            _lastCleanup = DateTime.Now;
 
             var expiredKeys = _attempts
-                .Where(kvp => kvp.Value.LockedUntil.HasValue && kvp.Value.LockedUntil.Value < DateTime.UtcNow)
+                .Where(kvp => kvp.Value.LockedUntil.HasValue && kvp.Value.LockedUntil.Value < DateTime.Now)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
@@ -110,7 +110,7 @@ namespace LostAndFoundApp.Services
 
             // Also remove stale entries with no lockout that haven't been used in a while
             var staleKeys = _attempts
-                .Where(kvp => !kvp.Value.LockedUntil.HasValue && kvp.Value.LastAttempt < DateTime.UtcNow.AddHours(-1))
+                .Where(kvp => !kvp.Value.LockedUntil.HasValue && kvp.Value.LastAttempt < DateTime.Now.AddHours(-1))
                 .Select(kvp => kvp.Key)
                 .ToList();
 
@@ -123,7 +123,7 @@ namespace LostAndFoundApp.Services
         private class LoginAttemptInfo
         {
             public int FailedCount { get; set; }
-            public DateTime LastAttempt { get; set; } = DateTime.UtcNow;
+            public DateTime LastAttempt { get; set; } = DateTime.Now;
             public DateTime? LockedUntil { get; set; }
         }
     }

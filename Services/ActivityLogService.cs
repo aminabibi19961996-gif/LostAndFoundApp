@@ -30,7 +30,7 @@ namespace LostAndFoundApp.Services
                 var safeDetails = details ?? string.Empty;
                 var log = new ActivityLog
                 {
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = DateTime.Now,
                     Action = action ?? string.Empty,
                     Details = safeDetails.Length > 2000 ? safeDetails[..2000] : safeDetails,
                     PerformedBy = performedBy ?? "System",

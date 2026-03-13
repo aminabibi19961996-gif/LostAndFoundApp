@@ -11,7 +11,7 @@ namespace LostAndFoundApp.Models
         public int Id { get; set; }
 
         [Required]
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime Timestamp { get; set; } = DateTime.Now;
 
         public bool Success { get; set; }
 

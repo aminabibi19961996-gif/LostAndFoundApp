@@ -77,7 +77,7 @@ namespace LostAndFoundApp.Controllers
                 ClaimedBy = vm.ClaimedBy,
                 Notes = vm.Notes,
                 CreatedBy = User.Identity?.Name ?? "Unknown",
-                CreatedDateTime = DateTime.UtcNow,
+                CreatedDateTime = DateTime.Now,
                 CustomTrackingId = await GenerateCustomTrackingIdAsync()
             };
 
@@ -317,7 +317,7 @@ namespace LostAndFoundApp.Controllers
             item.CreatedBy = originalCreatedBy;
             item.CreatedDateTime = originalCreatedDateTime;
             item.ModifiedBy = User.Identity?.Name ?? "Unknown";
-            item.ModifiedDateTime = DateTime.UtcNow;
+            item.ModifiedDateTime = DateTime.Now;
 
             // Handle photo removals (checkboxes) — only admin roles can delete existing files
             var canRemoveFiles = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
@@ -587,7 +587,7 @@ namespace LostAndFoundApp.Controllers
                 StorageLocationName = x.StorageLocationName,
                 StatusName = x.StatusName,
                 DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
-                DaysInSystem = (int)(DateTime.UtcNow - x.CreatedDateTime).TotalDays,
+                DaysInSystem = (int)(DateTime.Now - x.CreatedDateTime).TotalDays,
                 FoundByName = x.FoundByName,
                 Notes = x.Notes,
                 ClaimedBy = x.ClaimedBy,
@@ -1123,9 +1123,9 @@ namespace LostAndFoundApp.Controllers
             foreach (var item in items)
             {
                 item.StatusId = statusId;
-                item.StatusDate = statusDate ?? DateTime.UtcNow.Date;
+                item.StatusDate = statusDate ?? DateTime.Now.Date;
                 item.ModifiedBy = User.Identity?.Name ?? "Unknown";
-                item.ModifiedDateTime = DateTime.UtcNow;
+                item.ModifiedDateTime = DateTime.Now;
             }
 
             try
