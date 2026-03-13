@@ -108,7 +108,7 @@ namespace LostAndFoundApp.Models
         public string? CreatedBy { get; set; }
 
         /// <summary>
-        /// Timestamp of record creation — auto-populated server-side UTC, never user-editable.
+        /// Timestamp of record creation — auto-populated server-side, never user-editable.
         /// </summary>
         [Display(Name = "Created Date/Time")]
         public DateTime CreatedDateTime { get; set; }
@@ -121,7 +121,7 @@ namespace LostAndFoundApp.Models
         public string? ModifiedBy { get; set; }
 
         /// <summary>
-        /// Timestamp of last modification — auto-populated server-side UTC on edit, never user-editable.
+        /// Timestamp of last modification — auto-populated server-side on edit, never user-editable.
         /// </summary>
         [Display(Name = "Modified Date/Time")]
         public DateTime? ModifiedDateTime { get; set; }

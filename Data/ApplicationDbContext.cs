@@ -95,7 +95,7 @@ namespace LostAndFoundApp.Data
 
                 entity.Property(e => e.DateFound).IsRequired();
                 entity.Property(e => e.LocationFound).IsRequired().HasMaxLength(300);
-                entity.Property(e => e.CreatedDateTime).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CreatedDateTime).HasDefaultValueSql("GETDATE()");
 
                 // Index on DateFound for efficient range queries in search
                 entity.HasIndex(e => e.DateFound);
@@ -161,7 +161,7 @@ namespace LostAndFoundApp.Data
                 entity.HasIndex(e => e.GroupName).IsUnique();
                 entity.Property(e => e.MappedRole).IsRequired().HasMaxLength(50).HasDefaultValue("User");
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
-                entity.Property(e => e.DateAdded).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.DateAdded).HasDefaultValueSql("GETDATE()");
             });
 
             builder.Entity<AdUser>(entity =>
@@ -171,7 +171,7 @@ namespace LostAndFoundApp.Data
                 entity.HasIndex(e => e.Username).IsUnique();
                 entity.Property(e => e.MappedRole).IsRequired().HasMaxLength(50).HasDefaultValue("User");
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
-                entity.Property(e => e.DateAdded).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.DateAdded).HasDefaultValueSql("GETDATE()");
             });
 
             builder.Entity<ActivityLog>(entity =>
@@ -198,7 +198,7 @@ namespace LostAndFoundApp.Data
                 entity.Property(e => e.Message).IsRequired().HasMaxLength(4000);
                 entity.Property(e => e.TargetRole).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(256);
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()");
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
 
                 entity.HasIndex(e => e.TargetRole);

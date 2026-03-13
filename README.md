@@ -429,7 +429,7 @@ Six master data tables, each with identical CRUD operations:
 
 **Safety:** If any AD group fails to process, user deactivation is skipped entirely to prevent false deactivations.
 
-**Background Service:** `AdSyncHostedService` runs sync daily at a configurable hour (default: 2 AM UTC). On failure, retries after a configurable interval (default: 60 minutes).
+**Background Service:** `AdSyncHostedService` runs sync daily at a configurable hour (default: 2 AM). On failure, retries after a configurable interval (default: 60 minutes).
 
 **Sync History:** Every sync operation (manual or scheduled) is logged to the `AdSyncLogs` table with created/updated/deactivated counts and error summaries.
 
@@ -628,7 +628,7 @@ erDiagram
  int FoundById FK "Nullable"
  string ClaimedBy "Max 200"
  string CreatedBy "Auto - never editable"
- datetime CreatedDateTime "Auto - UTC"
+ datetime CreatedDateTime "Auto"
  string ModifiedBy "Auto on edit"
  datetime ModifiedDateTime "Auto on edit"
  string Notes "Max 1000"
@@ -686,7 +686,7 @@ erDiagram
     int Id PK
     string GroupName "Required, unique, max 256"
     string MappedRole "Admin, Supervisor, or User"
-    datetime DateAdded "Auto UTC"
+    datetime DateAdded "Auto"
     bool IsActive "Default true"
   }
 
@@ -694,7 +694,7 @@ erDiagram
     int Id PK
     string Username "Required, unique, max 256"
     string MappedRole "Admin, Supervisor, or User"
-    datetime DateAdded "Auto UTC"
+    datetime DateAdded "Auto"
     bool IsActive "Default true"
   }
 
@@ -704,7 +704,7 @@ erDiagram
     string Message "Required, max 4000"
     string TargetRole "Admin, Supervisor, User, or All"
     string CreatedBy "Username"
-    datetime CreatedAt "UTC"
+    datetime CreatedAt
     datetime ExpiresAt "Nullable"
     bool IsActive "Default true"
   }
@@ -983,7 +983,7 @@ The password policy is stored in the database and can be updated by a SuperAdmin
  "Domain": "corp.lostandfoundapp.com",
  "Container": "DC=corp,DC=lostandfoundapp,DC=com",
  "UseSSL": true,
- "DailySyncHourUtc": 2
+ "DailySyncHour": 2
  },
  "FileUpload": {
  "PhotoStoragePath": "./SecureStorage/Photos",

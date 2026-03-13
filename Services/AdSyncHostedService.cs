@@ -2,7 +2,7 @@ namespace LostAndFoundApp.Services
 {
     /// <summary>
     /// Background hosted service that runs AD sync automatically once every day.
-    /// Configurable sync time via appsettings "ActiveDirectory:DailySyncHourUtc" (default: 2 AM UTC).
+    /// Configurable sync time via appsettings "ActiveDirectory:DailySyncHour" (default: 2 AM).
     /// </summary>
     public class AdSyncHostedService : BackgroundService
     {
@@ -35,14 +35,14 @@ namespace LostAndFoundApp.Services
                 try
                 {
                     // Calculate delay until next sync time
-                    var syncHour = _config.GetValue<int>("ActiveDirectory:DailySyncHourUtc", 2);
+                    var syncHour = _config.GetValue<int>("ActiveDirectory:DailySyncHour", 2);
                     var now = DateTime.Now;
                     var nextSync = now.Date.AddHours(syncHour);
                     if (nextSync <= now)
                         nextSync = nextSync.AddDays(1);
 
                     var delay = nextSync - now;
-                    _logger.LogInformation("Next AD sync scheduled at {NextSync} UTC (in {Hours:F1} hours).",
+                    _logger.LogInformation("Next AD sync scheduled at {NextSync} (in {Hours:F1} hours).",
                         nextSync, delay.TotalHours);
 
                     await Task.Delay(delay, stoppingToken);
