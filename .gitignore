@@ -42,3 +42,4 @@ SecureStorage/
 # Publish output
 publish-win/
 publish/
+.agent/workflows/
