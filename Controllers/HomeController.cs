@@ -318,6 +318,22 @@ namespace LostAndFoundApp.Controllers
                 var inactiveLocations = await _context.StorageLocations.CountAsync(x => !x.IsActive);
                 vm.InactiveMasterDataCount = inactiveItems + inactiveRoutes + inactiveVehicles + inactiveLocations;
 
+                // Data retention purge status
+                var logRetention = await _context.LogRetentionSettings.FirstOrDefaultAsync();
+                if (logRetention != null)
+                {
+                    vm.LogRetentionDays = logRetention.RetentionDays;
+                    vm.LogLastPurgedAt = logRetention.LastPurgedAt;
+                    vm.LogLastPurgedCount = logRetention.LastPurgedCount;
+                }
+                var itemRetention = await _context.ItemRetentionSettings.FirstOrDefaultAsync();
+                if (itemRetention != null)
+                {
+                    vm.ItemRetentionDays = itemRetention.RetentionDays;
+                    vm.ItemLastPurgedAt = itemRetention.LastPurgedAt;
+                    vm.ItemLastPurgedCount = itemRetention.LastPurgedCount;
+                }
+
                 // Status breakdown with percentages
                 vm.StatusBreakdown = statusGroups.Select(s => new StatusBreakdownItem
                 {

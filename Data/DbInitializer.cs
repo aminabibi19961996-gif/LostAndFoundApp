@@ -215,6 +215,28 @@ namespace LostAndFoundApp.Data
                 await context.SaveChangesAsync();
                 logger.LogInformation("Seeded default overdue thresholds (7 days / 30 days).");
             }
+
+            // ─── Seed Default Log Retention Settings ────────────────
+            if (!await context.LogRetentionSettings.AnyAsync())
+            {
+                context.LogRetentionSettings.Add(new LogRetentionSettings
+                {
+                    RetentionDays = 30
+                });
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded default log retention period (30 days).");
+            }
+
+            // ─── Seed Default Item Retention Settings ───────────────
+            if (!await context.ItemRetentionSettings.AnyAsync())
+            {
+                context.ItemRetentionSettings.Add(new ItemRetentionSettings
+                {
+                    RetentionDays = 365
+                });
+                await context.SaveChangesAsync();
+                logger.LogInformation("Seeded default item retention period (365 days / 1 year).");
+            }
         }
 
         /// <summary>

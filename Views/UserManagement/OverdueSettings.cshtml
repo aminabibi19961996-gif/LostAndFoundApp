@@ -90,6 +90,34 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Confirmation modal for reducing thresholds -->
+            <div id="confirmReduceModal" class="modal" style="display:none;">
+                <div class="modal-backdrop" id="confirmReduceBackdrop"></div>
+                <div class="modal-content" style="max-width:440px;">
+                    <div class="modal-header">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size:16px;color:#F59E0B"></i>
+                        <span>Confirm Threshold Reduction</span>
+                        <button type="button" class="modal-close" id="confirmReduceClose">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding:20px 24px;">
+                        <p style="margin:0 0 12px;font-size:14px;color:var(--text-primary);font-weight:600;">
+                            You are reducing one or more overdue thresholds.
+                        </p>
+                        <p style="margin:0;font-size:13px;color:var(--text-secondary);line-height:1.6;">
+                            Lowering a threshold means <strong>more items will be flagged as overdue</strong>
+                            on dashboards and in search results. Items that were previously within the threshold
+                            may now appear in overdue alerts immediately.
+                        </p>
+                    </div>
+                    <div class="modal-footer" style="justify-content:flex-end;gap:8px;">
+                        <button type="button" class="btn btn-ghost" id="confirmReduceCancel">Cancel</button>
+                        <button type="button" class="btn" id="confirmReduceYes" style="background:rgba(245,158,11,0.12);color:#F59E0B;border:1px solid rgba(245,158,11,0.25);font-weight:700;">
+                            <i class="bi bi-check-lg me-1"></i> Yes, Reduce &amp; Save
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -111,5 +139,37 @@
 
     shortInput.addEventListener('input', updatePreview);
     longInput.addEventListener('input', updatePreview);
+
+    // Confirmation dialog when reducing thresholds
+    (function () {
+        var savedShort = @Model.ShortOverdueDays;
+        var savedLong = @Model.LongOverdueDays;
+        var form = document.querySelector('form[action*="OverdueSettings"]');
+        var modal = document.getElementById('confirmReduceModal');
+        var backdrop = document.getElementById('confirmReduceBackdrop');
+        var closeBtn = document.getElementById('confirmReduceClose');
+        var cancelBtn = document.getElementById('confirmReduceCancel');
+        var yesBtn = document.getElementById('confirmReduceYes');
+
+        function hideModal() { modal.style.display = 'none'; }
+
+        form.addEventListener('submit', function (e) {
+            var newShort = parseInt(shortInput.value) || 0;
+            var newLong = parseInt(longInput.value) || 0;
+            if (newShort < savedShort || newLong < savedLong) {
+                e.preventDefault();
+                modal.style.display = 'flex';
+            }
+        });
+
+        yesBtn.addEventListener('click', function () {
+            hideModal();
+            form.submit();
+        });
+
+        closeBtn.addEventListener('click', hideModal);
+        cancelBtn.addEventListener('click', hideModal);
+        backdrop.addEventListener('click', hideModal);
+    })();
 </script>
 }

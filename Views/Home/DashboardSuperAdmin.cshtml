@@ -368,7 +368,68 @@
         <div class="s-row"><span class="s-name">This Month</span><span class="s-val">@Model.ItemsThisMonth</span></div>
         <div class="s-row"><span class="s-name" style="color:var(--warn-db)">Awaiting Action</span><span class="s-val warn">@Model.ItemsAwaitingAction</span></div>
       </div>
+
+      <div class="s-panel">
+        <div class="s-panel-head"><i class="bi bi-shield-check" style="margin-right:5px;"></i> Data Retention</div>
+        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <span class="s-name" style="display:flex;align-items:center;gap:6px;"><i class="bi bi-journal-text" style="color:var(--accent-db);font-size:13px;"></i> Activity Logs</span>
+            <span class="s-val" style="font-size:12px;">@Model.LogRetentionDays<span style="font-size:10px;color:var(--t3);font-weight:500;">d</span></span>
+          </div>
+          <div style="font-size:11px;color:var(--t3);padding-left:22px;font-weight:500;">
+            @if (Model.LogLastPurgedAt.HasValue)
+            {
+              <span>Last purge: <span style="color:var(--accent-db);font-family:var(--mono);font-weight:600;">@Model.LogLastPurgedAt.Value.ToString("MM/dd HH:mm")</span> UTC</span>
+              <span class="purge-ago" data-utc="@Model.LogLastPurgedAt.Value.ToString("o")"></span>
+              <span> · <strong style="color:var(--t2);">@(Model.LogLastPurgedCount?.ToString("N0") ?? "0")</strong> deleted</span>
+            }
+            else
+            {
+              <span style="font-style:italic;">No purge yet</span>
+            }
+          </div>
+        </div>
+        <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <span class="s-name" style="display:flex;align-items:center;gap:6px;"><i class="bi bi-box-seam" style="color:var(--store-c);font-size:13px;"></i> Case Records</span>
+            <span class="s-val" style="font-size:12px;">@Model.ItemRetentionDays<span style="font-size:10px;color:var(--t3);font-weight:500;">d</span></span>
+          </div>
+          <div style="font-size:11px;color:var(--t3);padding-left:22px;font-weight:500;">
+            @if (Model.ItemLastPurgedAt.HasValue)
+            {
+              <span>Last purge: <span style="color:var(--accent-db);font-family:var(--mono);font-weight:600;">@Model.ItemLastPurgedAt.Value.ToString("MM/dd HH:mm")</span> UTC</span>
+              <span class="purge-ago" data-utc="@Model.ItemLastPurgedAt.Value.ToString("o")"></span>
+              <span> · <strong style="color:var(--t2);">@(Model.ItemLastPurgedCount?.ToString("N0") ?? "0")</strong> deleted</span>
+            }
+            else
+            {
+              <span style="font-style:italic;">No purge yet</span>
+            }
+          </div>
+        </div>
+        <div style="padding:6px 14px 8px;border-top:1px solid var(--border);">
+          <a asp-controller="UserManagement" asp-action="LogRetentionSettings" style="font-size:11px;color:var(--accent-db);text-decoration:none;font-weight:600;opacity:.8;">Manage settings →</a>
+        </div>
+      </div>
     </div>
   </div>
 
 </div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('.purge-ago').forEach(function (el) {
+        var utc = new Date(el.getAttribute('data-utc'));
+        if (isNaN(utc.getTime())) return;
+        var diffMs = Date.now() - utc.getTime();
+        var diffMin = Math.floor(diffMs / 60000);
+        var diffHr = Math.floor(diffMin / 60);
+        var diffDay = Math.floor(diffHr / 24);
+        var ago = diffDay > 0 ? diffDay + 'd ago'
+                : diffHr > 0 ? diffHr + 'h ago'
+                : diffMin > 0 ? diffMin + 'm ago'
+                : 'just now';
+        el.textContent = '(' + ago + ')';
+    });
+</script>
+}

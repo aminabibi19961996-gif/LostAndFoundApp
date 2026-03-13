@@ -941,6 +941,189 @@ namespace LostAndFoundApp.Controllers
         }
 
         // =====================================================================
+        // LOG RETENTION SETTINGS — Admin / SuperAdmin configurable
+        // =====================================================================
+
+        // GET: /UserManagement/LogRetentionSettings
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> LogRetentionSettings()
+        {
+            var settings = await _context.LogRetentionSettings.FirstOrDefaultAsync();
+            var vm = new LogRetentionSettingsViewModel
+            {
+                RetentionDays = settings?.RetentionDays ?? 30,
+                LastPurgedAt = settings?.LastPurgedAt,
+                LastPurgedCount = settings?.LastPurgedCount
+            };
+            return View(vm);
+        }
+
+        // POST: /UserManagement/LogRetentionSettings
+        [HttpPost]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LogRetentionSettings(LogRetentionSettingsViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Server-side validation: only 30, 60, or 90 days allowed
+            var allowedValues = new[] { 30, 60, 90 };
+            if (!allowedValues.Contains(model.RetentionDays))
+            {
+                ModelState.AddModelError(nameof(model.RetentionDays),
+                    "Retention period must be 30, 60, or 90 days.");
+                return View(model);
+            }
+
+            var settings = await _context.LogRetentionSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Models.LogRetentionSettings();
+                _context.LogRetentionSettings.Add(settings);
+            }
+
+            settings.RetentionDays = model.RetentionDays;
+            await _context.SaveChangesAsync();
+
+            await _activityLogService.LogAsync(HttpContext, "Update Log Retention",
+                $"Activity log retention period updated to {model.RetentionDays} days.", "UserManagement");
+
+            TempData["SuccessMessage"] = $"Log retention period updated to {model.RetentionDays} days.";
+            return RedirectToAction(nameof(LogRetentionSettings));
+        }
+
+        // GET: /UserManagement/LogRetentionCount?days=30
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> LogRetentionCount(int days)
+        {
+            var allowedValues = new[] { 30, 60, 90 };
+            if (!allowedValues.Contains(days))
+                return BadRequest(new { error = "Days must be 30, 60, or 90." });
+
+            var cutoff = DateTime.UtcNow.AddDays(-days);
+            var count = await _context.ActivityLogs.CountAsync(l => l.Timestamp < cutoff);
+            return Json(new { count });
+        }
+
+        // =====================================================================
+        // ITEM RETENTION SETTINGS — Admin / SuperAdmin configurable
+        // =====================================================================
+
+        // GET: /UserManagement/ItemRetentionSettings
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> ItemRetentionSettings()
+        {
+            var settings = await _context.ItemRetentionSettings.FirstOrDefaultAsync();
+            var vm = new ItemRetentionSettingsViewModel
+            {
+                RetentionDays = settings?.RetentionDays ?? 365,
+                LastPurgedAt = settings?.LastPurgedAt,
+                LastPurgedCount = settings?.LastPurgedCount
+            };
+            return View(vm);
+        }
+
+        // POST: /UserManagement/ItemRetentionSettings
+        [HttpPost]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ItemRetentionSettings(ItemRetentionSettingsViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Server-side validation: only 365 or 730 days allowed
+            var allowedValues = new[] { 365, 730 };
+            if (!allowedValues.Contains(model.RetentionDays))
+            {
+                ModelState.AddModelError(nameof(model.RetentionDays),
+                    "Retention period must be 365 days (1 year) or 730 days (2 years).");
+                return View(model);
+            }
+
+            var settings = await _context.ItemRetentionSettings.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                settings = new Models.ItemRetentionSettings();
+                _context.ItemRetentionSettings.Add(settings);
+            }
+
+            settings.RetentionDays = model.RetentionDays;
+            await _context.SaveChangesAsync();
+
+            var label = model.RetentionDays == 365 ? "1 year" : "2 years";
+            await _activityLogService.LogAsync(HttpContext, "Update Item Retention",
+                $"Item retention period updated to {model.RetentionDays} days ({label}).", "UserManagement");
+
+            TempData["SuccessMessage"] = $"Item retention period updated to {model.RetentionDays} days ({label}).";
+            return RedirectToAction(nameof(ItemRetentionSettings));
+        }
+
+        // GET: /UserManagement/ItemRetentionCount?days=365
+        [HttpGet]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        public async Task<IActionResult> ItemRetentionCount(int days)
+        {
+            var allowedValues = new[] { 365, 730 };
+            if (!allowedValues.Contains(days))
+                return BadRequest(new { error = "Days must be 365 or 730." });
+
+            var cutoff = DateTime.UtcNow.AddDays(-days);
+            var count = await _context.LostFoundItems.CountAsync(i => i.CreatedDateTime < cutoff);
+            return Json(new { count });
+        }
+
+        // POST: /UserManagement/RunLogPurgeNow
+        [HttpPost]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RunLogPurgeNow()
+        {
+            var scopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+            using var scope = scopeFactory.CreateScope();
+            var purgeService = scope.ServiceProvider.GetRequiredService<Services.LogRetentionHostedService>();
+
+            await purgeService.RunPurgeNowAsync();
+
+            // Refresh the settings to get updated LastPurgedAt/LastPurgedCount
+            var settings = await _context.LogRetentionSettings.FirstOrDefaultAsync();
+            var deletedCount = settings?.LastPurgedCount ?? 0;
+
+            await _activityLogService.LogAsync(HttpContext, "Manual Log Purge",
+                $"Manual log retention purge executed. Deleted {deletedCount} record(s).", "UserManagement");
+
+            TempData["SuccessMessage"] = $"Log purge completed. {deletedCount} record(s) deleted.";
+            return RedirectToAction(nameof(LogRetentionSettings));
+        }
+
+        // POST: /UserManagement/RunItemPurgeNow
+        [HttpPost]
+        [Authorize(Policy = "RequireAdminOrAbove")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RunItemPurgeNow()
+        {
+            var scopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+            using var scope = scopeFactory.CreateScope();
+            var purgeService = scope.ServiceProvider.GetRequiredService<Services.ItemRetentionHostedService>();
+
+            await purgeService.RunPurgeNowAsync();
+
+            // Refresh the settings to get updated LastPurgedAt/LastPurgedCount
+            var settings = await _context.ItemRetentionSettings.FirstOrDefaultAsync();
+            var deletedCount = settings?.LastPurgedCount ?? 0;
+
+            await _activityLogService.LogAsync(HttpContext, "Manual Item Purge",
+                $"Manual item retention purge executed. Deleted {deletedCount} record(s).", "UserManagement");
+
+            TempData["SuccessMessage"] = $"Item purge completed. {deletedCount} record(s) deleted.";
+            return RedirectToAction(nameof(ItemRetentionSettings));
+        }
+
+        // =====================================================================
         // AD GROUP SEARCH — live search against Active Directory
         // =====================================================================
 

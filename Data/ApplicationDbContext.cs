@@ -48,6 +48,12 @@ namespace LostAndFoundApp.Data
         // AD sync history log
         public DbSet<AdSyncLog> AdSyncLogs { get; set; }
 
+        // Activity log retention settings (single-row configuration table)
+        public DbSet<LogRetentionSettings> LogRetentionSettings { get; set; }
+
+        // Item retention settings (single-row configuration table)
+        public DbSet<ItemRetentionSettings> ItemRetentionSettings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -238,6 +244,18 @@ namespace LostAndFoundApp.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.ShortOverdueDays).HasDefaultValue(7);
                 entity.Property(e => e.LongOverdueDays).HasDefaultValue(30);
+            });
+
+            builder.Entity<LogRetentionSettings>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RetentionDays).HasDefaultValue(30);
+            });
+
+            builder.Entity<ItemRetentionSettings>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RetentionDays).HasDefaultValue(365);
             });
 
             builder.Entity<AdSyncLog>(entity =>

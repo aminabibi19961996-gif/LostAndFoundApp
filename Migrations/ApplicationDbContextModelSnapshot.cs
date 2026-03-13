@@ -418,6 +418,54 @@ namespace LostAndFoundApp.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("LostAndFoundApp.Models.ItemRetentionSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("LastPurgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LastPurgedCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(365);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ItemRetentionSettings");
+                });
+
+            modelBuilder.Entity("LostAndFoundApp.Models.LogRetentionSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("LastPurgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LastPurgedCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(30);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LogRetentionSettings");
+                });
+
             modelBuilder.Entity("LostAndFoundApp.Models.LostFoundItem", b =>
                 {
                     b.Property<int>("TrackingId")

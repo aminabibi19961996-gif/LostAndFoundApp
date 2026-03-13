@@ -90,6 +90,14 @@ namespace LostAndFoundApp.ViewModels
         /// <summary>Storage locations with item count for utilization</summary>
         public List<StorageUtilItem> StorageUtilization { get; set; } = new();
 
+        // ── Admin+: Data retention purge status ──
+        public int LogRetentionDays { get; set; } = 30;
+        public DateTime? LogLastPurgedAt { get; set; }
+        public int? LogLastPurgedCount { get; set; }
+        public int ItemRetentionDays { get; set; } = 365;
+        public DateTime? ItemLastPurgedAt { get; set; }
+        public int? ItemLastPurgedCount { get; set; }
+
         // ── SuperAdmin: System health ──
         public bool AdSyncEnabled { get; set; }
         public DateTime? LastAdSyncTime { get; set; }

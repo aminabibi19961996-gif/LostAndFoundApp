@@ -168,6 +168,14 @@ else
     Log.Information("Active Directory sync is disabled. Set ActiveDirectory:Enabled to true in appsettings to enable.");
 }
 
+// --- Daily Log Retention Background Service ---
+// Purges activity logs older than the configured retention period (30/60/90 days)
+builder.Services.AddHostedService<LostAndFoundApp.Services.LogRetentionHostedService>();
+
+// --- Daily Item Retention Background Service ---
+// Purges lost-and-found case records older than the configured retention period (365/730 days)
+builder.Services.AddHostedService<LostAndFoundApp.Services.ItemRetentionHostedService>();
+
 // --- Configure antiforgery to accept token from AJAX header ---
 builder.Services.AddAntiforgery(options =>
 {

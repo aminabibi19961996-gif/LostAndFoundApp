@@ -80,4 +80,24 @@ namespace LostAndFoundApp.ViewModels
         [Display(Name = "Long Overdue Threshold (days)")]
         public int LongOverdueDays { get; set; } = 30;
     }
+
+    public class LogRetentionSettingsViewModel
+    {
+        [Required]
+        [Display(Name = "Retention Period (days)")]
+        public int RetentionDays { get; set; } = 30;
+
+        public DateTime? LastPurgedAt { get; set; }
+        public int? LastPurgedCount { get; set; }
+    }
+
+    public class ItemRetentionSettingsViewModel
+    {
+        [Required]
+        [Display(Name = "Retention Period (days)")]
+        public int RetentionDays { get; set; } = 365;
+
+        public DateTime? LastPurgedAt { get; set; }
+        public int? LastPurgedCount { get; set; }
+    }
 }
