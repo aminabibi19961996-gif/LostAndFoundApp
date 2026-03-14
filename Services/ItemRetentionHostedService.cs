@@ -2,7 +2,7 @@ namespace LostAndFoundApp.Services
 {
     /// <summary>
     /// Background hosted service that purges lost-and-found case records older than
-    /// the configured retention period. Runs once per day at 4 AM UTC.
+    /// the configured retention period. Runs once per day at 4 AM.
     /// The retention period (365 or 730 days) is read from the ItemRetentionSettings
     /// table in the database — the same pattern used by LogRetentionSettings.
     /// Master data tables (Items, Routes, Vehicles, etc.) are never touched.
@@ -22,13 +22,13 @@ namespace LostAndFoundApp.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Item Retention Hosted Service started. Will purge expired case records daily at 04:00 UTC.");
+            _logger.LogInformation("Item Retention Hosted Service started. Will purge expired case records daily at 04:00.");
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    // Calculate delay until next run (4 AM UTC daily)
+                    // Calculate delay until next run (4 AM daily)
                     var now = DateTime.Now;
                     var nextRun = now.Date.AddHours(4);
                     if (nextRun <= now)
@@ -36,7 +36,7 @@ namespace LostAndFoundApp.Services
 
                     var delay = nextRun - now;
                     _logger.LogInformation(
-                        "Next item retention purge scheduled at {NextRun} UTC (in {Hours:F1} hours).",
+                        "Next item retention purge scheduled at {NextRun} (in {Hours:F1} hours).",
                         nextRun, delay.TotalHours);
 
                     await Task.Delay(delay, stoppingToken);
@@ -158,7 +158,7 @@ namespace LostAndFoundApp.Services
             }
 
             _logger.LogInformation(
-                "Item retention purge completed: deleted {Count} case record(s) and {Files} file(s) older than {Days} days (before {Cutoff:yyyy-MM-dd HH:mm} UTC).",
+                "Item retention purge completed: deleted {Count} case record(s) and {Files} file(s) older than {Days} days (before {Cutoff:yyyy-MM-dd HH:mm}).",
                 deletedCount, filesDeleted, retentionDays, cutoff);
         }
     }

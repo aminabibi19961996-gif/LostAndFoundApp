@@ -2,7 +2,7 @@ namespace LostAndFoundApp.Services
 {
     /// <summary>
     /// Background hosted service that purges activity log records older than
-    /// the configured retention period. Runs once per day at 3 AM UTC.
+    /// the configured retention period. Runs once per day at 3 AM.
     /// The retention period (30, 60, or 90 days) is read from the LogRetentionSettings
     /// table in the database — the same pattern used by OverdueSettings and PasswordPolicy.
     /// </summary>
@@ -21,13 +21,13 @@ namespace LostAndFoundApp.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Log Retention Hosted Service started. Will purge expired logs daily at 03:00 UTC.");
+            _logger.LogInformation("Log Retention Hosted Service started. Will purge expired logs daily at 03:00.");
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    // Calculate delay until next run (3 AM UTC daily)
+                    // Calculate delay until next run (3 AM daily)
                     var now = DateTime.Now;
                     var nextRun = now.Date.AddHours(3);
                     if (nextRun <= now)
@@ -35,7 +35,7 @@ namespace LostAndFoundApp.Services
 
                     var delay = nextRun - now;
                     _logger.LogInformation(
-                        "Next log retention purge scheduled at {NextRun} UTC (in {Hours:F1} hours).",
+                        "Next log retention purge scheduled at {NextRun} (in {Hours:F1} hours).",
                         nextRun, delay.TotalHours);
 
                     await Task.Delay(delay, stoppingToken);
@@ -109,7 +109,7 @@ namespace LostAndFoundApp.Services
             if (deletedCount > 0)
             {
                 _logger.LogInformation(
-                    "Log retention purge completed: deleted {Count} activity log record(s) older than {Days} days (before {Cutoff:yyyy-MM-dd HH:mm} UTC).",
+                    "Log retention purge completed: deleted {Count} activity log record(s) older than {Days} days (before {Cutoff:yyyy-MM-dd HH:mm}).",
                     deletedCount, retentionDays, cutoff);
             }
             else

@@ -379,7 +379,7 @@
           <div style="font-size:11px;color:var(--t3);padding-left:22px;font-weight:500;">
             @if (Model.LogLastPurgedAt.HasValue)
             {
-              <span>Last purge: <span style="color:var(--accent-db);font-family:var(--mono);font-weight:600;">@Model.LogLastPurgedAt.Value.ToString("MM/dd HH:mm")</span> UTC</span>
+              <span>Last purge: <span style="color:var(--accent-db);font-family:var(--mono);font-weight:600;">@Model.LogLastPurgedAt.Value.ToString("MM/dd HH:mm")</span></span>
               <span class="purge-ago" data-utc="@Model.LogLastPurgedAt.Value.ToString("o")"></span>
               <span> · <strong style="color:var(--t2);">@(Model.LogLastPurgedCount?.ToString("N0") ?? "0")</strong> deleted</span>
             }
@@ -397,7 +397,7 @@
           <div style="font-size:11px;color:var(--t3);padding-left:22px;font-weight:500;">
             @if (Model.ItemLastPurgedAt.HasValue)
             {
-              <span>Last purge: <span style="color:var(--accent-db);font-family:var(--mono);font-weight:600;">@Model.ItemLastPurgedAt.Value.ToString("MM/dd HH:mm")</span> UTC</span>
+              <span>Last purge: <span style="color:var(--accent-db);font-family:var(--mono);font-weight:600;">@Model.ItemLastPurgedAt.Value.ToString("MM/dd HH:mm")</span></span>
               <span class="purge-ago" data-utc="@Model.ItemLastPurgedAt.Value.ToString("o")"></span>
               <span> · <strong style="color:var(--t2);">@(Model.ItemLastPurgedCount?.ToString("N0") ?? "0")</strong> deleted</span>
             }

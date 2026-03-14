@@ -22,7 +22,7 @@ namespace LostAndFoundApp.Models
         public int RetentionDays { get; set; } = 365;
 
         /// <summary>
-        /// UTC timestamp of the last successful purge run by the background service.
+        /// Timestamp of the last successful purge run by the background service.
         /// </summary>
         public DateTime? LastPurgedAt { get; set; }
 

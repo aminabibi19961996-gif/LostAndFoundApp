@@ -61,7 +61,7 @@
                 Activity logs capture every action in the system — logins, item changes, role updates,
                 AD syncs, and more. This setting controls how long those records are kept.
                 A background service automatically purges logs older than the configured period
-                every day at <strong>3:00 AM UTC</strong>. Changes take effect immediately.
+                every day at <strong>3:00 AM</strong>. Changes take effect immediately.
             </div>
 
             <form asp-action="LogRetentionSettings" method="post">
@@ -113,13 +113,13 @@
                         <div class="purge-label">Last Purge</div>
                         @if (Model.LastPurgedAt.HasValue)
                         {
-                            <span class="purge-time">@Model.LastPurgedAt.Value.ToString("MMM dd, yyyy 'at' HH:mm") UTC</span>
+                            <span class="purge-time">@Model.LastPurgedAt.Value.ToString("MMM dd, yyyy 'at' HH:mm")</span>
                             <span class="purge-ago" id="purgeAgo"></span>
                             <span class="purge-count"> — <strong>@(Model.LastPurgedCount?.ToString("N0") ?? "0")</strong> record(s) deleted</span>
                         }
                         else
                         {
-                            <span style="color:var(--text-dim);font-style:italic;">No purge has run yet. The service runs daily at 3:00 AM UTC.</span>
+                            <span style="color:var(--text-dim);font-style:italic;">No purge has run yet. The service runs daily at 3:00 AM.</span>
                         }
                     </div>
                 </div>

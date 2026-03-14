@@ -171,10 +171,16 @@ else
 // --- Daily Log Retention Background Service ---
 // Purges activity logs older than the configured retention period (30/60/90 days)
 builder.Services.AddHostedService<LostAndFoundApp.Services.LogRetentionHostedService>();
+// Allow controllers to resolve the singleton hosted service instance via DI
+builder.Services.AddSingleton<LostAndFoundApp.Services.LogRetentionHostedService>(sp =>
+    sp.GetServices<IHostedService>().OfType<LostAndFoundApp.Services.LogRetentionHostedService>().First());
 
 // --- Daily Item Retention Background Service ---
 // Purges lost-and-found case records older than the configured retention period (365/730 days)
 builder.Services.AddHostedService<LostAndFoundApp.Services.ItemRetentionHostedService>();
+// Allow controllers to resolve the singleton hosted service instance via DI
+builder.Services.AddSingleton<LostAndFoundApp.Services.ItemRetentionHostedService>(sp =>
+    sp.GetServices<IHostedService>().OfType<LostAndFoundApp.Services.ItemRetentionHostedService>().First());
 
 // --- Configure antiforgery to accept token from AJAX header ---
 builder.Services.AddAntiforgery(options =>
