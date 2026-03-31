@@ -811,11 +811,13 @@ namespace LostAndFoundApp.Controllers
             var scopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
             _ = Task.Run(async () =>
             {
+                using var scope = scopeFactory.CreateScope();
+                var adSync = scope.ServiceProvider.GetRequiredService<AdSyncService>();
+                var activityLog = scope.ServiceProvider.GetRequiredService<ActivityLogService>();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
                 try
                 {
-                    using var scope = scopeFactory.CreateScope();
-                    var adSync = scope.ServiceProvider.GetRequiredService<AdSyncService>();
-                    var activityLog = scope.ServiceProvider.GetRequiredService<ActivityLogService>();
                     var result = await adSync.SyncUsersAsync("Manual", triggeredBy);
                     await activityLog.LogAsync(
                         "Manual AD Sync",
@@ -827,8 +829,22 @@ namespace LostAndFoundApp.Controllers
                 }
                 catch (Exception ex)
                 {
-                    var logger = _logger;
-                    logger.LogError(ex, "Background AD sync failed.");
+                    // BUG-5 FIX: Ensure fatal exceptions are logged to the database so they are visible in the AdGroups UI
+                    _logger.LogError(ex, "Fatal error during background AD sync.");
+                    try
+                    {
+                        var failLog = new AdSyncLog
+                        {
+                            Timestamp = DateTime.UtcNow,
+                            Success = false,
+                            TriggerType = "Manual",
+                            TriggeredBy = triggeredBy,
+                            ErrorSummary = $"FATAL CRASH: {ex.Message}"
+                        };
+                        dbContext.AdSyncLogs.Add(failLog);
+                        await dbContext.SaveChangesAsync();
+                    }
+                    catch { /* Prevent recursive failure */ }
                 }
             });
 
@@ -840,13 +856,12 @@ namespace LostAndFoundApp.Controllers
         // PASSWORD POLICY CONFIGURATION — SuperAdmin only
         // =====================================================================
 
-        // GET: /UserManagement/PasswordPolicy
         [HttpGet]
         [Authorize(Policy = "RequireSuperAdmin")]
-        public IActionResult PasswordPolicy()
+        public async Task<IActionResult> PasswordPolicy()
         {
-            // Read current policy from database (Gap 1 fix)
-            var policy = _context.PasswordPolicySettings.FirstOrDefault();
+            // BUG-4 FIX: Sync FirstOrDefault changed to Async
+            var policy = await _context.PasswordPolicySettings.FirstOrDefaultAsync();
             var vm = new PasswordPolicyViewModel
             {
                 MinimumLength = policy?.MinimumLength ?? 8,

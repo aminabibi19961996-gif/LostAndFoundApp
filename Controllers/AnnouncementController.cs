@@ -188,21 +188,22 @@ namespace LostAndFoundApp.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
-            var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
-
-            // SuperAdmin, Admin, and Supervisor manage announcements from Index, not Messages
-            if (userRole == "SuperAdmin" || userRole == "Admin" || userRole == "Supervisor")
-                return RedirectToAction(nameof(Index));
+            var roles = await _userManager.GetRolesAsync(user);
+            var isSuperAdmin = roles.Contains("SuperAdmin");
+            var isAdmin = roles.Contains("Admin");
+            var isSupervisor = roles.Contains("Supervisor");
+            var primaryRole = roles.FirstOrDefault() ?? "User";
 
             var now = DateTime.UtcNow;
 
             var announcements = await _context.Announcements
+                .AsNoTracking()
                 .Where(a => a.IsActive)
                 .Where(a => a.ExpiresAt == null || a.ExpiresAt > now)
                 .Where(a => a.TargetRole == "All"
-                    || a.TargetRole == userRole
-                    || (a.TargetRole == "AdminAndAbove" && (userRole == "Admin"))
-                    || (a.TargetRole == "SupervisorAndAbove" && (userRole == "Admin" || userRole == "Supervisor")))
+                    || a.TargetRole == primaryRole
+                    || (a.TargetRole == "AdminAndAbove" && (isAdmin || isSuperAdmin))
+                    || (a.TargetRole == "SupervisorAndAbove" && (isSupervisor || isAdmin || isSuperAdmin)))
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 

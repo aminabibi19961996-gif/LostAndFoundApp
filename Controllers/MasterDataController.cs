@@ -66,9 +66,9 @@ namespace LostAndFoundApp.Controllers
         public async Task<IActionResult> CreateItem(Item model)
         {
             if (!ModelState.IsValid) return View(model);
-            if (await _context.Items.AnyAsync(x => x.Name == model.Name))
+            if (await _context.Items.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower()))
             {
-                ModelState.AddModelError("Name", "An item with this name already exists.");
+                ModelState.AddModelError("Name", "An item with this name already exists (case-insensitive).");
                 return View(model);
             }
             _context.Items.Add(model);
@@ -95,9 +95,9 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid) return View(model);
             var existing = await _context.Items.FindAsync(model.Id);
             if (existing == null) return NotFound();
-            if (await _context.Items.AnyAsync(x => x.Name == model.Name && x.Id != model.Id))
+            if (await _context.Items.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower() && x.Id != model.Id))
             {
-                ModelState.AddModelError("Name", "An item with this name already exists.");
+                ModelState.AddModelError("Name", "An item with this name already exists (case-insensitive).");
                 return View(model);
             }
             existing.Name = model.Name;
@@ -166,7 +166,7 @@ namespace LostAndFoundApp.Controllers
         public async Task<IActionResult> CreateRoute(Models.Route model)
         {
             if (!ModelState.IsValid) return View(model);
-            if (await _context.Routes.AnyAsync(x => x.Name == model.Name))
+            if (await _context.Routes.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower()))
             {
                 ModelState.AddModelError("Name", "A route with this name already exists.");
                 return View(model);
@@ -195,7 +195,7 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid) return View(model);
             var existing = await _context.Routes.FindAsync(model.Id);
             if (existing == null) return NotFound();
-            if (await _context.Routes.AnyAsync(x => x.Name == model.Name && x.Id != model.Id))
+            if (await _context.Routes.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower() && x.Id != model.Id))
             {
                 ModelState.AddModelError("Name", "A route with this name already exists.");
                 return View(model);
@@ -265,7 +265,7 @@ namespace LostAndFoundApp.Controllers
         public async Task<IActionResult> CreateVehicle(Vehicle model)
         {
             if (!ModelState.IsValid) return View(model);
-            if (await _context.Vehicles.AnyAsync(x => x.Name == model.Name))
+            if (await _context.Vehicles.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower()))
             {
                 ModelState.AddModelError("Name", "A vehicle with this name already exists.");
                 return View(model);
@@ -294,7 +294,7 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid) return View(model);
             var existing = await _context.Vehicles.FindAsync(model.Id);
             if (existing == null) return NotFound();
-            if (await _context.Vehicles.AnyAsync(x => x.Name == model.Name && x.Id != model.Id))
+            if (await _context.Vehicles.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower() && x.Id != model.Id))
             {
                 ModelState.AddModelError("Name", "A vehicle with this name already exists.");
                 return View(model);
@@ -364,7 +364,7 @@ namespace LostAndFoundApp.Controllers
         public async Task<IActionResult> CreateStorageLocation(StorageLocation model)
         {
             if (!ModelState.IsValid) return View(model);
-            if (await _context.StorageLocations.AnyAsync(x => x.Name == model.Name))
+            if (await _context.StorageLocations.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower()))
             {
                 ModelState.AddModelError("Name", "A storage location with this name already exists.");
                 return View(model);
@@ -393,7 +393,7 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid) return View(model);
             var existing = await _context.StorageLocations.FindAsync(model.Id);
             if (existing == null) return NotFound();
-            if (await _context.StorageLocations.AnyAsync(x => x.Name == model.Name && x.Id != model.Id))
+            if (await _context.StorageLocations.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower() && x.Id != model.Id))
             {
                 ModelState.AddModelError("Name", "A storage location with this name already exists.");
                 return View(model);
@@ -463,7 +463,7 @@ namespace LostAndFoundApp.Controllers
         public async Task<IActionResult> CreateStatus(Status model)
         {
             if (!ModelState.IsValid) return View(model);
-            if (await _context.Statuses.AnyAsync(x => x.Name == model.Name))
+            if (await _context.Statuses.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower()))
             {
                 ModelState.AddModelError("Name", "A status with this name already exists.");
                 return View(model);
@@ -492,7 +492,7 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid) return View(model);
             var existing = await _context.Statuses.FindAsync(model.Id);
             if (existing == null) return NotFound();
-            if (await _context.Statuses.AnyAsync(x => x.Name == model.Name && x.Id != model.Id))
+            if (await _context.Statuses.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower() && x.Id != model.Id))
             {
                 ModelState.AddModelError("Name", "A status with this name already exists.");
                 return View(model);
@@ -562,7 +562,7 @@ namespace LostAndFoundApp.Controllers
         public async Task<IActionResult> CreateFoundByName(FoundByName model)
         {
             if (!ModelState.IsValid) return View(model);
-            if (await _context.FoundByNames.AnyAsync(x => x.Name == model.Name))
+            if (await _context.FoundByNames.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower()))
             {
                 ModelState.AddModelError("Name", "This name already exists.");
                 return View(model);
@@ -591,7 +591,7 @@ namespace LostAndFoundApp.Controllers
             if (!ModelState.IsValid) return View(model);
             var existing = await _context.FoundByNames.FindAsync(model.Id);
             if (existing == null) return NotFound();
-            if (await _context.FoundByNames.AnyAsync(x => x.Name == model.Name && x.Id != model.Id))
+            if (await _context.FoundByNames.AnyAsync(x => x.Name.ToLower() == model.Name.ToLower() && x.Id != model.Id))
             {
                 ModelState.AddModelError("Name", "This name already exists.");
                 return View(model);

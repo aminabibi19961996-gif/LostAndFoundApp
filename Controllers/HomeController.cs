@@ -122,10 +122,11 @@ namespace LostAndFoundApp.Controllers
                 ? Math.Round((double)(vm.ItemsThisMonth - vm.ItemsLastMonth) / vm.ItemsLastMonth * 100, 1)
                 : (vm.ItemsThisMonth > 0 ? 100 : 0);
 
-            // Transfer frequency this month
+            // BUG-6 FIX: Use StatusDate (when transfer actually happened) instead of CreatedDateTime
             vm.TransferFrequencyThisMonth = await _context.LostFoundItems
                 .Include(x => x.Status)
-                .CountAsync(x => x.Status != null && x.Status.Name == "Transferred" && x.CreatedDateTime >= monthAgo);
+                .CountAsync(x => x.Status != null && x.Status.Name == "Transferred" 
+                    && x.StatusDate >= monthAgo);
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             // CRITICAL ALERTS
@@ -148,9 +149,10 @@ namespace LostAndFoundApp.Controllers
                     && x.Status.Name != "Disposed"
                     && x.Status.Name != "Transferred");
 
-            // Overdue: in the system for > ShortOverdueDays and not resolved
+            // LOGIC-2 FIX: Exclusive ranges for overdue counts (Short but not Long)
             vm.ItemsOverdue7Days = await _context.LostFoundItems
                 .CountAsync(x => x.CreatedDateTime <= shortOverdueAgo
+                    && x.CreatedDateTime > longOverdueAgo
                     && x.Status != null
                     && x.Status.Name != "Claimed"
                     && x.Status.Name != "Disposed"
@@ -215,7 +217,7 @@ namespace LostAndFoundApp.Controllers
                 ItemName = x.ItemName,
                 LocationFound = x.LocationFound,
                 StatusName = x.StatusName,
-                DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
+                DaysSinceFound = (DateTime.UtcNow.Date - x.DateFound.Date).Days,
                 ClaimedBy = x.ClaimedBy,
                 CreatedBy = x.CreatedBy
             }).ToList();
@@ -342,16 +344,6 @@ namespace LostAndFoundApp.Controllers
                     CssClass = s.StatusName?.ToLower() ?? "unknown",
                     Percentage = totalItems > 0 ? (int)Math.Round((double)s.Count / totalItems * 100) : 0
                 }).OrderByDescending(s => s.Count).ToList();
-
-                // Top items
-                vm.TopItemTypes = await _context.LostFoundItems
-                    .Include(x => x.Item)
-                    .Where(x => x.Item != null)
-                    .GroupBy(x => x.Item!.Name)
-                    .Select(g => new TopItemType { ItemName = g.Key, Count = g.Count() })
-                    .OrderByDescending(x => x.Count)
-                    .Take(5)
-                    .ToListAsync();
 
                 // Storage utilization
                 vm.StorageUtilization = await _context.LostFoundItems

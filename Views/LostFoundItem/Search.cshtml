@@ -13,7 +13,7 @@
     .search-actions { display: flex; gap: 8px; align-items: center; }
 
     /* Filter card — accent left border for visual distinction */
-    .fc { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; margin-bottom: 28px; overflow: visible; position: relative; z-index: 2; flex-shrink: 0; }
+    .fc { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px; margin-bottom: 16px; overflow: visible; position: relative; z-index: 2; flex-shrink: 0; }
     .fc-body { padding: 20px 22px; }
     .fg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
     .fg .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-bottom: 6px; display: block; }
@@ -64,9 +64,11 @@
     .ra:hover { background: var(--bg-hover); color: var(--accent); }
     .cb { cursor: pointer; accent-color: var(--accent); width: 15px; height: 15px; }
 
-    /* Pagination footer — pinned at bottom of .rc */
-    .rc-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
-    .rc-footer-info { font-size: 13.5px; color: var(--text-dim); font-weight: 500; }
+    /* Pagination bar — thinner and moved up */
+    .rc-pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 20px; border-bottom: 1px solid var(--border); background: var(--bg-elevated); flex-shrink: 0; }
+    .rc-pagination-bar .rc-footer-info { font-size: 12.5px; color: var(--text-dim); font-weight: 500; }
+    .rc-pagination-bar .pagination { margin: 0; gap: 4px; }
+    .rc-pagination-bar .page-link { min-width: 30px; height: 30px; padding: 0 4px; font-size: 12px; display: flex; align-items: center; justify-content: center; }
 
     .days-warn  { color: var(--amber); font-weight: 700; }
     .days-crit  { color: var(--red);   font-weight: 700; }
@@ -355,6 +357,83 @@
 <div class="rc">
     @if (Model.Results.Any())
     {
+        <div class="rc-pagination-bar">
+            <span class="rc-footer-info">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalRecords records</span>
+            @if (Model.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination">
+                        @if (Model.CurrentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Search"
+                                   asp-route-CurrentPage="@(Model.CurrentPage - 1)"
+                                   asp-route-TrackingId="@Model.TrackingId"
+                                   asp-route-CustomTrackingId="@Model.CustomTrackingId"
+                                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-ItemId="@Model.ItemId"
+                                   asp-route-StatusId="@Model.StatusId"
+                                   asp-route-RouteId="@Model.RouteId"
+                                   asp-route-VehicleId="@Model.VehicleId"
+                                   asp-route-StorageLocationId="@Model.StorageLocationId"
+                                   asp-route-FoundById="@Model.FoundById"
+                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
+                                   asp-route-NotesSearch="@Model.NotesSearch"
+                                   asp-route-SortField="@Model.SortField"
+                                   asp-route-SortOrder="@Model.SortOrder">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        }
+                        @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Search"
+                                   asp-route-CurrentPage="@i"
+                                   asp-route-TrackingId="@Model.TrackingId"
+                                   asp-route-CustomTrackingId="@Model.CustomTrackingId"
+                                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-ItemId="@Model.ItemId"
+                                   asp-route-StatusId="@Model.StatusId"
+                                   asp-route-RouteId="@Model.RouteId"
+                                   asp-route-VehicleId="@Model.VehicleId"
+                                   asp-route-StorageLocationId="@Model.StorageLocationId"
+                                   asp-route-FoundById="@Model.FoundById"
+                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
+                                   asp-route-NotesSearch="@Model.NotesSearch"
+                                   asp-route-SortField="@Model.SortField"
+                                   asp-route-SortOrder="@Model.SortOrder">@i</a>
+                            </li>
+                        }
+                        @if (Model.CurrentPage < Model.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Search"
+                                   asp-route-CurrentPage="@(Model.CurrentPage + 1)"
+                                   asp-route-TrackingId="@Model.TrackingId"
+                                   asp-route-CustomTrackingId="@Model.CustomTrackingId"
+                                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
+                                   asp-route-ItemId="@Model.ItemId"
+                                   asp-route-StatusId="@Model.StatusId"
+                                   asp-route-RouteId="@Model.RouteId"
+                                   asp-route-VehicleId="@Model.VehicleId"
+                                   asp-route-StorageLocationId="@Model.StorageLocationId"
+                                   asp-route-FoundById="@Model.FoundById"
+                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
+                                   asp-route-NotesSearch="@Model.NotesSearch"
+                                   asp-route-SortField="@Model.SortField"
+                                   asp-route-SortOrder="@Model.SortOrder">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
         <div class="rc-scroll">
             <table class="stable">
                 <thead>
@@ -458,83 +537,7 @@
             </table>
         </div>
 
-        <div class="rc-footer">
-            <span class="rc-footer-info">Page @Model.CurrentPage of @Model.TotalPages · @Model.TotalRecords records</span>
-            @if (Model.TotalPages > 1)
-            {
-                <nav>
-                    <ul class="pagination">
-                        @if (Model.CurrentPage > 1)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" asp-action="Search"
-                                   asp-route-CurrentPage="@(Model.CurrentPage - 1)"
-                                   asp-route-TrackingId="@Model.TrackingId"
-                                   asp-route-CustomTrackingId="@Model.CustomTrackingId"
-                                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
-                                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
-                                   asp-route-ItemId="@Model.ItemId"
-                                   asp-route-StatusId="@Model.StatusId"
-                                   asp-route-RouteId="@Model.RouteId"
-                                   asp-route-VehicleId="@Model.VehicleId"
-                                   asp-route-StorageLocationId="@Model.StorageLocationId"
-                                   asp-route-FoundById="@Model.FoundById"
-                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
-                                   asp-route-NotesSearch="@Model.NotesSearch"
-                                   asp-route-SortField="@Model.SortField"
-                                   asp-route-SortOrder="@Model.SortOrder">
-                                    <i class="bi bi-chevron-left"></i>
-                                </a>
-                            </li>
-                        }
-                        @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
-                        {
-                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                                <a class="page-link" asp-action="Search"
-                                   asp-route-CurrentPage="@i"
-                                   asp-route-TrackingId="@Model.TrackingId"
-                                   asp-route-CustomTrackingId="@Model.CustomTrackingId"
-                                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
-                                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
-                                   asp-route-ItemId="@Model.ItemId"
-                                   asp-route-StatusId="@Model.StatusId"
-                                   asp-route-RouteId="@Model.RouteId"
-                                   asp-route-VehicleId="@Model.VehicleId"
-                                   asp-route-StorageLocationId="@Model.StorageLocationId"
-                                   asp-route-FoundById="@Model.FoundById"
-                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
-                                   asp-route-NotesSearch="@Model.NotesSearch"
-                                   asp-route-SortField="@Model.SortField"
-                                   asp-route-SortOrder="@Model.SortOrder">@i</a>
-                            </li>
-                        }
-                        @if (Model.CurrentPage < Model.TotalPages)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" asp-action="Search"
-                                   asp-route-CurrentPage="@(Model.CurrentPage + 1)"
-                                   asp-route-TrackingId="@Model.TrackingId"
-                                   asp-route-CustomTrackingId="@Model.CustomTrackingId"
-                                   asp-route-DateFoundFrom="@Model.DateFoundFrom?.ToString("yyyy-MM-dd")"
-                                   asp-route-DateFoundTo="@Model.DateFoundTo?.ToString("yyyy-MM-dd")"
-                                   asp-route-ItemId="@Model.ItemId"
-                                   asp-route-StatusId="@Model.StatusId"
-                                   asp-route-RouteId="@Model.RouteId"
-                                   asp-route-VehicleId="@Model.VehicleId"
-                                   asp-route-StorageLocationId="@Model.StorageLocationId"
-                                   asp-route-FoundById="@Model.FoundById"
-                                   asp-route-DescriptionSearch="@Model.DescriptionSearch"
-                                   asp-route-NotesSearch="@Model.NotesSearch"
-                                   asp-route-SortField="@Model.SortField"
-                                   asp-route-SortOrder="@Model.SortOrder">
-                                    <i class="bi bi-chevron-right"></i>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </nav>
-            }
-        </div>
+
     }
     else
     {

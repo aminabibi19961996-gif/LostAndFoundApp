@@ -52,7 +52,8 @@ namespace LostAndFoundApp.Controllers
         // POST: /LostFoundItem/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestFormLimits(MultipartBodyLengthLimit = 52_428_800)] // 50MB — supports 4 photos + attachment
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
+        [RequestFormLimits(MultipartBodyLengthLimit = 52_428_800)]
         [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> Create(LostFoundItemCreateViewModel vm)
         {
@@ -77,11 +78,10 @@ namespace LostAndFoundApp.Controllers
                 ClaimedBy = vm.ClaimedBy,
                 Notes = vm.Notes,
                 CreatedBy = User.Identity?.Name ?? "Unknown",
-                CreatedDateTime = DateTime.UtcNow,
-                CustomTrackingId = await GenerateCustomTrackingIdAsync()
+                CreatedDateTime = DateTime.UtcNow
             };
 
-            // Handle photo uploads (up to 4)
+            // 1. Handle photo uploads (up to 4)
             var photoFiles = new[] { vm.PhotoFile, vm.PhotoFile2, vm.PhotoFile3, vm.PhotoFile4 };
             var photoFieldNames = new[] { "PhotoFile", "PhotoFile2", "PhotoFile3", "PhotoFile4" };
             var savedPhotoPaths = new string?[4];
@@ -93,9 +93,7 @@ namespace LostAndFoundApp.Controllers
                     var photoName = await _fileService.SavePhotoAsync(photoFiles[i]!);
                     if (photoName == null)
                     {
-                        // Clean up any previously saved photos in this batch
-                        for (int j = 0; j < i; j++)
-                            _fileService.DeletePhoto(savedPhotoPaths[j]);
+                        for (int j = 0; j < i; j++) _fileService.DeletePhoto(savedPhotoPaths[j]);
                         ModelState.AddModelError(photoFieldNames[i], "Invalid photo file. Allowed types: jpg, jpeg, png, gif. Max size: 10MB.");
                         await PopulateDropdowns(vm);
                         return View(vm);
@@ -108,7 +106,7 @@ namespace LostAndFoundApp.Controllers
             item.PhotoPath3 = savedPhotoPaths[2];
             item.PhotoPath4 = savedPhotoPaths[3];
 
-            // Handle attachment upload
+            // 2. Handle attachment upload
             if (vm.AttachmentFile != null && vm.AttachmentFile.Length > 0)
             {
                 var attachmentName = await _fileService.SaveAttachmentAsync(vm.AttachmentFile);
@@ -122,38 +120,61 @@ namespace LostAndFoundApp.Controllers
                 item.AttachmentPath = attachmentName;
             }
 
-            _context.LostFoundItems.Add(item);
-            try
+            // 3. BUG-2 FIX: Handle ID race condition with retry loop for the FINAL SAVE
+            bool saved = false;
+            int retries = 0;
+            while (!saved && retries < 5)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to save new LostFoundItem");
-                // Clean up orphaned files that were saved to disk before the DB failure
-                _fileService.DeletePhoto(item.PhotoPath);
-                _fileService.DeletePhoto(item.PhotoPath2);
-                _fileService.DeletePhoto(item.PhotoPath3);
-                _fileService.DeletePhoto(item.PhotoPath4);
-                _fileService.DeleteAttachment(item.AttachmentPath);
-                ModelState.AddModelError(string.Empty, "An error occurred while saving the record. Please try again.");
-                await PopulateDropdowns(vm);
-                return View(vm);
+                try
+                {
+                    item.CustomTrackingId = await GenerateCustomTrackingIdAsync();
+                    _context.LostFoundItems.Add(item);
+                    await _context.SaveChangesAsync();
+                    saved = true;
+                }
+                catch (DbUpdateException)
+                {
+                    // Detach to allow re-pooling or re-adding
+                    _context.Entry(item).State = EntityState.Detached;
+                    retries++;
+                    if (retries >= 5)
+                    {
+                        // Final failure: Clean up files before erroring
+                        _fileService.DeletePhoto(item.PhotoPath);
+                        _fileService.DeletePhoto(item.PhotoPath2);
+                        _fileService.DeletePhoto(item.PhotoPath3);
+                        _fileService.DeletePhoto(item.PhotoPath4);
+                        _fileService.DeleteAttachment(item.AttachmentPath);
+                        _logger.LogError("Failed to save record after 5 ID collision retries.");
+                        ModelState.AddModelError(string.Empty, "System was unable to generate a unique Tracking ID. Please try again.");
+                        await PopulateDropdowns(vm);
+                        return View(vm);
+                    }
+                    await Task.Delay(150); // Small jittered delay
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error during Create save");
+                    _fileService.DeletePhoto(item.PhotoPath);
+                    _fileService.DeletePhoto(item.PhotoPath2);
+                    _fileService.DeletePhoto(item.PhotoPath3);
+                    _fileService.DeletePhoto(item.PhotoPath4);
+                    _fileService.DeleteAttachment(item.AttachmentPath);
+                    ModelState.AddModelError(string.Empty, "An error occurred while saving. Please try again.");
+                    await PopulateDropdowns(vm);
+                    return View(vm);
+                }
             }
 
-            _logger.LogInformation("LostFoundItem {TrackingId} created by {User}", item.TrackingId, item.CreatedBy);
+            _logger.LogInformation("LostFoundItem {TrackingId} ({CustomId}) created by {User}", item.TrackingId, item.CustomTrackingId, item.CreatedBy);
 
-            // Log with key initial field values so the audit trail shows what was submitted
+            // Log details
             var itemNameForLog = (await _context.Items.FindAsync(item.ItemId))?.Name ?? item.ItemId.ToString();
             var statusNameForLog = (await _context.Statuses.FindAsync(item.StatusId))?.Name ?? item.StatusId.ToString();
-            var createDetails = $"Created lost & found record #{item.TrackingId}\n" +
-                                $"CHANGES:\n" +
-                                $"- Item: \"{itemNameForLog}\"\n" +
-                                $"- Date Found: \"{item.DateFound:MM/dd/yyyy}\"\n" +
-                                $"- Location Found: \"{item.LocationFound}\"\n" +
-                                $"- Status: \"{statusNameForLog}\"";
+            var createDetails = $"Created record #{item.CustomTrackingId} (TID:{item.TrackingId})\nItem: {itemNameForLog}\nStatus: {statusNameForLog}";
+            
             await _activityLogService.LogAsync(HttpContext, "Create Record", createDetails, "Items");
-            TempData["SuccessMessage"] = $"Item record #{item.TrackingId} created successfully.";
+            TempData["SuccessMessage"] = $"Record {item.CustomTrackingId} created successfully.";
             return RedirectToAction(nameof(Details), new { id = item.TrackingId });
         }
 
@@ -210,6 +231,7 @@ namespace LostAndFoundApp.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         public async Task<IActionResult> Edit(int id)
         {
             var item = await _context.LostFoundItems.FindAsync(id);
@@ -255,6 +277,7 @@ namespace LostAndFoundApp.Controllers
         // POST: /LostFoundItem/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireSupervisorOrAbove")]
         [RequestFormLimits(MultipartBodyLengthLimit = 52_428_800)] // 50MB — supports 4 photos + attachment
         [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> Edit(LostFoundItemEditViewModel vm)
@@ -312,7 +335,21 @@ namespace LostAndFoundApp.Controllers
             item.StatusDate = vm.StatusDate;
             item.FoundById = vm.FoundById;
             item.ClaimedBy = vm.ClaimedBy;
-            item.Notes = vm.Notes;
+
+            // GAP-2 FIX: Requirement validation for Claimed status
+            var statusName = (await _context.Statuses.FindAsync(item.StatusId))?.Name;
+            if (statusName != null && statusName.Equals("Claimed", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(item.ClaimedBy))
+            {
+                ModelState.AddModelError(nameof(vm.ClaimedBy), "Claimed By is required when status is set to Claimed.");
+                await PopulateDropdowns(vm);
+                vm.ExistingPhotoPath = item.PhotoPath;
+                vm.ExistingPhotoPath2 = item.PhotoPath2;
+                vm.ExistingPhotoPath3 = item.PhotoPath3;
+                vm.ExistingPhotoPath4 = item.PhotoPath4;
+                vm.ExistingAttachmentPath = item.AttachmentPath;
+                return View(vm);
+            }
+
             // Audit trail — auto-populated, never user-editable
             item.CreatedBy = originalCreatedBy;
             item.CreatedDateTime = originalCreatedDateTime;
@@ -717,6 +754,7 @@ namespace LostAndFoundApp.Controllers
                     FoundByName = x.FoundBy != null ? x.FoundBy.Name : "",
                     x.ClaimedBy,
                     x.CreatedBy,
+                    x.CreatedDateTime,
                     x.Notes
                 })
                 .ToListAsync();
@@ -734,7 +772,7 @@ namespace LostAndFoundApp.Controllers
                 StorageLocationName = x.StorageLocationName,
                 StatusName = x.StatusName,
                 DaysSinceFound = (DateTime.UtcNow.Date - x.DateFound.Date).Days,
-                DaysInSystem = (int)(DateTime.UtcNow - x.DateFound.Date).Days,
+                DaysInSystem = (int)(DateTime.UtcNow - x.CreatedDateTime).TotalDays,
                 FoundByName = x.FoundByName,
                 Notes = x.Notes,
                 ClaimedBy = x.ClaimedBy,
@@ -885,8 +923,18 @@ namespace LostAndFoundApp.Controllers
                     && x.Status.Name != "Transferred");
             }
 
+            // LOGIC-3 FIX: User sort order in Export
+            query = vm.SortField switch
+            {
+                "DateFound" => vm.SortOrder == "asc" ? query.OrderBy(x => x.DateFound) : query.OrderByDescending(x => x.DateFound),
+                "ItemName" => vm.SortOrder == "asc" ? query.OrderBy(x => x.Item != null ? x.Item.Name : "") : query.OrderByDescending(x => x.Item != null ? x.Item.Name : ""),
+                "StatusName" => vm.SortOrder == "asc" ? query.OrderBy(x => x.Status != null ? x.Status.Name : "") : query.OrderByDescending(x => x.Status != null ? x.Status.Name : ""),
+                "LocationFound" => vm.SortOrder == "asc" ? query.OrderBy(x => x.LocationFound) : query.OrderByDescending(x => x.LocationFound),
+                "DaysSinceFound" => vm.SortOrder == "asc" ? query.OrderByDescending(x => x.DateFound) : query.OrderBy(x => x.DateFound),
+                _ => vm.SortOrder == "asc" ? query.OrderBy(x => x.TrackingId) : query.OrderByDescending(x => x.TrackingId),
+            };
+
             var results = await query
-                .OrderByDescending(x => x.TrackingId)
                 .Select(x => new
                 {
                     x.TrackingId,
