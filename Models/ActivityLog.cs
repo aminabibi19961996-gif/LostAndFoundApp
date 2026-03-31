@@ -11,7 +11,7 @@ namespace LostAndFoundApp.Models
         public int Id { get; set; }
 
         [Required]
-        public DateTime Timestamp { get; set; } = DateTime.Now;
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Short action name, e.g. "Login", "AD Sync", "Create Item", "Edit Role"

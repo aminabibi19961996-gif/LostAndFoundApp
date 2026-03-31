@@ -75,9 +75,9 @@ public class RetentionCountTests : IDisposable
     public async Task LogRetentionCount_WithAllowedDays_ReturnsJsonCount(int days)
     {
         _context.ActivityLogs.AddRange(
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-(days + 5)), Action = "Old", Details = "Old log", PerformedBy = "admin", Category = "Test" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-(days + 1)), Action = "Old", Details = "Old log", PerformedBy = "admin", Category = "Test" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-1),          Action = "New", Details = "New log", PerformedBy = "admin", Category = "Test" }
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-(days + 5)), Action = "Old", Details = "Old log", PerformedBy = "admin", Category = "Test" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-(days + 1)), Action = "Old", Details = "Old log", PerformedBy = "admin", Category = "Test" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-1),          Action = "New", Details = "New log", PerformedBy = "admin", Category = "Test" }
         );
         await _context.SaveChangesAsync();
 
@@ -91,7 +91,7 @@ public class RetentionCountTests : IDisposable
     public async Task LogRetentionCount_WithNoOldRecords_ReturnsZero()
     {
         _context.ActivityLogs.Add(
-            new ActivityLog { Timestamp = DateTime.Now, Action = "Recent", Details = "Recent log", PerformedBy = "admin", Category = "Test" });
+            new ActivityLog { Timestamp = DateTime.UtcNow, Action = "Recent", Details = "Recent log", PerformedBy = "admin", Category = "Test" });
         await _context.SaveChangesAsync();
 
         var result = await _controller.LogRetentionCount(30);
@@ -128,9 +128,9 @@ public class RetentionCountTests : IDisposable
     public async Task ItemRetentionCount_WithAllowedDays_ReturnsJsonCount(int days)
     {
         _context.LostFoundItems.AddRange(
-            new LostFoundItem { CustomTrackingId = "OLD-001", DateFound = DateTime.Now.AddDays(-(days + 10)), CreatedDateTime = DateTime.Now.AddDays(-(days + 10)), ItemId = 1, StatusId = 1, LocationFound = "Bus" },
-            new LostFoundItem { CustomTrackingId = "OLD-002", DateFound = DateTime.Now.AddDays(-(days + 2)),  CreatedDateTime = DateTime.Now.AddDays(-(days + 2)),  ItemId = 1, StatusId = 1, LocationFound = "Bus" },
-            new LostFoundItem { CustomTrackingId = "NEW-001", DateFound = DateTime.Now.AddDays(-5),           CreatedDateTime = DateTime.Now.AddDays(-5),            ItemId = 1, StatusId = 1, LocationFound = "Bus" }
+            new LostFoundItem { CustomTrackingId = "OLD-001", DateFound = DateTime.UtcNow.AddDays(-(days + 10)), CreatedDateTime = DateTime.UtcNow.AddDays(-(days + 10)), ItemId = 1, StatusId = 1, LocationFound = "Bus" },
+            new LostFoundItem { CustomTrackingId = "OLD-002", DateFound = DateTime.UtcNow.AddDays(-(days + 2)),  CreatedDateTime = DateTime.UtcNow.AddDays(-(days + 2)),  ItemId = 1, StatusId = 1, LocationFound = "Bus" },
+            new LostFoundItem { CustomTrackingId = "NEW-001", DateFound = DateTime.UtcNow.AddDays(-5),           CreatedDateTime = DateTime.UtcNow.AddDays(-5),            ItemId = 1, StatusId = 1, LocationFound = "Bus" }
         );
         await _context.SaveChangesAsync();
 
@@ -144,7 +144,7 @@ public class RetentionCountTests : IDisposable
     public async Task ItemRetentionCount_WithNoOldRecords_ReturnsZero()
     {
         _context.LostFoundItems.Add(
-            new LostFoundItem { CustomTrackingId = "NEW-001", DateFound = DateTime.Now, CreatedDateTime = DateTime.Now, ItemId = 1, StatusId = 1, LocationFound = "Bus" });
+            new LostFoundItem { CustomTrackingId = "NEW-001", DateFound = DateTime.UtcNow, CreatedDateTime = DateTime.UtcNow, ItemId = 1, StatusId = 1, LocationFound = "Bus" });
         await _context.SaveChangesAsync();
 
         var result = await _controller.ItemRetentionCount(365);
@@ -179,10 +179,10 @@ public class RetentionCountTests : IDisposable
     public async Task LogRetentionCount_CountsOnlyRecordsOlderThanCutoff()
     {
         _context.ActivityLogs.AddRange(
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-31), Action = "A", Details = "d", PerformedBy = "u", Category = "C" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-30).AddMinutes(-1), Action = "A", Details = "d", PerformedBy = "u", Category = "C" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-29), Action = "A", Details = "d", PerformedBy = "u", Category = "C" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-10), Action = "A", Details = "d", PerformedBy = "u", Category = "C" }
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-31), Action = "A", Details = "d", PerformedBy = "u", Category = "C" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-30).AddMinutes(-1), Action = "A", Details = "d", PerformedBy = "u", Category = "C" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-29), Action = "A", Details = "d", PerformedBy = "u", Category = "C" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-10), Action = "A", Details = "d", PerformedBy = "u", Category = "C" }
         );
         await _context.SaveChangesAsync();
 
@@ -196,10 +196,10 @@ public class RetentionCountTests : IDisposable
     public async Task ItemRetentionCount_CountsOnlyRecordsOlderThanCutoff()
     {
         _context.LostFoundItems.AddRange(
-            new LostFoundItem { CustomTrackingId = "A", DateFound = DateTime.Now, CreatedDateTime = DateTime.Now.AddDays(-366), ItemId = 1, StatusId = 1, LocationFound = "X" },
-            new LostFoundItem { CustomTrackingId = "B", DateFound = DateTime.Now, CreatedDateTime = DateTime.Now.AddDays(-365).AddMinutes(-1), ItemId = 1, StatusId = 1, LocationFound = "X" },
-            new LostFoundItem { CustomTrackingId = "C", DateFound = DateTime.Now, CreatedDateTime = DateTime.Now.AddDays(-364), ItemId = 1, StatusId = 1, LocationFound = "X" },
-            new LostFoundItem { CustomTrackingId = "D", DateFound = DateTime.Now, CreatedDateTime = DateTime.Now.AddDays(-1), ItemId = 1, StatusId = 1, LocationFound = "X" }
+            new LostFoundItem { CustomTrackingId = "A", DateFound = DateTime.UtcNow, CreatedDateTime = DateTime.UtcNow.AddDays(-366), ItemId = 1, StatusId = 1, LocationFound = "X" },
+            new LostFoundItem { CustomTrackingId = "B", DateFound = DateTime.UtcNow, CreatedDateTime = DateTime.UtcNow.AddDays(-365).AddMinutes(-1), ItemId = 1, StatusId = 1, LocationFound = "X" },
+            new LostFoundItem { CustomTrackingId = "C", DateFound = DateTime.UtcNow, CreatedDateTime = DateTime.UtcNow.AddDays(-364), ItemId = 1, StatusId = 1, LocationFound = "X" },
+            new LostFoundItem { CustomTrackingId = "D", DateFound = DateTime.UtcNow, CreatedDateTime = DateTime.UtcNow.AddDays(-1), ItemId = 1, StatusId = 1, LocationFound = "X" }
         );
         await _context.SaveChangesAsync();
 
@@ -222,9 +222,9 @@ public class RetentionCountTests : IDisposable
 
         // Add old logs that should be deleted (older than 30 days)
         _context.ActivityLogs.AddRange(
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-40), Action = "Old1", Details = "Old log", PerformedBy = "admin", Category = "Test" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-35), Action = "Old2", Details = "Old log", PerformedBy = "admin", Category = "Test" },
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-5), Action = "New", Details = "Recent log", PerformedBy = "admin", Category = "Test" }
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-40), Action = "Old1", Details = "Old log", PerformedBy = "admin", Category = "Test" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-35), Action = "Old2", Details = "Old log", PerformedBy = "admin", Category = "Test" },
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-5), Action = "New", Details = "Recent log", PerformedBy = "admin", Category = "Test" }
         );
         await _context.SaveChangesAsync();
 
@@ -261,9 +261,9 @@ public class RetentionCountTests : IDisposable
 
         // Add old items that should be deleted (older than 365 days)
         _context.LostFoundItems.AddRange(
-            new LostFoundItem { CustomTrackingId = "OLD-001", DateFound = DateTime.Now.AddDays(-400), CreatedDateTime = DateTime.Now.AddDays(-400), ItemId = 1, StatusId = 1, LocationFound = "Bus" },
-            new LostFoundItem { CustomTrackingId = "OLD-002", DateFound = DateTime.Now.AddDays(-370), CreatedDateTime = DateTime.Now.AddDays(-370), ItemId = 1, StatusId = 1, LocationFound = "Train" },
-            new LostFoundItem { CustomTrackingId = "NEW-001", DateFound = DateTime.Now.AddDays(-5), CreatedDateTime = DateTime.Now.AddDays(-5), ItemId = 1, StatusId = 1, LocationFound = "Office" }
+            new LostFoundItem { CustomTrackingId = "OLD-001", DateFound = DateTime.UtcNow.AddDays(-400), CreatedDateTime = DateTime.UtcNow.AddDays(-400), ItemId = 1, StatusId = 1, LocationFound = "Bus" },
+            new LostFoundItem { CustomTrackingId = "OLD-002", DateFound = DateTime.UtcNow.AddDays(-370), CreatedDateTime = DateTime.UtcNow.AddDays(-370), ItemId = 1, StatusId = 1, LocationFound = "Train" },
+            new LostFoundItem { CustomTrackingId = "NEW-001", DateFound = DateTime.UtcNow.AddDays(-5), CreatedDateTime = DateTime.UtcNow.AddDays(-5), ItemId = 1, StatusId = 1, LocationFound = "Office" }
         );
         await _context.SaveChangesAsync();
 
@@ -302,7 +302,7 @@ public class RetentionCountTests : IDisposable
 
         // Add only recent logs (none older than 30 days)
         _context.ActivityLogs.Add(
-            new ActivityLog { Timestamp = DateTime.Now.AddDays(-5), Action = "Recent", Details = "Recent log", PerformedBy = "admin", Category = "Test" }
+            new ActivityLog { Timestamp = DateTime.UtcNow.AddDays(-5), Action = "Recent", Details = "Recent log", PerformedBy = "admin", Category = "Test" }
         );
         await _context.SaveChangesAsync();
 

@@ -179,7 +179,7 @@ namespace LostAndFoundApp.Controllers
             var bytes = new byte[bom.Length + csvContent.Length];
             bom.CopyTo(bytes, 0);
             csvContent.CopyTo(bytes, bom.Length);
-            return File(bytes, "text/csv", $"activity_logs_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+            return File(bytes, "text/csv", $"activity_logs_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv");
         }
 
         private static string EscapeCsv(string? value)

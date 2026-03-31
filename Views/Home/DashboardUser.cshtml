@@ -96,7 +96,7 @@
   <div class="pg-head">
     <div>
       <div class="pg-title">Dashboard</div>
-      <div class="pg-date">@DateTime.Now.ToString("dddd, MMMM d, yyyy")</div>
+      <div class="pg-date">@DateTime.UtcNow.ToString("dddd, MMMM d, yyyy")</div>
     </div>
     <div class="action-strip">
       <a class="action-btn primary" asp-controller="LostFoundItem" asp-action="Create"><i class="bi bi-plus-lg"></i> New Record</a>

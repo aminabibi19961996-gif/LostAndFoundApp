@@ -28,7 +28,7 @@ namespace LostAndFoundApp.Models
         /// </summary>
         public int PopupShownCount { get; set; } = 0;
 
-        public DateTime FirstReadAt { get; set; } = DateTime.Now;
+        public DateTime FirstReadAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// When the user explicitly dismissed the announcement. Null if not yet dismissed.

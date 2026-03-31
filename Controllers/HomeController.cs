@@ -98,13 +98,13 @@ namespace LostAndFoundApp.Controllers
                 .Select(x => x.CreatedDateTime)
                 .ToListAsync();
             if (storedItemDates.Any())
-                vm.AvgStorageDuration = Math.Round(storedItemDates.Average(x => (DateTime.Now - x).TotalDays), 1);
+                vm.AvgStorageDuration = Math.Round(storedItemDates.Average(x => (DateTime.UtcNow - x).TotalDays), 1);
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             // TRENDS — Week-over-week, month-over-month
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var weekAgo = now.AddDays(-7);
             var twoWeeksAgo = now.AddDays(-14);
             var monthAgo = now.AddDays(-30);

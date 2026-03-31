@@ -104,7 +104,7 @@ namespace LostAndFoundApp.Controllers
                 return View(model);
 
             // Past-date validation: ExpiresAt cannot be in the past
-            if (model.ExpiresAt.HasValue && model.ExpiresAt.Value.Date < DateTime.Today)
+            if (model.ExpiresAt.HasValue && model.ExpiresAt.Value.Date < DateTime.UtcNow.Date)
             {
                 ModelState.AddModelError("ExpiresAt", "Expiry date cannot be in the past.");
                 return View(model);
@@ -123,7 +123,7 @@ namespace LostAndFoundApp.Controllers
                 Message = model.Message.Trim(),
                 TargetRole = model.TargetRole,
                 CreatedBy = User.Identity?.Name ?? "System",
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 ExpiresAt = model.ExpiresAt,
                 IsActive = true
             };
@@ -194,7 +194,7 @@ namespace LostAndFoundApp.Controllers
             if (userRole == "SuperAdmin" || userRole == "Admin" || userRole == "Supervisor")
                 return RedirectToAction(nameof(Index));
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
@@ -262,7 +262,7 @@ namespace LostAndFoundApp.Controllers
 
             if (existing != null)
             {
-                existing.DismissedAt = DateTime.Now;
+                existing.DismissedAt = DateTime.UtcNow;
             }
             else
             {
@@ -271,8 +271,8 @@ namespace LostAndFoundApp.Controllers
                     AnnouncementId = id,
                     UserId = user.Id,
                     PopupShownCount = 1,
-                    FirstReadAt = DateTime.Now,
-                    DismissedAt = DateTime.Now
+                    FirstReadAt = DateTime.UtcNow,
+                    DismissedAt = DateTime.UtcNow
                 });
             }
 
@@ -293,7 +293,7 @@ namespace LostAndFoundApp.Controllers
             if (user == null) return RedirectToAction("Login", "Account");
 
             var userRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "User";
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
@@ -351,7 +351,7 @@ namespace LostAndFoundApp.Controllers
 
             if (existing != null)
             {
-                existing.DismissedAt = DateTime.Now;
+                existing.DismissedAt = DateTime.UtcNow;
             }
             else
             {
@@ -360,8 +360,8 @@ namespace LostAndFoundApp.Controllers
                     AnnouncementId = id,
                     UserId = user.Id,
                     PopupShownCount = 1,
-                    FirstReadAt = DateTime.Now,
-                    DismissedAt = DateTime.Now
+                    FirstReadAt = DateTime.UtcNow,
+                    DismissedAt = DateTime.UtcNow
                 });
             }
 
@@ -386,7 +386,7 @@ namespace LostAndFoundApp.Controllers
             if (userRole == "SuperAdmin")
                 return Json(new object[0]);
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var announcements = await _context.Announcements
                 .Where(a => a.IsActive)
@@ -451,7 +451,7 @@ namespace LostAndFoundApp.Controllers
                         AnnouncementId = announcementId,
                         UserId = user.Id,
                         PopupShownCount = 1,
-                        FirstReadAt = DateTime.Now
+                        FirstReadAt = DateTime.UtcNow
                     });
                 }
             }
@@ -471,7 +471,7 @@ namespace LostAndFoundApp.Controllers
             if (userRole == "SuperAdmin")
                 return Json(new { count = 0 });
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             var count = await _context.Announcements
                 .Where(a => a.IsActive)

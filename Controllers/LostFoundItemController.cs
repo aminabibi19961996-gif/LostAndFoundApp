@@ -77,7 +77,7 @@ namespace LostAndFoundApp.Controllers
                 ClaimedBy = vm.ClaimedBy,
                 Notes = vm.Notes,
                 CreatedBy = User.Identity?.Name ?? "Unknown",
-                CreatedDateTime = DateTime.Now,
+                CreatedDateTime = DateTime.UtcNow,
                 CustomTrackingId = await GenerateCustomTrackingIdAsync()
             };
 
@@ -317,7 +317,7 @@ namespace LostAndFoundApp.Controllers
             item.CreatedBy = originalCreatedBy;
             item.CreatedDateTime = originalCreatedDateTime;
             item.ModifiedBy = User.Identity?.Name ?? "Unknown";
-            item.ModifiedDateTime = DateTime.Now;
+            item.ModifiedDateTime = DateTime.UtcNow;
 
             // Handle photo removals (checkboxes) — only admin roles can delete existing files
             var canRemoveFiles = User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Supervisor");
@@ -453,7 +453,7 @@ namespace LostAndFoundApp.Controllers
             // system for ≥ ShortOverdueDays and are still unresolved.
             if (vm.ShowOverdueOnly)
             {
-                var overdueAgo = DateTime.Today.AddDays(-vm.ShortOverdueDays);
+                var overdueAgo = DateTime.UtcNow.Date.AddDays(-vm.ShortOverdueDays);
                 query = query.Where(x =>
                     x.DateFound <= overdueAgo
                     && x.Status != null
@@ -586,8 +586,8 @@ namespace LostAndFoundApp.Controllers
                 VehicleName = x.VehicleName,
                 StorageLocationName = x.StorageLocationName,
                 StatusName = x.StatusName,
-                DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
-                DaysInSystem = (int)(DateTime.Now - x.CreatedDateTime).TotalDays,
+                DaysSinceFound = (DateTime.UtcNow.Date - x.DateFound.Date).Days,
+                DaysInSystem = (int)(DateTime.UtcNow - x.CreatedDateTime).TotalDays,
                 FoundByName = x.FoundByName,
                 Notes = x.Notes,
                 ClaimedBy = x.ClaimedBy,
@@ -617,7 +617,7 @@ namespace LostAndFoundApp.Controllers
             // bug fix #2: apply ShowOverdueOnly in PrintSearch
             if (vm.ShowOverdueOnly)
             {
-                var overdueAgo = DateTime.Today.AddDays(-vm.ShortOverdueDays);
+                var overdueAgo = DateTime.UtcNow.Date.AddDays(-vm.ShortOverdueDays);
                 query = query.Where(x =>
                     x.DateFound <= overdueAgo
                     && x.Status != null
@@ -733,8 +733,8 @@ namespace LostAndFoundApp.Controllers
                 VehicleName = x.VehicleName,
                 StorageLocationName = x.StorageLocationName,
                 StatusName = x.StatusName,
-                DaysSinceFound = (DateTime.Today - x.DateFound.Date).Days,
-                DaysInSystem = (DateTime.Today - x.DateFound.Date).Days,
+                DaysSinceFound = (DateTime.UtcNow.Date - x.DateFound.Date).Days,
+                DaysInSystem = (int)(DateTime.UtcNow - x.DateFound.Date).Days,
                 FoundByName = x.FoundByName,
                 Notes = x.Notes,
                 ClaimedBy = x.ClaimedBy,
@@ -876,7 +876,7 @@ namespace LostAndFoundApp.Controllers
             // bug fix #3: apply ShowOverdueOnly in Export
             if (vm.ShowOverdueOnly)
             {
-                var overdueAgo = DateTime.Today.AddDays(-vm.ShortOverdueDays);
+                var overdueAgo = DateTime.UtcNow.Date.AddDays(-vm.ShortOverdueDays);
                 query = query.Where(x =>
                     x.DateFound <= overdueAgo
                     && x.Status != null
@@ -930,7 +930,7 @@ namespace LostAndFoundApp.Controllers
             var bytes = new byte[bom.Length + csvContent.Length];
             bom.CopyTo(bytes, 0);
             csvContent.CopyTo(bytes, bom.Length);
-            return File(bytes, "text/csv", $"lost-found-export-{DateTime.Now:yyyyMMdd-HHmmss}.csv");
+            return File(bytes, "text/csv", $"lost-found-export-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
         }
 
         private static string EscapeCsv(string? value)
@@ -1123,9 +1123,9 @@ namespace LostAndFoundApp.Controllers
             foreach (var item in items)
             {
                 item.StatusId = statusId;
-                item.StatusDate = statusDate ?? DateTime.Now.Date;
+                item.StatusDate = statusDate ?? DateTime.UtcNow.Date;
                 item.ModifiedBy = User.Identity?.Name ?? "Unknown";
-                item.ModifiedDateTime = DateTime.Now;
+                item.ModifiedDateTime = DateTime.UtcNow;
             }
 
             try

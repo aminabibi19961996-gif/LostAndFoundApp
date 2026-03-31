@@ -48,7 +48,7 @@ namespace LostAndFoundApp.ViewModels
         public DateTime? ExpiresAt { get; set; }
         public bool IsActive { get; set; }
         public int ReadCount { get; set; }
-        public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value < DateTime.Now;
+        public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow;
     }
 
     public class UserMessageViewModel

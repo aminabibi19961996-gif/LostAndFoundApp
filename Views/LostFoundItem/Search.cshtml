@@ -22,7 +22,7 @@
     .fc-actions .fc-left { margin-right: auto; }
     @@media (max-width: 1200px) { .fg { grid-template-columns: repeat(4, 1fr); } }
     @@media (max-width: 900px)  { .fg { grid-template-columns: repeat(3, 1fr); } }
-    @@media (max-width: 600px)  { .fg { grid-template-columns: repeat(2, 1fr); } }
+    @@media (max-width: 600px)  { .fg { grid-template-columns: 1fr; } }
 
     /* Results card — fills remaining height, table scrolls inside */
     .rc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -71,6 +71,16 @@
     .days-warn  { color: var(--amber); font-weight: 700; }
     .days-crit  { color: var(--red);   font-weight: 700; }
     .overdue-active { display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#EF4444;font-size:12.5px;font-weight:700; }
+
+    /* Fix for small screens: allow the page to scroll so results are visible */
+    @@media (max-width: 768px) {
+        .page { overflow-y: auto !important; height: auto !important; display: block !important; padding-bottom: 40px !important; }
+        .rc { flex: none !important; min-height: 500px; }
+        .rc-scroll { flex: none !important; overflow: visible !important; }
+        .stable { display: block; overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+        .search-header { flex-direction: column; align-items: stretch; }
+        .search-actions { width: 100%; justify-content: flex-start; margin-top: 10px; }
+    }
 </style>
 }
 

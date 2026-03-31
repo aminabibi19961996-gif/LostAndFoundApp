@@ -74,7 +74,7 @@
         <button class="no-print-btn no-print" onclick="window.print()">Print</button>
     </div>
     <div class="filter-summary">
-        <strong>Filters:</strong> @Model.FilterSummary | <strong>Total:</strong> @Model.TotalRecords records | <strong>Generated:</strong> @DateTime.Now.ToString("MM/dd/yyyy HH:mm")
+        <strong>Filters:</strong> @Model.FilterSummary | <strong>Total:</strong> @Model.TotalRecords records | <strong>Generated:</strong> @DateTime.UtcNow.ToString("MM/dd/yyyy HH:mm")
     </div>
     <table>
         <thead>
